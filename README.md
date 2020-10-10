@@ -1,4 +1,4 @@
 # StatmanSprays
-College baseball Spray Charts
+College baseball spray charts
 
 Developed by Kenny Dorian
