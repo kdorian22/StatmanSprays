@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+{% extends 'base.html' %}
+{% block title %}Statman Sprays{% endblock %}
+{% block content %}
+
+      <div id = division>
+        <a class = redirect > <div class = pageSelect> Spray Charts  </div> </a>
+            <!-- <br> <img src = "static/field.png" width=500px>  -->
+         <a class = redirect href = "{{url_for('updateDB')}}"> <div class = pageSelect> Update Database  </div> </a>
+            <!-- <br> <img src = "static/db.png" width=500px> -->
+
+      </div>
+
+<style>
+  /* img{
+    margin-top: 20px;
+    color: white;
+  } */
+
+.redirect{
+  color: rgb(254, 246, 235);
+  text-decoration: none
+}
+
+@media only screen and (min-width: 1200px) {
+    .pageSelect{
+      float: left;
+      width: 40%;
+      height: 50vh;
+      line-height: 50vh;
+      margin: 4.5%;
+      text-align: center;
+      margin-top: 10%;
+      font-weight: bold;
+      background-color: rgb(254, 246, 235);
+      border: 6px solid rgb(254, 246, 235);
+      font-size: 4.7vw;
+      border-radius: 10px;
+      background-color: slategray;
+      color: rgb(254, 246, 235);
+      box-shadow: 0px 0px 10px gray
+    }
+  }
+
+@media only screen and (max-width: 1200px) {
+  .pageSelect{
+    width: 80%;
+    height: 33vh;
+    line-height: 33vh;
+    margin-left: 10%;
+    margin-top: 7%;
+    text-align: center;
+    font-weight: bold;
+    background-color: rgb(254, 246, 235);
+    border: 6px solid rgb(254, 246, 235);
+    font-size: 6.5vw;
+    border-radius: 10px;
+    background-color: slategray;
+    color: rgb(254, 246, 235);
+    box-shadow: 0px 0px 10px gray
+
+  }
+}
+
+
+
+  .pageSelect:hover{
+    cursor: pointer;
+    background-color:  rgb(254, 246, 235);
+    color: slategray;
+    border: 6px solid slategray
+  }
+
+
+</style>
+
+<script>
+  const teamsObj = {{data|safe}}
+  console.log(teamsObj)
+  const teams = teamsObj.map(function(d){ return d.NAME})
+  let division = ''
+  $('.divSelect span').click(function(){
+    $('.divSelect span').each(function(){
+      $(this).removeClass('divSelected')
+    })
+    $(this).addClass('divSelected')
+
+  })
+
+</script>
+{% endblock %}
