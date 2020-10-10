@@ -1,2 +1,4 @@
 # StatmanSprays
-NAA 
+College baseball Spray Charts
+
+Developed by Kenny Dorian
