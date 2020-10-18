@@ -268,11 +268,12 @@ th.plays{
      .attr('class', function(d){ return d.PBP_18 == 0 ? '' : 'done'})
      .html(function(d){return '<div class = upd data-col = pbp data-key ='+d.TEAM_KEY+' data-year = 2018>&#8634; </div>'})
 
-
-     $('.done').on('mouseenter', function(e){
+     function toolTip(el, ev){
+       console.log(ev)
        $('#toolTip').css('top', 0).css('left', 0)
        $("#toolTip").empty()
-       child = $(this).children('div.upd')
+       // child = $(this).children('div.upd')
+       child = $(el)
        var col = child.data('col')
        var key = child.data('key')
        var year = child.data('year')
@@ -283,9 +284,8 @@ th.plays{
              $("#toolTip").empty()
              data = JSON.parse(data)
              $('#toolTip').show()
-             console.log(e.clientX, e.clientY)
-             x = e.clientX > 750 ? (e.pageX - 450) : (e.pageX + 30)
-             y = e.clientY > 300 ? e.clientY > 400 ? (e.pageY - 400) : (e.pageY - 200) : (e.pageY)
+             x = ev.clientX > 750 ? (ev.pageX - 450) : (ev.pageX + 30)
+             y = ev.clientY > 300 ? ev.clientY > 400 ? (ev.pageY - 400) : (ev.pageY - 200) : (ev.pageY)
              $('#toolTip').css('left', x+'px').css('top', y+'px')
              let pitchers = data.filter(function(d){ return d.POSITION == 'P'})
              let pos = data.filter(function(d){ return d.POSITION != 'P'})
@@ -343,9 +343,8 @@ th.plays{
              $("#toolTip").empty()
              data = JSON.parse(data)
              $('#toolTip').show()
-             console.log(e.clientX, e.clientY)
-             x = e.pageX - 50
-             y = e.pageY + 30
+             x = ev.pageX - 50
+             y = ev.pageY + 30
              $('#toolTip').css('left', x+'px').css('top', y+'px')
              let date = d3.max(data.map(function(d){ return d.DATE_KEY }))
              let maxDate = '<span style = "font-weight: bold"> Most Recent Data: </span><br>'+
@@ -357,9 +356,10 @@ th.plays{
            }
 
          }
-
        })
-     })
+     }
+
+     $('.done .upd').on('mouseenter', function(e){toolTip(this, e)})
 
      $('.done').on('mouseout', function(d){
        $("#toolTip").hide()
@@ -395,9 +395,16 @@ th.plays{
            loader.parent('td').css('background-color', 'rgb(102, 204, 145)').css('color', 'white')
            $('.success').text(`${team + ' ' + year + ' ' + type} loaded successfully.` )
            $('.success').slideDown()
+           $('.done .upd').on('mouseenter', function(e){toolTip(this, e)})
+
+           $('.done .upd').on('mouseout', function(d){
+             $("#toolTip").hide()
+             $("#toolTip").empty()
+           })
          }
          setTimeout(function(){ $('.banner').slideUp('slow') }, 2500)
        })
+
      })
    }
   addRows(init)

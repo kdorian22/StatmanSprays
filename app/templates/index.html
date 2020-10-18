@@ -4,7 +4,7 @@
 {% block content %}
 
       <div id = division>
-        <a class = redirect > <div class = pageSelect> Spray Charts  </div> </a>
+        <a class = redirect href = "{{url_for('sprays')}}"> <div class = pageSelect> Spray Charts  </div> </a>
             <!-- <br> <img src = "static/field.png" width=500px>  -->
          <a class = redirect href = "{{url_for('updateDB')}}"> <div class = pageSelect> Update Database  </div> </a>
             <!-- <br> <img src = "static/db.png" width=500px> -->

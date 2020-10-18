@@ -393,3 +393,16 @@ def updateDB():
 		WHERE t.ACTIVE_RECORD = 1
 		"""))
 	return render_template('updateDB.html', status=status, data = json.dumps([dict(s) for s in status]))
+
+
+@app.route('/sprays', methods = ['POST', 'GET'])
+def sprays():
+	teams = db.engine.execute(f"""
+	with a as (SELECT BATTER_TEAM_KEY TEAM_KEY, COUNT(*), YEAR  FROM
+	PLAY_BY_PLAY
+	GROUP BY BATTER_TEAM_KEY, YEAR)
+	SELECT a.*, NAME FROM a
+	JOIN TEAM_DIM t on t.TEAM_KEY = a.TEAM_KEY
+	ORDER BY NAME, a.YEAR
+	""")
+	return render_template('sprays.html', teams=teams, data = json.dumps([dict(s) for s in teams]))

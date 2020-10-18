@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+{% extends 'base.html' %}
+{% block title %} Update DB {% endblock %}
+
+{% block content %}
+<html>
+    <div hidden class="success banner">  </div>
+    <div hidden class="failure banner">  </div>
+
+  <div id = body>
+
+    <div id="like_button_container"></div>
+
+  <table id = headTable>
+    <tr>
+      <td id = name><h1 id = pageHead> Spray Charts </h1> </td>
+      <td id = search><input id =  searchTeam type="text" placeholder="Find Team..."></td>
+    </tr>
+  </table>
+  <hr>
+  <div hidden id = toolTip> </div>
+</div>
+
+</html>
+
+<style>
+
+#body{
+  width: 98%;
+  margin-left: 1%
+}
+#name{
+  vertical-align: bottom;
+}
+
+#search{
+  vertical-align: bottom;
+  text-align: right;
+}
+
+#searchTeam{
+  font-size: 25px;
+  border-radius: 5px;
+  border: 1px solid black;
+  margin-bottom: 3px;
+  width: 250px;
+  box-shadow: 0px 0px 5px slategray;
+  background-color: rgb(254, 246, 235)
+}
+
+#headTable{
+  width: 100%
+}
+
+
+
+</style>
+
+
+<script>
+  const init = {{data|safe}}
+  const teams = init.map(function(d){ return {'label': d.NAME+ ' - ' + d.YEAR, 'value': {'key': d.TEAM_KEY, 'year': d.YEAR}}})
+  const teams2 = init.map(function(d){ return d.NAME})
+  $(function(){
+      $("#searchTeam").autocomplete({
+      source: teams,
+      minLength:2,
+      select: function(event, ui){
+        console.log(ui.item.value)
+        $('#searchTeam').val(ui.item.label)
+        return false
+      },
+      focus: function(event, ui) {
+        event.preventDefault();
+        $('#searchTeam').val(ui.item.label);
+    }
+    })
+  })
+</script>
+
+<script >
+
+
+
+
+
+
+</script>
+
+{% endblock %}
