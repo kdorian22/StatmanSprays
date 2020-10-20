@@ -6,11 +6,8 @@
 <html>
     <div hidden class="success banner">  </div>
     <div hidden class="failure banner">  </div>
-
+    <div hidden class="wait banner">  </div>
   <div id = body>
-
-    <div id="like_button_container"></div>
-
   <table id = headTable>
     <tr>
       <td id = name><h1 id = pageHead>  </h1> </td>
@@ -188,6 +185,11 @@ th.plays{
 
 .failure{
   background-color: red;
+  color: black
+}
+
+.wait{
+  background-color: lightgray;
   color: black
 }
 
@@ -374,27 +376,30 @@ th.plays{
      })
 
      $('.upd').click(function(d){
-       $('.upd').css("pointer-events", "none")
+       $('#body').css("pointer-events", "none")
        var loader = $(this)
        var col = $(this).data('col')
        var key = $(this).data('key')
        var year = $(this).data('year')
        if(col == 'pbp'){
          var str = `{{url_for('scrapePlays')}}?team=${key}&year=${year}`
+         $('.wait').text('Scraping plays. This may take up to 2 minutes.')
+         $('.wait').slideDown()
        }else{
          var str = `{{url_for('scrapeRoster')}}?team=${key}&year=${year}`
        }
        loader.addClass('progress')
        $.get(str, function(data){
+         $('.banner').hide()
          loader.removeClass('progress')
-         $('.upd').css("pointer-events", "auto")
+         $('#body').css("pointer-events", "auto")
          if(data == 'no roster'){
            $('.failure').text(`Load the ${year} roster before the play by play data`)
            $('.failure').slideDown()
          }else if(data == 'no'){
            loader.parent('td').css('background-color', 'red')
             $('.failure').text('Data error. Contact site administrator')
-           $('.failure').slideDown()
+            $('.failure').slideDown()
          }else{
            let team = init.filter(function(d){ return d.TEAM_KEY == key})[0].NAME
            let type = col == 'pbp' ? 'play by play data' : 'roster'

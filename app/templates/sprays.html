@@ -6,11 +6,7 @@
 <html>
     <div hidden class="success banner">  </div>
     <div hidden class="failure banner">  </div>
-
   <div id = body>
-
-    <div id="like_button_container"></div>
-
   <table id = headTable>
     <tr>
       <td id = name><h1 id = pageHead>  </h1> </td>
@@ -21,9 +17,12 @@
     <div id = rosterDiv>
       <span id = teamName> No Team Selected </span>
       <table id = roster>
+
       </table>
     </div>
-    <svg id = field height=600 width=600></svg>
+    <div id = fieldDiv>
+      <svg id = field height=600 width=600></svg>
+    </div>
   </div>
   <div hidden id = toolTip> </div>
 </div>
@@ -32,10 +31,85 @@
 
 <style>
 
+
+#headTable{
+  width: 100%;
+  margin-top: 5px
+}
 #teamName{
   font-size: 40px;
   font-weight: bold
 }
+
+
+#field{
+  border-radius: 5px;
+  border: 2px solid slategray;
+  background-color: rgb(254, 246, 235);
+}
+
+
+#roster{
+  border-collapse: collapse;
+  width: 96%;
+  margin-left: 2%;
+  font-weight: normal;
+}
+
+#roster tr{
+  border-bottom: 1px solid rgb(254, 246, 235);
+}
+
+#roster td{
+  padding: 5px;
+  font-size: 20px;
+}
+
+#roster tr{
+  padding: 5px;
+  font-size: 28px;
+}
+
+#roster tr.row:hover{
+  background-color: rgb(254, 246, 235);
+  color: slategray;
+  cursor: pointer;
+}
+
+.selected{
+  background-color: rgb(254, 246, 235);
+  color: slategray;
+}
+
+#container{
+  width: 100%;
+  margin-top: 15px;
+  display: flex;
+  position: relative;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+@media (max-width: 1200px){
+  #container{
+    flex-direction: column;
+    justify-content: space-evenly;
+  }
+  #body{
+    width: 60% !important;
+    margin-left: 20% !important;
+  }
+  #rosterDiv{
+    max-height: 200px!important
+  }
+
+  #headTable{
+    width: 600px;
+  }
+
+}
+
+
 
 #rosterDiv{
   text-align: center;
@@ -51,46 +125,8 @@
   width: 600px;
 }
 
-#roster{
-  border-collapse: collapse;
-  width: 96%;
-  margin-left: 2%;
-  font-size: 20px;
-  font-weight: normal;
-}
-
-#roster tr{
-  border-bottom: 1px solid rgb(254, 246, 235);
-  cursor: pointer;
-}
-
-#roster td{
-  padding: 5px;
-}
-
-#roster tr:hover{
-  background-color: rgb(254, 246, 235);
-  color: slategray;
-}
-
-.selected{
-  background-color: rgb(254, 246, 235);
-  color: slategray;
-}
-
-#field{
-  border-radius: 5px;
-  float: right;
-  border: 2px solid slategray;
-  background-color: rgb(254, 246, 235)
-}
 
 
-#container{
-  width: 100%;
-  margin-top: 15px;
-  text-align: left
-}
 
 
 #body{
@@ -117,9 +153,7 @@
   background-color: rgb(254, 246, 235)
 }
 
-#headTable{
-  width: 100%
-}
+
 
 </style>
 
@@ -151,6 +185,9 @@
             $("#teamName").text(ui.item.label)
             $("#roster").empty()
 
+            d3.select('#roster').append('tr')
+            .html("<th>Name</th><th>Pos</th><th>Num</th><th> Year </th>")
+
             d3.select('#roster')
             .selectAll('tr.row')
             .data(data, function(d){ return d.PLAYER_KEY})
@@ -160,6 +197,9 @@
             .on('click', function(d){
               $('.selected').removeClass('selected')
               $(this).addClass('selected')
+              $.get(Flask.url_for('getData', {key: d.PLAYER_KEY, year: d.YEAR, type: 'pbp'}), function(data){
+                console.log(data)
+              })
             })
 
             d3.selectAll('tr.row')

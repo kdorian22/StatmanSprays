@@ -118,10 +118,8 @@ def scrapeRoster():
 		db.session.commit()
 		i = 0
 		url=f'https://stats.ncaa.org/team/{team}/roster/{yearCodes[year]}'
-		print(url)
 		soup = BeautifulSoup(requests.get(url).content, 'lxml')
 		table = soup.find('tbody')
-		print(table)
 		if table is not None:
 			for row in table.findAll('tr'):
 				cells = []
@@ -133,7 +131,6 @@ def scrapeRoster():
 				db.session.add(player)
 			i = i+1
 			if i % 10 == 0:
-				print(str(i) + ': successful')
 				db.session.commit()
 		else:
 			db.engine.execute(f"""
@@ -217,7 +214,6 @@ def scrapePlays():
 	## Get the link to the list of games. There are two similar links; we need the third one down
 	url = "https://stats.ncaa.org" + direct[2]
 	soup = BeautifulSoup(requests.get(url).content, 'lxml')
-	print(url)
 
 	## Get all the box score links. Different attribute depending on year
 	links = []
@@ -231,7 +227,8 @@ def scrapePlays():
 	for url in boxes[0:]:
 		soup = BeautifulSoup(requests.get(url).content, 'lxml')
 		link = soup.find('a', attrs={'href': re.compile("/play_by_play")})
-		pbp.append(link.get('href'))
+		if link is not None:
+			pbp.append(link.get('href'))
 
 	## For each game, get all of the plays with intended batter team
 	games = [f'https://stats.ncaa.org/{s}' for s in pbp]
@@ -343,18 +340,19 @@ def scrapePlays():
 				play_details['outcome'] = None
 			pbp = play_by_play(play_details['date'], play_details['batter'], play_details['btk'], play_details['ptk'], play_details['outcome'], play_details['location'], year, play_details['description'])
 			db.session.add(pbp)
+			db.session.commit()
 			allPlays.append(play_details)
 
-	db.session.commit()
 	return jsonify(allPlays)
 
 
 @app.route('/getData/<key>/<year>/<type>', methods = ['POST', 'GET'])
 def getData(key, year, type):
+	print(key, year, type)
 	if key != '' and year != '' and type != '' and len(key) < 10 and len(year) < 5 and len(type) < 4:
 		if type == 'pbp':
 			tab = 'PLAY_BY_PLAY'
-			keyCol = 'BATTER_TEAM_KEY'
+			keyCol = 'BATTER_PLAYER_KEY'
 			order = 'DATE_KEY'
 		else:
 			tab = 'PLAYER_DIM'
