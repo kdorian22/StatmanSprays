@@ -352,11 +352,22 @@ def scrapePlays():
 @app.route('/getData/<key>/<year>/<type>', methods = ['POST', 'GET'])
 def getData(key, year, type):
 	if key != '' and year != '' and type != '' and len(key) < 10 and len(year) < 5 and len(type) < 4:
-		tab = 'PLAY_BY_PLAY' if type == 'pbp' else 'PLAYER_DIM'
-		yearCol = f'and YEAR = {year}' if type == 'ros' else f'and YEAR = {year}'
-		keyCol = f'TEAM_KEY' if type == 'ros' else 'BATTER_TEAM_KEY'
-	data = list(db.engine.execute(f"""SELECT * FROM {tab} WHERE {keyCol} = {key} {yearCol}"""))
+		if type == 'pbp':
+			tab = 'PLAY_BY_PLAY'
+			keyCol = 'BATTER_TEAM_KEY'
+			order = 'DATE_KEY'
+		else:
+			tab = 'PLAYER_DIM'
+			keyCol = 'TEAM_KEY'
+			order = 'FULL_NAME'
+
+		data = list(db.engine.execute(
+			f"""SELECT * FROM {tab} WHERE {keyCol} = {key} and YEAR = {year} ORDER BY {order}"""
+		))
+	else:
+		data = []
 	return json.dumps([dict(d) for d in data])
+
 
 
 @app.route('/updateDB', methods = ['POST', 'GET'])

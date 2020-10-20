@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 {% extends 'base.html' %}
-{% block title %} Update DB {% endblock %}
+{% block title %} Spray Charts {% endblock %}
 
 {% block content %}
 <html>
@@ -13,11 +13,18 @@
 
   <table id = headTable>
     <tr>
-      <td id = name><h1 id = pageHead> Spray Charts </h1> </td>
-      <td id = search><input id =  searchTeam type="text" placeholder="Find Team..."></td>
+      <td id = name><h1 id = pageHead>  </h1> </td>
+      <td id = search><input id =  searchTeam type="text" placeholder="Select Team..."></td>
     </tr>
   </table>
-  <hr>
+  <div id = container>
+    <div id = rosterDiv>
+      <span id = teamName> No Team Selected </span>
+      <table id = roster>
+      </table>
+    </div>
+    <svg id = field height=600 width=600></svg>
+  </div>
   <div hidden id = toolTip> </div>
 </div>
 
@@ -25,20 +32,82 @@
 
 <style>
 
+#teamName{
+  font-size: 40px;
+  font-weight: bold
+}
+
+#rosterDiv{
+  text-align: center;
+  border: 2px solid rgb(254, 246, 235);
+  background-color: slategray;
+  color: rgb(254, 246, 235);
+  border-radius: 5px;
+  box-sizing: 0px 0px 5px gray;
+  margin-bottom: 20px;
+  max-height: 600px;
+  overflow: scroll;
+  float: left;
+  width: 600px;
+}
+
+#roster{
+  border-collapse: collapse;
+  width: 96%;
+  margin-left: 2%;
+  font-size: 20px;
+  font-weight: normal;
+}
+
+#roster tr{
+  border-bottom: 1px solid rgb(254, 246, 235);
+  cursor: pointer;
+}
+
+#roster td{
+  padding: 5px;
+}
+
+#roster tr:hover{
+  background-color: rgb(254, 246, 235);
+  color: slategray;
+}
+
+.selected{
+  background-color: rgb(254, 246, 235);
+  color: slategray;
+}
+
+#field{
+  border-radius: 5px;
+  float: right;
+  border: 2px solid slategray;
+  background-color: rgb(254, 246, 235)
+}
+
+
+#container{
+  width: 100%;
+  margin-top: 15px;
+  text-align: left
+}
+
+
 #body{
   width: 98%;
   margin-left: 1%
 }
+
 #name{
   vertical-align: bottom;
 }
 
 #search{
-  vertical-align: bottom;
   text-align: right;
 }
 
 #searchTeam{
+  vertical-align: bottom;
   font-size: 25px;
   border-radius: 5px;
   border: 1px solid black;
@@ -52,15 +121,19 @@
   width: 100%
 }
 
-
-
 </style>
 
 
 <script>
   const init = {{data|safe}}
-  const teams = init.map(function(d){ return {'label': d.NAME+ ' - ' + d.YEAR, 'value': {'key': d.TEAM_KEY, 'year': d.YEAR}}})
+  const teams = init.map(function(d){ return {'label': d.NAME+ ' - ' + d.YEAR, 'value': {'key': d.TEAM_KEY, 'year': d.YEAR, 'name': d.NAME}}})
   const teams2 = init.map(function(d){ return d.NAME})
+
+  $('#searchTeam').click(function(d){
+      $("#searchTeam").val('')
+  });
+
+
   $(function(){
       $("#searchTeam").autocomplete({
       source: teams,
@@ -68,6 +141,46 @@
       select: function(event, ui){
         console.log(ui.item.value)
         $('#searchTeam').val(ui.item.label)
+        name = ui.item.value.name
+        key = ui.item.value.key
+        year = ui.item.value.year
+        col = 'ros'
+        $.get(Flask.url_for('getData', {key: key, year: year, type: col}), function(data){
+          if(data.length > 0){
+            data = JSON.parse(data)
+            $("#teamName").text(ui.item.label)
+            $("#roster").empty()
+
+            d3.select('#roster')
+            .selectAll('tr.row')
+            .data(data, function(d){ return d.PLAYER_KEY})
+            .enter()
+            .append('tr')
+            .attr('class', 'row')
+            .on('click', function(d){
+              $('.selected').removeClass('selected')
+              $(this).addClass('selected')
+            })
+
+            d3.selectAll('tr.row')
+            .append('td').html(function(d){ return d.FULL_NAME })
+
+             d3.selectAll('tr.row')
+             .append('td')
+             .html(function(d){ return d.POSITION} )
+
+             d3.selectAll('tr.row')
+             .append('td')
+             .html(function(d){ return d.NUMBER} )
+
+             d3.selectAll('tr.row')
+             .append('td')
+             .html(function(d){ return d.CLASS} )
+
+
+
+          }
+        })
         return false
       },
       focus: function(event, ui) {
