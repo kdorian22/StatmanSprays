@@ -245,7 +245,7 @@ th.plays{
      d3.selectAll('tr.row')
      .append('td')
      .attr('class', function(d){ return d.PBP_20 == 0 ? '' : 'done'})
-     .html(function(d){return '<div class = upd data-col = pbp data-key ='+d.TEAM_KEY+' data-year = 2020>&#8634; </div>'})
+     .html(function(d){return '<div class = upd data-col = pbpT data-key ='+d.TEAM_KEY+' data-year = 2020>&#8634; </div>'})
 
      d3.selectAll('tr.row')
      .append('td')
@@ -256,7 +256,7 @@ th.plays{
      d3.selectAll('tr.row')
      .append('td')
      .attr('class', function(d){ return d.PBP_19 == 0 ? '' : 'done'})
-     .html(function(d){return '<div class = upd data-col = pbp data-key ='+d.TEAM_KEY+' data-year = 2019>&#8634; </div>'})
+     .html(function(d){return '<div class = upd data-col = pbpT data-key ='+d.TEAM_KEY+' data-year = 2019>&#8634; </div>'})
 
 
      d3.selectAll('tr.row')
@@ -268,7 +268,7 @@ th.plays{
      d3.selectAll('tr.row')
      .append('td')
      .attr('class', function(d){ return d.PBP_18 == 0 ? '' : 'done'})
-     .html(function(d){return '<div class = upd data-col = pbp data-key ='+d.TEAM_KEY+' data-year = 2018>&#8634; </div>'})
+     .html(function(d){return '<div class = upd data-col = pbpT data-key ='+d.TEAM_KEY+' data-year = 2018>&#8634; </div>'})
 
      function toolTip(el, ev){
        $('#toolTip').css('top', 0).css('left', 0)
@@ -277,7 +277,6 @@ th.plays{
        var col = child.data('col')
        var key = child.data('key')
        var year = child.data('year')
-
        $.get(Flask.url_for('getData', {key: key, year: year, type: col}), function(data){
          if(data.length > 0){
            if(col == 'ros'){
@@ -345,7 +344,7 @@ th.plays{
                .html(function(d){ return d.CLASS} )
 
 
-           }else if(col == 'pbp'){
+           }else if(col == 'pbpT'){
              $("#toolTip").empty()
              data = JSON.parse(data)
              $('#toolTip').show()
@@ -381,7 +380,7 @@ th.plays{
        var col = $(this).data('col')
        var key = $(this).data('key')
        var year = $(this).data('year')
-       if(col == 'pbp'){
+       if(col == 'pbpT'){
          var str = `{{url_for('scrapePlays')}}?team=${key}&year=${year}`
          $('.wait').text('Scraping plays. This may take up to 2 minutes.')
          $('.wait').slideDown()

@@ -21,7 +21,7 @@
       </table>
     </div>
     <div id = fieldDiv>
-      <svg id = field height=600 width=600></svg>
+      <svg id = field height=450 width=600></svg>
     </div>
   </div>
   <div hidden id = toolTip> </div>
@@ -119,7 +119,7 @@
   border-radius: 5px;
   box-sizing: 0px 0px 5px gray;
   margin-bottom: 20px;
-  max-height: 600px;
+  max-height: 450px;
   overflow: scroll;
   float: left;
   width: 600px;
@@ -154,6 +154,11 @@
 }
 
 
+.infWedge, .ofWedge{
+  stroke: slategray;
+}
+
+
 
 </style>
 
@@ -166,7 +171,174 @@
   $('#searchTeam').click(function(d){
       $("#searchTeam").val('')
   });
+  function makeSpray(plays, name){
+    $('#field').empty()
+    d3.selection.prototype.moveToFront = function() {
+      return this.each(function(){
+        this.parentNode.appendChild(this);
+      });
+    };
+    var colScale = d3.scaleLinear().domain([0,1]).range(['white', 'red'])
 
+    plays = plays.filter(function(d){ return d.LOCATION != null & d.LOCATION != 'null'})
+    buckets = []
+    infPlays = plays.filter(function(d){ return ['3b', 'third base', 'ss', 'shortstop',
+    'through the left side', 'up the middle', '2b', 'second base', 'through the right side',
+    '1b', 'first base'].indexOf(d.LOCATION) > -1}).length
+    console.log(plays.filter(function(d){ return ['3b', 'third base', 'ss', 'shortstop',
+    'through the left side', 'up the middle', '2b', 'second base', 'through the right side',
+    '1b', 'first base'].indexOf(d.LOCATION) > -1}))
+
+    ofPlays = plays.filter(function(d){ return ['lf', 'left', 'lf line', 'left center',
+    'cf', 'center', 'rf', 'right', 'rf line', 'right center'].indexOf(d.LOCATION) > -1}).length
+
+    locDict = {
+      '1': ['3b', 'third base'],
+      '2': ['ss', 'shortstop', 'through the left side'],
+      '3': ['up the middle'],
+      '4': ['2b', 'second base', 'through the right side'],
+      '5': ['1b', 'first base'],
+      '6': ['lf', 'left', 'lf line', 'left center'],
+      '7': ['cf', 'center'],
+      '8': ['rf', 'right', 'rf line', 'right center']
+    }
+
+    plotDict = {
+      '0': [205,320],
+      '1': [250,300],
+      '2': [300, 290],
+      '3': [350,300],
+      '4': [395,320],
+      '5': [140, 200],
+      '6': [300, 150],
+      '7': [460, 200]
+    }
+
+    for(loc in locDict){
+      buckets.push({
+       'loc': loc,
+       'plays': plays.filter(function(d){return locDict[loc].indexOf(d.LOCATION.replace(';','')) > -1})
+      })
+    }
+    margins = {'bottom': '10', 'left': '5', 'right': '5', 'top': '10'}
+    height = d3.select('#field').attr('height')
+    width = d3.select('#field').attr('width')
+    field = d3.select('#field').append('g').attr('transform', `translate(${width}, ${height-margins.bottom})`)
+    fieldSVG = d3.select('#field')
+
+    lfLine = -Math.PI/4
+    fieldWidth = Math.PI/2
+    ofBuckets = 3
+    infBuckets = buckets.length - ofBuckets
+
+      for(var i = 0; i < infBuckets; ++i){
+        start = lfLine+(fieldWidth/infBuckets)*i
+        end = lfLine+(fieldWidth/infBuckets)*(i+1)
+        arc = d3.arc()
+          .innerRadius(0)
+          .outerRadius(190)
+          .startAngle(start)
+          .endAngle(end);
+
+        field.append('path')
+        .attr('d', arc)
+        .attr('transform', `translate(-${width/2}, 0)`)
+        .attr('class', 'infWedge')
+        .on('mouseenter', function(d){
+          d3.select(this).moveToFront()
+          d3.select(this).style('stroke-width', '3')
+        })
+        .on('mouseout', function(d){
+          d3.select(this).style('stroke-width', '1')
+        })
+        .style('fill', function(d){
+          val = buckets[i].plays.length/infPlays
+          val = val > .6 ? .6 : val
+          if(!isNaN(parseFloat(val))){
+            return colScale(val)
+          }else{
+            return 'lightgray'
+          }
+        })
+
+        if(infPlays > 0){
+          str = (Math.round(buckets[i].plays.length/infPlays*100))+"%"
+        }else{
+          str = ''
+        }
+        fieldSVG.append('text')
+        .text(str)
+        .attr('x', plotDict[i][0])
+        .attr('y', plotDict[i][1])
+        .style('font-size', '18px')
+        .style('text-anchor', 'middle')
+        .style('font-weight', 'bold')
+      }
+      for(var i = infBuckets; i < buckets.length; ++i){
+        start = lfLine+(fieldWidth/ofBuckets)*(i-infBuckets)
+        end = lfLine+(fieldWidth/ofBuckets)*((i-infBuckets)+1)
+        arc = d3.arc()
+          .innerRadius(190)
+          .outerRadius(400)
+          .startAngle(start)
+          .endAngle(end);
+
+
+
+        field.append('path')
+        .attr('d', arc)
+        .attr('transform', `translate(-${width/2}, 0)`)
+        .attr('class', 'ofWedge')
+        .on('mouseenter', function(d){
+          d3.select(this).moveToFront()
+          d3.select(this).style('stroke-width', '3')
+        })
+        .on('mouseout', function(d){
+          d3.select(this).style('stroke-width', '1')
+        })
+        .style('fill', function(d){
+          val = buckets[i].plays.length/ofPlays
+          val = val > .6 ? .6 : val
+          if(!isNaN(parseFloat(val))){
+            return colScale(val)
+          }else{
+            return 'lightgray'
+          }
+        })
+
+        if(ofPlays > 0){
+          str = (Math.round(buckets[i].plays.length/ofPlays*100))+"%"
+        }else{
+          str = ''
+        }
+        fieldSVG.append('text')
+        .text(str)
+        .attr('x', plotDict[i][0])
+        .attr('y', plotDict[i][1])
+        .style('font-size', '28px')
+        .style('text-anchor', 'middle')
+        .style('font-weight', 'bold')
+      }
+
+      fieldSVG.append('text')
+      .text(name)
+      .attr('x', margins.left).attr('y', margins.top*2.5)
+      .style('font-size', '26px')
+
+      fieldSVG.append('text')
+      .text(`Inf BIP: ${infPlays}`)
+      .attr('x', width - margins.right).attr('y', height-margins.bottom)
+      .style('font-size', '22px')
+      .style('text-anchor', 'end')
+
+      fieldSVG.append('text')
+      .text(`OF BIP: ${ofPlays}`)
+      .attr('x', width - margins.right).attr('y', margins.top*2.5)
+      .style('font-size', '22px')
+      .style('text-anchor', 'end')
+
+
+  }
 
   $(function(){
       $("#searchTeam").autocomplete({
@@ -175,6 +347,7 @@
       select: function(event, ui){
         console.log(ui.item.value)
         $('#searchTeam').val(ui.item.label)
+        $('#field').empty()
         name = ui.item.value.name
         key = ui.item.value.key
         year = ui.item.value.year
@@ -197,8 +370,9 @@
             .on('click', function(d){
               $('.selected').removeClass('selected')
               $(this).addClass('selected')
-              $.get(Flask.url_for('getData', {key: d.PLAYER_KEY, year: d.YEAR, type: 'pbp'}), function(data){
-                console.log(data)
+              $.get(Flask.url_for('getData', {key: d.PLAYER_KEY, year: d.YEAR, type: 'pbpP'}), function(data){
+                data = JSON.parse(data)
+                makeSpray(data, d.FULL_NAME)
               })
             })
 

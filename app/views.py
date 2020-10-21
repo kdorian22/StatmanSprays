@@ -106,6 +106,7 @@ def scrapeTeams():
 
 @app.route('/scrapeRoster', methods = ['GET'])
 def scrapeRoster():
+	db.session.commit()
 	year = request.values.get('year','2020')
 	team = request.values.get('team','')
 	r = request.values.get('r', '')
@@ -149,6 +150,7 @@ def scrapeRoster():
 
 @app.route('/scrapePlays', methods = ['POST', 'GET'])
 def scrapePlays():
+	db.session.commit()
 	team = request.values.get('team', '755')
 	year = request.values.get('year', '2020')
 	## Get team name
@@ -174,6 +176,9 @@ def scrapePlays():
 		names.append(full[1] + ' ' + full[0])
 		names.append(full[1][0] + '. ' + full[0])
 		names.append(full[0] + ', ' + full[1][0]+'.')
+		names.append(full[0] + ', ' + full[1][0])
+		names.append(full[0] + ',' + full[1][0]+'.')
+		names.append(full[0] + ',' + full[1][0])
 		names.append(full[1][0:2] + '. ' + full[0])
 		names.append(full[1][0:3] + '. ' + full[0])
 		names.append(full[0])
@@ -181,6 +186,9 @@ def scrapePlays():
 		namesNotLast.append(full[1] + ' ' + full[0])
 		namesNotLast.append(full[1][0] + '. ' + full[0])
 		namesNotLast.append(full[0] + ', ' + full[1][0]+'.')
+		namesNotLast.append(full[0] + ', ' + full[1][0])
+		namesNotLast.append(full[0] + ',' + full[1][0]+'.')
+		namesNotLast.append(full[0] + ',' + full[1][0])
 		namesNotLast.append(full[1][0:2] + '. ' + full[0])
 		namesNotLast.append(full[1][0:3] + '. ' + full[0])
 		namesNotLast.append(r.FULL_NAME)
@@ -191,6 +199,8 @@ def scrapePlays():
 		if len(last) == 2:
 			names.append(last[0][0] + '. ' + last[1])
 			namesNotLast.append(last[0][0] + '. ' + last[1])
+		names = names + [x.upper() for x in names]
+		namesNotLast = namesNotLast + [x.upper() for x in namesNotLast]
 		players[r.PLAYER_KEY] = names
 		playersNotLast[r.PLAYER_KEY] = namesNotLast
 
@@ -233,7 +243,6 @@ def scrapePlays():
 	## For each game, get all of the plays with intended batter team
 	games = [f'https://stats.ncaa.org/{s}' for s in pbp]
 	allPlays = []
-	print(games)
 	for game in games:
 		plays = []
 
@@ -246,102 +255,104 @@ def scrapePlays():
 			date = None
 
 		## Plays are stored in a 3-column table. This is how we identify which column we want
+		index = 10
 		for i, td in enumerate(soup.find('table', {'class': 'mytable', 'width': '1000px'}).find('tr', {'class': 'grey_heading'}).findAll('td')):
 			if td.text != teamName and td.text != 'Score':
 				oppTeamName = td.text
-			if td.text == teamName:
+			if td.text == teamName or (td.text in teamName.split()):
 				index = i
 
-		oppTeam = team_dim.query.filter_by(NAME=oppTeamName).first()
-		if oppTeam != None:
-			ptk = oppTeam.TEAM_KEY
-		else:
-			ptk = None
+		if index < 10:
+			oppTeam = team_dim.query.filter_by(NAME=oppTeamName).first()
+			if oppTeam != None:
+				ptk = oppTeam.TEAM_KEY
+			else:
+				ptk = None
 
 
-		for table in soup.findAll('table', {'class': 'mytable', 'width': '1000px'}):
-			for play in table.findAll('tr', {'class': None}):
-				## Select the correct column
-				string = play.select_one(f"tr td:nth-of-type({index+1})").text.replace("\n", '')
-				if len(string) > 5 and len([pl for pl in unwanted if(pl in string)]) == 0:
-					plays.append(string)
+			for table in soup.findAll('table', {'class': 'mytable', 'width': '1000px'}):
+				for play in table.findAll('tr', {'class': None}):
+					## Select the correct column
+					string = play.select_one(f"tr td:nth-of-type({index+1})").text.replace("\n", '')
+					if len(string) > 5 and len([pl for pl in unwanted if(pl in string)]) == 0:
+						plays.append(string)
 
-		for play in plays:
-			play = play.replace('3a', ';').replace('unassisted', '')
-			play_details = {}
-			play_details['date'] = date
-			play_details['btk'] = team
-			play_details['ptk'] = ptk
-			play_details['description'] = play
-			## get the first 3 words -- contains the batters names
-			start = ' '.join(play.split(' ')[0:4])
-
-
-			## store all potential batters in the subject list
-			subject = []
-
-			for p in roster:
-				if bool([pl for pl in players[p.PLAYER_KEY] if(pl in start)]):
-					subject.append(p.PLAYER_KEY)
+			for play in plays:
+				play = play.replace('3a', ';').replace('unassisted', '')
+				play_details = {}
+				play_details['date'] = date
+				play_details['btk'] = team
+				play_details['ptk'] = ptk
+				play_details['description'] = play
+				## get the first 3 words -- contains the batters names
+				start = ' '.join(play.split(' ')[0:4])
 
 
-			## if more than 1 potential subject, check again, but don't look for last names
-			if len(subject) > 1:
+				## store all potential batters in the subject list
 				subject = []
+
 				for p in roster:
-					if bool([pl for pl in playersNotLast[p.PLAYER_KEY] if(pl in start)]):
+					if bool([pl for pl in players[p.PLAYER_KEY] if(pl in start)]):
 						subject.append(p.PLAYER_KEY)
 
-			subject = subject[0] if len(subject) > 0 else None
-			play_details['batter'] = subject
 
-			loc = [l for l in locMult if(l in play)]
-			if len(loc) == 0:
-				loc = [l for l in locations if(l in play)]
+				## if more than 1 potential subject, check again, but don't look for last names
+				if len(subject) > 1:
+					subject = []
+					for p in roster:
+						if bool([pl for pl in playersNotLast[p.PLAYER_KEY] if(pl in start)]):
+							subject.append(p.PLAYER_KEY)
 
-			if 'double play' in play:
-				loc = [str(play.split('play ')[1]).split(' ')[0]]
+				subject = subject[0] if len(subject) > 0 else None
+				play_details['batter'] = subject
 
-			indLoc = 1000
-			if len(loc) > 1:
-				for l in loc:
-					indexLoc = play.find(l)
+				loc = [l for l in locMult if(l in play)]
+				if len(loc) == 0:
+					loc = [l for l in locations if(l in play)]
 
-					if indexLoc < indLoc:
-						indLoc = indexLoc
-						loc = [l]
-			loc = loc[0].replace('.','').replace(',','').strip() if len(loc) > 0 else None
-			loc = None if loc == 'ss' and 'passed ball' in play else loc
-			play_details['location'] = loc
+				if 'double play' in play:
+					loc = [str(play.split('play ')[1]).split(' ')[0]]
 
-			out = [t for t in outMult if(t in play)]
-			if len(out) == 0:
-				out = [t for t in outcomes if(t in play)]
+				indLoc = 1000
+				if len(loc) > 1:
+					for l in loc:
+						indexLoc = play.find(l)
 
-			indOut = 1000
-			if len(out) > 1:
-				for t in out:
-					indexOut = play.find(t)
+						if indexLoc < indLoc:
+							indLoc = indexLoc
+							loc = [l]
+				loc = loc[0].replace('.','').replace(',','').strip() if len(loc) > 0 else None
+				loc = None if loc == 'ss' and 'passed ball' in play else loc
+				play_details['location'] = loc
 
-					if indexOut < indOut:
-						indOut = indexOut
-						out = [t]
-			out = out[0].strip() if len(out) > 0 else None
+				out = [t for t in outMult if(t in play)]
+				if len(out) == 0:
+					out = [t for t in outcomes if(t in play)]
 
-			if out is not None:
-				if out == 'error':
-					if loc in ['lf', 'rf', 'cf', 'left', 'right', 'center']:
-						play_details['outcome'] = 'FB'
+				indOut = 1000
+				if len(out) > 1:
+					for t in out:
+						indexOut = play.find(t)
+
+						if indexOut < indOut:
+							indOut = indexOut
+							out = [t]
+				out = out[0].strip() if len(out) > 0 else None
+
+				if out is not None:
+					if out == 'error':
+						if loc in ['lf', 'rf', 'cf', 'left', 'right', 'center']:
+							play_details['outcome'] = 'FB'
+						else:
+							play_details['outcome'] = 'GB'
 					else:
-						play_details['outcome'] = 'GB'
+						play_details['outcome'] = outDict[out]
 				else:
-					play_details['outcome'] = outDict[out]
-			else:
-				play_details['outcome'] = None
-			pbp = play_by_play(play_details['date'], play_details['batter'], play_details['btk'], play_details['ptk'], play_details['outcome'], play_details['location'], year, play_details['description'])
-			db.session.add(pbp)
-			db.session.commit()
-			allPlays.append(play_details)
+					play_details['outcome'] = None
+				pbp = play_by_play(play_details['date'], play_details['batter'], play_details['btk'], play_details['ptk'], play_details['outcome'], play_details['location'], year, play_details['description'])
+				db.session.add(pbp)
+				db.session.commit()
+				allPlays.append(play_details)
 
 	return jsonify(allPlays)
 
@@ -349,12 +360,16 @@ def scrapePlays():
 @app.route('/getData/<key>/<year>/<type>', methods = ['POST', 'GET'])
 def getData(key, year, type):
 	print(key, year, type)
-	if key != '' and year != '' and type != '' and len(key) < 10 and len(year) < 5 and len(type) < 4:
-		if type == 'pbp':
+	if key != '' and year != '' and type != '' and len(key) < 10 and len(year) < 5 and len(type) < 10:
+		if type == 'pbpT':
+			tab = 'PLAY_BY_PLAY'
+			keyCol = 'BATTER_TEAM_KEY'
+			order = 'DATE_KEY'
+		elif type == 'pbpP':
 			tab = 'PLAY_BY_PLAY'
 			keyCol = 'BATTER_PLAYER_KEY'
 			order = 'DATE_KEY'
-		else:
+		elif type == 'ros':
 			tab = 'PLAYER_DIM'
 			keyCol = 'TEAM_KEY'
 			order = 'FULL_NAME'
