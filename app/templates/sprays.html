@@ -4,8 +4,6 @@
 
 {% block content %}
 <html>
-    <div hidden class="success banner">  </div>
-    <div hidden class="failure banner">  </div>
   <div id = body>
   <table id = headTable>
     <tr>
@@ -21,7 +19,11 @@
       </table>
     </div>
     <div id = fieldDiv>
-      <svg id = field height=450 width=600></svg>
+      <svg id = field height=450 width=650></svg>
+      <div hidden id = playDiv>
+        <table id = playTable>
+        </table>
+      </div>
     </div>
   </div>
   <div hidden id = toolTip> </div>
@@ -49,33 +51,6 @@
 }
 
 
-#roster{
-  border-collapse: collapse;
-  width: 96%;
-  margin-left: 2%;
-  font-weight: normal;
-}
-
-#roster tr{
-  border-bottom: 1px solid rgb(254, 246, 235);
-}
-
-#roster td{
-  padding: 5px;
-  font-size: 20px;
-}
-
-#roster tr{
-  padding: 5px;
-  font-size: 28px;
-}
-
-#roster tr.row:hover{
-  background-color: rgb(254, 246, 235);
-  color: slategray;
-  cursor: pointer;
-}
-
 .selected{
   background-color: rgb(254, 246, 235);
   color: slategray;
@@ -85,7 +60,6 @@
   width: 100%;
   margin-top: 15px;
   display: flex;
-  position: relative;
   justify-content: space-between;
   align-items: flex-start;
 }
@@ -96,15 +70,26 @@
     justify-content: space-evenly;
   }
   #body{
-    width: 60% !important;
-    margin-left: 20% !important;
+    width: 70% !important;
+    margin-left: 15% !important;
+    text-align: center;
   }
   #rosterDiv{
-    max-height: 200px!important
+    max-height: 200px!important;
+    margin: auto;
+  }
+
+  #playDiv{
+    max-height: 200px!important;
+  }
+
+  #fieldDiv{
+    margin:auto;
   }
 
   #headTable{
-    width: 600px;
+    width: 650px;
+    margin: auto;
   }
 
 }
@@ -121,12 +106,70 @@
   margin-bottom: 20px;
   max-height: 450px;
   overflow: scroll;
-  float: left;
-  width: 600px;
+  width: 650px;
+}
+
+#roster{
+  border-collapse: collapse;
+  width: 96%;
+  margin-left: 2%;
+  font-weight: normal;
 }
 
 
+#roster td{
+  padding: 5px;
+  font-size: 20px;
+}
 
+#roster tr{
+  padding: 5px;
+  border-bottom: 1px solid rgb(254, 246, 235);
+}
+
+#roster tr.row:hover{
+  background-color: rgb(254, 246, 235);
+  color: slategray;
+  cursor: pointer;
+}
+
+
+#playDiv{
+  text-align: center;
+  border: 2px solid rgb(254, 246, 235);
+  background-color: slategray;
+  color: rgb(254, 246, 235);
+  border-radius: 5px;
+  box-sizing: 0px 0px 5px gray;
+  margin-top: 20px;
+  max-height: 200px;
+  overflow: scroll;
+  width: 650px;
+}
+
+
+#playTable{
+  border-collapse: collapse;
+  width: 96%;
+  margin-left: 2%;
+  font-weight: normal;
+  margin:2px;
+}
+
+
+#playTable td{
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  font-size: 15px;
+}
+
+
+#playTable tr{
+  border-bottom: 1px solid rgb(254, 246, 235);
+  padding: 5px;
+}
 
 
 #body{
@@ -155,7 +198,12 @@
 
 
 .infWedge, .ofWedge{
-  stroke: slategray;
+  stroke: black;
+  cursor: pointer
+}
+
+.selectedWedge{
+  stroke-width: 3 !important;
 }
 
 
@@ -171,7 +219,9 @@
   $('#searchTeam').click(function(d){
       $("#searchTeam").val('')
   });
-  function makeSpray(plays, name){
+  function makeSpray(plays, name, num){
+
+
     $('#field').empty()
     d3.selection.prototype.moveToFront = function() {
       return this.each(function(){
@@ -180,14 +230,13 @@
     };
     var colScale = d3.scaleLinear().domain([0,1]).range(['white', 'red'])
 
-    plays = plays.filter(function(d){ return d.LOCATION != null & d.LOCATION != 'null'})
+    plays = plays.filter(function(d){ return d.LOCATION != null & d.LOCATION != 'null' & d.OUTCOME != null})
     buckets = []
+    hrBuckets = []
     infPlays = plays.filter(function(d){ return ['3b', 'third base', 'ss', 'shortstop',
     'through the left side', 'up the middle', '2b', 'second base', 'through the right side',
     '1b', 'first base'].indexOf(d.LOCATION) > -1}).length
-    console.log(plays.filter(function(d){ return ['3b', 'third base', 'ss', 'shortstop',
-    'through the left side', 'up the middle', '2b', 'second base', 'through the right side',
-    '1b', 'first base'].indexOf(d.LOCATION) > -1}))
+
 
     ofPlays = plays.filter(function(d){ return ['lf', 'left', 'lf line', 'left center',
     'cf', 'center', 'rf', 'right', 'rf line', 'right center'].indexOf(d.LOCATION) > -1}).length
@@ -195,31 +244,55 @@
     locDict = {
       '1': ['3b', 'third base'],
       '2': ['ss', 'shortstop', 'through the left side'],
-      '3': ['up the middle'],
-      '4': ['2b', 'second base', 'through the right side'],
-      '5': ['1b', 'first base'],
-      '6': ['lf', 'left', 'lf line', 'left center'],
-      '7': ['cf', 'center'],
-      '8': ['rf', 'right', 'rf line', 'right center']
+      '3': ['2b', 'second base', 'through the right side'],
+      '4': ['1b', 'first base'],
+      '5': ['lf', 'left', 'lf line', 'left center'],
+      '6': ['cf', 'center'],
+      '7': ['rf', 'right', 'rf line', 'right center'],
+      '8': ['up the middle']
     }
 
     plotDict = {
-      '0': [205,320],
-      '1': [250,300],
-      '2': [300, 290],
-      '3': [350,300],
-      '4': [395,320],
-      '5': [140, 200],
-      '6': [300, 150],
-      '7': [460, 200]
+      '0': [240,320],
+      '1': [295,300],
+      '2': [355,300],
+      '3': [410,320],
+      '4': [165, 200],
+      '5': [325, 150],
+      '6': [485, 200]
+    }
+
+    hrDict = {
+      '4': [125, 80],
+      '5': [325, 30],
+      '6': [525, 80]
     }
 
     for(loc in locDict){
-      buckets.push({
-       'loc': loc,
-       'plays': plays.filter(function(d){return locDict[loc].indexOf(d.LOCATION.replace(';','')) > -1})
-      })
+      if(loc < 8){
+        buckets.push({
+         'loc': loc,
+         'plays': plays.filter(function(d){return locDict[loc].indexOf(d.LOCATION.replace(';','')) > -1})
+        })
+        hrBuckets.push({
+         'loc': loc,
+         'plays': plays.filter(function(d){return locDict[loc].indexOf(d.LOCATION.replace(';','')) > -1 & d.OUTCOME == 'HR'})
+        })
+      }else{
+        middle = plays.filter(function(d){return locDict[loc].indexOf(d.LOCATION.replace(';','')) > -1})
+        for(i = 0; i < middle.length; ++i){
+          ssRate = (buckets[1].plays.length+buckets[0].plays.length)/(infPlays)
+          console.log(ssRate)
+          if(Math.random() < ssRate){
+            buckets[1].plays.push(middle[i])
+          }else{
+            buckets[2].plays.push(middle[i])
+          }
+        }
+      }
     }
+
+
     margins = {'bottom': '10', 'left': '5', 'right': '5', 'top': '10'}
     height = d3.select('#field').attr('height')
     width = d3.select('#field').attr('width')
@@ -244,12 +317,41 @@
         .attr('d', arc)
         .attr('transform', `translate(-${width/2}, 0)`)
         .attr('class', 'infWedge')
+        .attr('index', i)
         .on('mouseenter', function(d){
           d3.select(this).moveToFront()
           d3.select(this).style('stroke-width', '3')
         })
         .on('mouseout', function(d){
           d3.select(this).style('stroke-width', '1')
+        })
+        .on('click', function(d){
+          $('.selectedWedge').removeClass('selectedWedge')
+          $(this).addClass('selectedWedge')
+          wedgePlays = buckets[$(this).attr('index')].plays.sort(function(a, b){
+            return d3.ascending(a.DATE_KEY, b.DATE_KEY)
+          })
+          $("#playTable").empty()
+          $('#playDiv').hide()
+          if(wedgePlays.length > 0){
+            $('#playDiv').show()
+            d3.select('#playTable')
+            .selectAll('tr.play')
+            .data(wedgePlays)
+            .enter()
+            .append('tr')
+            .attr('class', 'play')
+
+            d3.selectAll('tr.play')
+            .append('td').html(function(d){ return String(d.DATE_KEY).substring(4,6)+'-'+String(d.DATE_KEY).substring(6,8)+'-'+String(d.DATE_KEY).substring(0,4) })
+            .style('font-weight', 'bold')
+            .style('width', '30%')
+
+             d3.selectAll('tr.play')
+             .append('td')
+             .html(function(d){ return d.DESCRIPTION.length > 50 ? d.DESCRIPTION.split(';')[0].substring(0,50) + '...' : d.DESCRIPTION.split(';')[0]})
+             .style('width', '70%')
+          }
         })
         .style('fill', function(d){
           val = buckets[i].plays.length/infPlays
@@ -274,14 +376,16 @@
         .style('text-anchor', 'middle')
         .style('font-weight', 'bold')
       }
-      for(var i = infBuckets; i < buckets.length; ++i){
+
+
+      for(var i = infBuckets; i < buckets.length; i++){
         start = lfLine+(fieldWidth/ofBuckets)*(i-infBuckets)
         end = lfLine+(fieldWidth/ofBuckets)*((i-infBuckets)+1)
         arc = d3.arc()
           .innerRadius(190)
           .outerRadius(400)
           .startAngle(start)
-          .endAngle(end);
+          .endAngle(end)
 
 
 
@@ -289,12 +393,42 @@
         .attr('d', arc)
         .attr('transform', `translate(-${width/2}, 0)`)
         .attr('class', 'ofWedge')
+        .attr('index', i)
         .on('mouseenter', function(d){
           d3.select(this).moveToFront()
           d3.select(this).style('stroke-width', '3')
         })
         .on('mouseout', function(d){
           d3.select(this).style('stroke-width', '1')
+        })
+        .on('click', function(d){
+          $('.selectedWedge').removeClass('selectedWedge')
+          $(this).addClass('selectedWedge')
+          wedgePlays = buckets[$(this).attr('index')].plays.sort(function(a, b){
+            return d3.ascending(a.date, b.date)
+          })
+          $("#playTable").empty()
+          $('#playDiv').hide()
+          if(wedgePlays.length > 0){
+            $('#playDiv').show()
+            d3.select('#playTable')
+            .selectAll('tr.play')
+            .data(wedgePlays)
+            .enter()
+            .append('tr')
+            .attr('class', 'play')
+
+            d3.selectAll('tr.play')
+            .append('td').html(function(d){ return String(d.DATE_KEY).substring(4,6)+'-'+String(d.DATE_KEY).substring(6,8)+'-'+String(d.DATE_KEY).substring(0,4) })
+            .style('font-weight', 'bold')
+            .style('width', '30%')
+
+             d3.selectAll('tr.play')
+             .append('td')
+             .html(function(d){ return d.DESCRIPTION.length > 40 ? d.DESCRIPTION.substring(0,40) + '...' : d.DESCRIPTION})
+             .style('width', '70%')
+          }
+
         })
         .style('fill', function(d){
           val = buckets[i].plays.length/ofPlays
@@ -306,10 +440,14 @@
           }
         })
 
+
+
         if(ofPlays > 0){
           str = (Math.round(buckets[i].plays.length/ofPlays*100))+"%"
+          strHR = hrBuckets[i].plays.length
         }else{
           str = ''
+          strHR = ''
         }
         fieldSVG.append('text')
         .text(str)
@@ -318,11 +456,24 @@
         .style('font-size', '28px')
         .style('text-anchor', 'middle')
         .style('font-weight', 'bold')
+
+        fieldSVG.append('text')
+        .text(strHR)
+        .attr('x', hrDict[i][0])
+        .attr('y', hrDict[i][1])
+        .style('font-size', '20px')
+        .style('text-anchor', 'middle')
+        .style('font-weight', 'bold')
       }
 
       fieldSVG.append('text')
       .text(name)
       .attr('x', margins.left).attr('y', margins.top*2.5)
+      .style('font-size', '26px')
+
+      fieldSVG.append('text')
+      .text(`#${num}`)
+      .attr('x', margins.left).attr('y', margins.top*5.5)
       .style('font-size', '26px')
 
       fieldSVG.append('text')
@@ -338,6 +489,27 @@
       .style('text-anchor', 'end')
 
 
+      $('#playDiv').show()
+      d3.select('#playTable')
+      .selectAll('tr.play')
+      .data(plays.sort(function(a, b){
+        return d3.ascending(a.date, b.date)
+      }))
+      .enter()
+      .append('tr')
+      .attr('class', 'play')
+
+      d3.selectAll('tr.play')
+      .append('td').html(function(d){ return String(d.DATE_KEY).substring(4,6)+'-'+String(d.DATE_KEY).substring(6,8)+'-'+String(d.DATE_KEY).substring(0,4) })
+      .style('font-weight', 'bold')
+      .style('width', '30%')
+
+       d3.selectAll('tr.play')
+       .append('td')
+       .html(function(d){ return d.DESCRIPTION.length > 50 ? d.DESCRIPTION.split(';')[0].substring(0,50) + '...' : d.DESCRIPTION.split(';')[0]})
+       .style('width', '70%')
+
+
   }
 
   $(function(){
@@ -345,7 +517,8 @@
       source: teams,
       minLength:2,
       select: function(event, ui){
-        console.log(ui.item.value)
+        $("#playTable").empty()
+        $('#playDiv').hide()
         $('#searchTeam').val(ui.item.label)
         $('#field').empty()
         name = ui.item.value.name
@@ -368,11 +541,13 @@
             .append('tr')
             .attr('class', 'row')
             .on('click', function(d){
+              $("#playTable").empty()
+              $('#playDiv').hide()
               $('.selected').removeClass('selected')
               $(this).addClass('selected')
               $.get(Flask.url_for('getData', {key: d.PLAYER_KEY, year: d.YEAR, type: 'pbpP'}), function(data){
                 data = JSON.parse(data)
-                makeSpray(data, d.FULL_NAME)
+                makeSpray(data, d.FULL_NAME, d.NUMBER)
               })
             })
 
@@ -403,15 +578,6 @@
     }
     })
   })
-</script>
-
-<script >
-
-
-
-
-
-
 </script>
 
 {% endblock %}

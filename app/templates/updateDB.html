@@ -271,6 +271,7 @@ th.plays{
      .html(function(d){return '<div class = upd data-col = pbpT data-key ='+d.TEAM_KEY+' data-year = 2018>&#8634; </div>'})
 
      function toolTip(el, ev){
+       // clearTimeout()
        $('#toolTip').css('top', 0).css('left', 0)
        $("#toolTip").empty()
        child = $(el)
@@ -359,10 +360,10 @@ th.plays{
              .attr('class', 'dataDiv')
              .html(maxDate)
            }
-           setTimeout(function(){
-             $("#toolTip").hide()
-             $("#toolTip").empty() }
-            , 20000)
+           // setTimeout(function(){
+           //   $("#toolTip").hide()
+           //   $("#toolTip").empty() }
+           //  , 20000)
          }
        })
      }

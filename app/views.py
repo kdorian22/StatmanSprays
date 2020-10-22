@@ -166,8 +166,8 @@ def scrapePlays():
 		return 'no roster'
 	players = {}
 	playersNotLast = {}
-	## For each guy on the roster, list the different ways his name can be stored
 
+	## For each guy on the roster, list the different ways his name can be stored
 	for r in roster:
 		names = []
 		namesNotLast = []
@@ -175,6 +175,8 @@ def scrapePlays():
 		last = full[0].split(' ')
 		names.append(full[1] + ' ' + full[0])
 		names.append(full[1][0] + '. ' + full[0])
+		names.append(full[1][0] + '.' + full[0])
+		names.append(full[1][0] + full[0])
 		names.append(full[0] + ', ' + full[1][0]+'.')
 		names.append(full[0] + ', ' + full[1][0])
 		names.append(full[0] + ',' + full[1][0]+'.')
@@ -185,6 +187,8 @@ def scrapePlays():
 		names.append(r.FULL_NAME)
 		namesNotLast.append(full[1] + ' ' + full[0])
 		namesNotLast.append(full[1][0] + '. ' + full[0])
+		namesNotLast.append(full[1][0] + '.' + full[0])
+		namesNotLast.append(full[1][0] + full[0])
 		namesNotLast.append(full[0] + ', ' + full[1][0]+'.')
 		namesNotLast.append(full[0] + ', ' + full[1][0])
 		namesNotLast.append(full[0] + ',' + full[1][0]+'.')
