@@ -400,6 +400,10 @@ th.plays{
            loader.parent('td').css('background-color', 'red')
             $('.failure').text('Data error. Contact site administrator')
             $('.failure').slideDown()
+         }else if(data == 'no games'){
+           loader.parent('td').css('background-color', 'red')
+            $('.failure').text('No games played this season')
+            $('.failure').slideDown()
          }else{
            let team = init.filter(function(d){ return d.TEAM_KEY == key})[0].NAME
            let type = col == 'pbp' ? 'play by play data' : 'roster'
