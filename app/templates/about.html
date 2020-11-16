@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+{% extends 'base.html' %}
+{% block title %} About Us {% endblock %}
+
+{% block content %}
+<html>
+  <div id = all>
+    <div class = section>
+      <div class = head>  About Us </div> <hr>
+      Advance scouting can be a challenge for college baseball coaches.
+      Statman Sprays looks to make it a litle bit easier.
+      <br><br>
+      Using publically available play-by-play data, Statman Sprays
+      offers free, accurate spray charts for any NCAA baseball player dating back to 2018.
+      <br><br>
+      Use our spray charts to understand your opponents and efficiently position your defenders.
+    </div>
+
+    <div class = section>
+      <div class = head>  How does it work? </div> <hr>
+      Statman Sprays pulls rosters and play-by-play data for any team in the country straight from the
+        <a id = ncAnchor href = https://stats.ncaa.org target = '_blank'>NCAA stats repository</a>.
+        That data is cleaned, parsed, and stored in our public database and is available to any Statman Sprays user. <br> <br>
+        Statman Sprays was developed by a former D3 student manager and current professional software developer who has
+        spent years refining this process to bring you the most accurate and complete data possible.<br> <br>
+        We give you total control:
+        <li> Visit the UPDATE DB tab to extract data from NCAA stats repository and load it into our database.</li>
+        <li> If someone else has already loaded the data you are looking for, hover over the desired table cell to make sure it's up to date. Otherwise, you're all set. </li>
+        <li> From there, hop on over to the SPRAYS tab to visualize any batter’s batted ball tendencies </li>
+    </div>
+
+    <div class = section>
+      <div class = head>  FAQ </div> <hr>
+      <strong> Q: Can I look at a batter's entire career rather than just 1 year at a time? </strong>
+      <p> Because there is no unique way to identify players across years, spray charts are currently only available for 1 season at a time. </p> <br>
+
+      <strong> Q: Can I split the data out by pitcher side? </strong>
+      <p> Unfortunately, neither batter side not pitcher side is listed on the NCAA website or consistently on team sites. </p><br>
+
+      <strong> Q: How do you deal with balls in the gap? </strong>
+      <p> Balls in the gap as well as balls in the 5-6 or 3-4 holes are randomly assigned
+        to one of the two possible field sections according to that batter’s tendencies. For example, a batter with 30 BIP to CF and 10 to LF
+        will have balls hit to LCF placed in CF 75% of the time and in LF 25% of the time. <br> <br>
+        This calculation is performed when the spray chart is drawn and can lead to slight changes in individual charts each time it is drawn. </p>
+
+      <strong> Q: What happens to balls fielded by the pitcher or catcher? </strong>
+      <p> Balls fielded by the pitcher or catcher are included in the Inf BIP total, but now in any section of the spray chart.
+    </div>
+
+    <div class = section>
+      <div class = head >  Contact </div> <hr>
+      <div id = contact>StatmanSprays [at] gmail [dot] com</div>
+    </div>
+
+  </div>
+
+
+
+</html>
+
+<style>
+
+  #ncAnchor{
+    color: rgb(254, 246, 235);
+  }
+
+  #ncAnchor:hover{
+    color: black;
+  }
+
+  #contact{
+    text-align: center;
+    width: 100%;
+    margin-bottom: 20px;
+    margin-top: 20px
+    font-weight: bold;
+  }
+
+  #all{
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .section{
+    border: 2px solid rgb(254, 246, 235);
+    background-color: slategray;
+    color: rgb(254, 246, 235);
+    padding: 10px;
+    text-align: left;
+    font-size: 24px;
+    box-shadow: 0px 0px 5px gray;
+    margin: 20px;
+    width: 90%;
+    border-radius: 5px;
+  }
+
+  .head{
+    font-weight: bold;
+    font-size: 36px;
+    text-align: center
+  }
+
+  li{
+    margin-top: 20px
+  }
+
+  strong{
+    font-size: 30px
+  }
+
+</style>
+
+
+<script>
+
+</script>
+
+<script >
+
+
+
+
+
+
+</script>
+
+{% endblock %}

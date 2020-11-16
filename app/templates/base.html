@@ -17,21 +17,58 @@
   </head>
 
    <body>
-      <div id = header> <div id = links> <a href = "{{url_for('index')}}">HOME</a> | <a href = "{{url_for('sprays')}}">SPRAYS</a> | <a href = "{{url_for('updateDB')}}">UPDATE DB</a> </div> <!--<img id = icon src = 'static/field.png'> -->
-      <div id = title > <a id = titleAnchor href = "{{url_for('index')}}">STATMAN SPRAYS </a> </div>   </div>
+     <div id = page>
+      <div id = header>
+        <div id = links>
+          <a class = headAnchor href = "{{url_for('index')}}">HOME</a> |
+          <a class = headAnchor href = "{{url_for('sprays')}}">SPRAYS</a> |
+          <a class = headAnchor href = "{{url_for('updateDB')}}">UPDATE DB</a> |
+          <a class = headAnchor href = "{{url_for('about')}}">ABOUT</a>
+        </div>
+        <!--<img id = icon src = 'static/field.png'> -->
+        <div id = title > <a id = titleAnchor href = "{{url_for('index')}}">STATMAN SPRAYS </a> </div>
+      </div>
       <div id = content> {% block content %}{% endblock %}  </div>
+
+      <div id = footer> Statman Sprays |
+        <a class = footAnchor href = "{{url_for('index')}}">Home</a> |
+        <a class = footAnchor href = "{{url_for('sprays')}}">Sprays</a> |
+        <a class = footAnchor href = "{{url_for('updateDB')}}">Update DB</a> |
+        <a class = footAnchor href = "{{url_for('about')}}">About</a> |
+        <a class = footAnchor href = "{{url_for('about')}}/#Contact">Contact</a>
+    </div>
    </body>
 </html>
 <style>
+#footer{
+  color: slategray !important;
+  font-size: 12px;
+  position: absolute;
+  bottom: 5px;
+  left: 15px
+}
+
+.footAnchor{
+  color: slategray;
+  font-style: none;
+  text-decoration: none
+}
+
+#page{
+  position: relative;
+  min-height: 100vh;
+}
 
 #content{
   width: 100%;
+  padding-bottom: 30px
 }
 
 
 #titleAnchor{
   color: rgb(254, 246, 235) !important;
   text-decoration: none !important;
+  font-style: normal;
 }
 
 @media only screen and (max-width: 1200px) {
@@ -41,12 +78,13 @@
 
   #header{
     text-align: center;
+    justify-content: center !important
   }
 
   #title{
     margin-right: 5px;
     height: 80px;
-    font-size: 4vw;
+    font-size: 50px;
     line-height: 80px;
     letter-spacing: 6px;
     font-weight: bold;
@@ -62,7 +100,7 @@
   #title{
     margin-right: 5px;
     height: 80px;
-    font-size: 3.6vw;
+    font-size: 50px;
     line-height: 80px;
     letter-spacing: 6px;
     float:right;
@@ -74,7 +112,7 @@
 #links{
   height: 80px;
   line-height: 80px;
-  font-size: 2vw;
+  font-size: 30px;
   display: inline-block;
   margin-left: 20px;
   letter-spacing: 2px;
@@ -82,18 +120,18 @@
 
 
 
-#links a{
+.headAnchor{
   color: rgb(254, 246, 235) !important;
   text-decoration: none;
   cursor: pointer;
-}
-
-#links a:hover:not(#titleAnchor){
-  color: black !important;
-
+  font-style: normal;
 }
 
 
+.headAnchor:hover{
+  color: black;
+  text-decoration: underline;
+}
 
 #icon{
   height: 80px;
@@ -103,6 +141,8 @@
 }
 
 #header{
+  display: flex;
+  justify-content: space-between;
   width: 100%;
   position: relative;
   height: 80px;
@@ -110,6 +150,8 @@
   /* border-bottom: 2px solid rgb(254, 246, 235); */
   box-shadow: rgba(0, 0, 0, 0.4) 0px 0px 10px;
 }
+
+
 
   body{
     /* background-image:url("static/cover.jpg"); */

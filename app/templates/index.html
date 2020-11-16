@@ -3,13 +3,13 @@
 {% block title %}Statman Sprays{% endblock %}
 {% block content %}
 
-      <div id = division>
+      <div>
         <a class = redirect href = "{{url_for('sprays')}}"> <div class = pageSelect> Spray Charts  </div> </a>
             <!-- <br> <img src = "static/field.png" width=500px>  -->
          <a class = redirect href = "{{url_for('updateDB')}}"> <div class = pageSelect> Update Database  </div> </a>
             <!-- <br> <img src = "static/db.png" width=500px> -->
-
       </div>
+
 
 <style>
   /* img{
@@ -19,7 +19,8 @@
 
 .redirect{
   color: rgb(254, 246, 235);
-  text-decoration: none
+  text-decoration: none;
+  font-style: normal !important
 }
 
 @media only screen and (min-width: 1200px) {
@@ -38,7 +39,8 @@
       border-radius: 10px;
       background-color: slategray;
       color: rgb(254, 246, 235);
-      box-shadow: 0px 0px 10px gray
+      box-shadow: 0px 0px 10px gray;
+      font-style: normal;
     }
   }
 
@@ -57,7 +59,8 @@
     border-radius: 10px;
     background-color: slategray;
     color: rgb(254, 246, 235);
-    box-shadow: 0px 0px 10px gray
+    box-shadow: 0px 0px 10px gray;
+    font-style: normal;
 
   }
 }

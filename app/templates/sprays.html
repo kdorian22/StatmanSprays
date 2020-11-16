@@ -425,7 +425,7 @@
 
              d3.selectAll('tr.play')
              .append('td')
-             .html(function(d){ return d.DESCRIPTION.length > 40 ? d.DESCRIPTION.substring(0,40) + '...' : d.DESCRIPTION})
+             .html(function(d){ return d.DESCRIPTION.length > 50 ? d.DESCRIPTION.substring(0,50) + '...' : d.DESCRIPTION})
              .style('width', '70%')
           }
 
