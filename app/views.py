@@ -37,7 +37,7 @@ locMult = ['through the left side', 'through the right side', 'up the middle', '
 'right field line', 'left center', 'right center', 'third base', 'first bsae', 'second base',
 'rf line', 'lf line']
 
-outcomes = ['grounded','muffed','error','line','lined','flied','force','pop','single','double','triple','home','choice','foul','bunt']
+outcomes = ['grounded','muffed','error','line','lined','flied','fly','force','pop','single','double','triple','home','choice','foul','bunt']
 
 outMult = ['out at']
 
@@ -55,6 +55,7 @@ outDict = {
  'triple': '3B',
  'home': 'HR',
  'flied': 'FB',
+ 'fly': 'FB',
  'pop': 'FB',
  'foul': 'FB'
  }
@@ -183,7 +184,7 @@ def scrapePlays():
 	now = datetime.now()
 	time_now = int(str(now.year) + str(now.month) + str(now.day) + str(now.hour) + str(now.minute))
 
-	if allow == 1 or (time_now - time_last > 10):
+	if allow == 1 or (time_now - time_last > 5):
 		db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 0")
 		db.engine.execute(f"UPDATE ALLOW_SCRAPE SET TIME = {time_now}")
 		db.session.commit()

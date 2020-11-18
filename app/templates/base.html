@@ -5,6 +5,7 @@
     <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="https://d3js.org/d3-array.v2.min.js"></script>
     <script src="https://d3js.org/d3-shape.v2.min.js"></script>
     <!-- Load React. -->
     <!-- Note: when deploying, replace "development.js" with "production.min.js". -->
@@ -30,8 +31,8 @@
       </div>
       <div id = content> {% block content %}{% endblock %}  </div>
 
-      <div id = footer> Statman Sprays |
-        <a class = footAnchor href = "{{url_for('index')}}">Home</a> |
+      <div id = footer>
+        <a class = footAnchor href = "{{url_for('index')}}">Statman Sprays</a> |
         <a class = footAnchor href = "{{url_for('sprays')}}">Sprays</a> |
         <a class = footAnchor href = "{{url_for('updateDB')}}">Update DB</a> |
         <a class = footAnchor href = "{{url_for('about')}}">About</a> |
@@ -129,8 +130,8 @@
 
 
 .headAnchor:hover{
-  color: black;
-  text-decoration: underline;
+  color: black !important;
+  /* text-decoration: underline; */
 }
 
 #icon{
