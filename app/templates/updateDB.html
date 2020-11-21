@@ -389,7 +389,7 @@ th.plays{
        var year = $(this).data('year')
        if(col == 'pbpT'){
          var str = `{{url_for('scrapePlays')}}?team=${key}&year=${year}`
-         $('.wait').text('Scraping plays. This may take up to 2 minutes.')
+         $('.wait').text("Scraping plays. This may take up to 2 minutes. Don't refresh the page")
          $('.wait').slideDown()
        }else{
          var str = `{{url_for('scrapeRoster')}}?team=${key}&year=${year}`

@@ -246,7 +246,7 @@
     let hrBuckets = []
     var infPlays = plays.filter(function(d){ return ['3b', 'third base', 'ss', 'shortstop',
     'through the left side', 'up the middle', '2b', 'second base', 'through the right side',
-    '1b', 'first base'].indexOf(d.LOCATION) > -1})
+    '1b', 'first base', 'p', 'c'].indexOf(d.LOCATION) > -1})
 
     var ofPlays = plays.filter(function(d){ return ['lf', 'left', 'lf line', 'left center',
     'cf', 'center', 'rf', 'right', 'rf line', 'right center'].indexOf(d.LOCATION) > -1})
