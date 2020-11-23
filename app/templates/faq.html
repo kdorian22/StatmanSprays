@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+{% extends 'base.html' %}
+{% block title %} FAQ {% endblock %}
+
+{% block content %}
+<html>
+  <div id = all>
+
+
+    <div class = section>
+      <div class = head>  FAQ </div> <hr>
+      <strong> Q: My team currently pays for spray charts. Is Statman Sprays really free? </strong>
+      <p> Statman Sprays is 100% free to use and presents data that is as accurate as anything else out there.</p> <br>
+
+      <strong> Q: Where does the data come from? </strong>
+      <p> Statman Sprays pulls publically available play-by-play data from the <a id = ncAnchor href = https://stats.ncaa.org target = '_blank'>NCAA stats repository</a>
+      before it is cleaned and parsed to generate the spray charts.
+      <br><br>Our proprietary algorithm is tailored to handle NCCA play-by-play strings
+      and is able to correctly capture the batter, location, and outcome for >99% of all BIP.
+      </p> <br>
+
+      <strong> Q: Can I save a copy of a spray chart? </strong>
+      <p> Absolutely, click on the print icon next to a player's name to print that chart or to save it as a PDF.
+      </p> <br>
+
+      <!-- <strong> Q: Do you adjust for balls put in play against a defensive shift? </strong>
+      <p> No, we assume that all balls are put in play against a traditional defensive allignment.  </p> <br> -->
+
+      <strong> Q: What happens to balls fielded by the pitcher or catcher? </strong>
+      <p> Balls fielded by the pitcher or catcher are included in the Inf BIP total, but not in any section of the spray chart.</p> <br>
+
+      <strong> Q: How do you deal with balls in the gap? </strong>
+      <p> Balls in the gap, balls in the 5-6 or 3-4 holes, and balls up the middle are randomly assigned
+        to one of the two possible field sections according to that batter’s tendencies. For example, a batter with 30 BIP to CF and 10 to LF
+        will have balls hit to LCF placed in CF 75% of the time and in LF 25% of the time. <br> <br>
+        This calculation is performed when the spray chart is drawn and can lead to slight changes in individual charts each time it is drawn. </p> <br>
+
+      <!-- <strong> Q: Why don't the hit and out totals match up with the stats I see on team websites? </strong>
+      <p> Hit and out totals on each spray chart are aggregated from play-by-play strings which occassionally lack BIP locations or outomes.
+      <br> <br> We ignore those faulty data points resulting in numbers that don't always line up perfectly with other aggregations.   </p> <br> -->
+
+      <!-- <strong> Q: Can I look at a batter's entire career rather than just 1 year at a time? </strong>
+      <p> Because there is no way to identify unique players across multiple years, spray charts are currently only available for 1 season at a time. </p> <br> -->
+
+      <strong> Q: Can I split the charts out by pitcher side? </strong>
+      <p> Unfortunately, neither batter side nor pitcher side is reported on the NCAA website or consistently on team sites. </p><br>
+    </div>
+
+
+  </div>
+
+
+
+</html>
+
+<style>
+
+  #ncAnchor{
+    color: rgb(254, 246, 235);
+  }
+
+  #ncAnchor:hover{
+    color: black;
+  }
+
+  #contact{
+    text-align: center;
+    width: 100%;
+    margin-bottom: 20px;
+    margin-top: 20px;
+    font-weight: bold;
+  }
+
+  #all{
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .section{
+    border: 2px solid rgb(254, 246, 235);
+    background-color: slategray;
+    color: rgb(254, 246, 235);
+    padding: 10px;
+    text-align: left;
+    font-size: 24px;
+    box-shadow: 0px 0px 5px gray;
+    margin: 20px;
+    width: 90%;
+    border-radius: 5px;
+  }
+
+  .head{
+    font-weight: bold;
+    font-size: 36px;
+    text-align: center
+  }
+
+  li{
+    margin-top: 20px
+  }
+
+  strong{
+    font-size: 30px
+  }
+
+</style>
+
+
+<script>
+
+</script>
+
+<script >
+
+
+
+
+
+
+</script>
+
+{% endblock %}

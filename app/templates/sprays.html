@@ -13,6 +13,7 @@
   </table>
   <div id = container>
     <div id = rosterDiv>
+      <span hidden id = printAll> Print All </span>
       <span id = teamName> No Team Selected </span>
       <table id = roster>
 
@@ -35,6 +36,17 @@
 
 <style>
 
+#printAll{
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  cursor: pointer
+}
+
+#printAll:hover{
+  text-decoration: underline
+}
+
 #textTip{
   max-width: 400px;
   background-color: lightgray;
@@ -50,7 +62,7 @@
   margin-top: 5px
 }
 #teamName{
-  font-size: 40px;
+  font-size: 36px;
   font-weight: bold
 }
 
@@ -108,6 +120,7 @@
 
 
 #rosterDiv{
+  position: relative;
   text-align: center;
   border: 2px solid rgb(254, 246, 235);
   background-color: slategray;
@@ -144,6 +157,9 @@
   cursor: pointer;
 }
 
+.selected .print{
+  color: black
+}
 
 #playDiv{
   text-align: center;
@@ -241,7 +257,7 @@
     };
     var colScale = d3.scaleLinear().domain([0,1]).range(['white', 'red'])
 
-    var plays = plays.filter(function(d){ return d.LOCATION != null & d.LOCATION != 'null' & d.OUTCOME != null})
+    var plays = plays.filter(function(d){ return  d.OUTCOME != null & d.OUTCOME != 'null'})
     let buckets = []
     let hrBuckets = []
     var infPlays = plays.filter(function(d){ return ['3b', 'third base', 'ss', 'shortstop',
@@ -284,6 +300,7 @@
     }
 
     const outcomes = ['1B', '2B', '3B', 'HR', 'LD','FB', 'GB']
+
     const outNameMap = {
       '1B': '1B',
       '2B': '2B',
@@ -404,7 +421,7 @@
            .attr('class','hitHead')
            .text(function (d) {return outNameMap[d.outcome]})
            .attr('x', function(d){return 35*(d.index)+25})
-           .attr('y', height - 50)
+           .attr('y', height - 30)
            .style('color', 'black')
            .style('font-size', '18px')
            .style('text-decoration', 'underline')
@@ -418,7 +435,7 @@
             .attr('class','hitText')
             .text(function (d) {return d.num})
             .attr('x', function(d){return 35*(d.index)+25})
-            .attr('y', height - 30)
+            .attr('y', height - 10)
             .style('color', 'black')
             .style('font-size', '18px')
             .style('text-anchor', 'middle')
@@ -431,7 +448,7 @@
              .attr('class', 'typeHead')
              .text(function (d) {return outNameMap[d.outcome]})
              .attr('x', function(d){return 35*(d.index-4)+25})
-             .attr('y', height - 105)
+             .attr('y', height - 75)
              .style('color', 'black')
              .style('font-size', '18px')
              .style('text-decoration', 'underline')
@@ -445,7 +462,7 @@
               .attr('class','typeText')
               .text(function (d) {return d.num})
               .attr('x', function(d){return 35*(d.index-4)+25})
-              .attr('y', height - 85)
+              .attr('y', height - 55)
               .style('color', 'black')
               .style('font-size', '18px')
               .style('text-anchor', 'middle')
@@ -524,7 +541,7 @@
              d3.selectAll('tr.play')
              .append('td')
              .attr('class', 'playStr')
-             .html(function(d){ return d.DESCRIPTION.length > 50 ? d.DESCRIPTION.substring(0,50) + '...' : d.DESCRIPTION})
+             .html(function(d){ return d.DESCRIPTION.length > 50 ? d.DESCRIPTION.split(';')[0].substring(0,50) + '...' : d.DESCRIPTION.split(';')[0]})
              .style('width', '70%')
              // .on('mouseenter', function(d){
              //   $('#textTip').css('left', d3.event.pageX-50)
@@ -552,7 +569,7 @@
            .attr('class','hitHead')
            .text(function (d) {return outNameMap[d.outcome]})
            .attr('x', function(d){return 35*(d.index)+25})
-           .attr('y', height - 50)
+           .attr('y', height - 30)
            .style('color', 'black')
            .style('font-size', '18px')
            .style('text-decoration', 'underline')
@@ -566,7 +583,7 @@
             .attr('class','hitText')
             .text(function (d) {return d.num})
             .attr('x', function(d){return 35*(d.index)+25})
-            .attr('y', height - 30)
+            .attr('y', height - 10)
             .style('color', 'black')
             .style('font-size', '18px')
             .style('text-anchor', 'middle')
@@ -579,7 +596,7 @@
              .attr('class', 'typeHead')
              .text(function (d) {return outNameMap[d.outcome]})
              .attr('x', function(d){return 35*(d.index-4)+25})
-             .attr('y', height - 105)
+             .attr('y', height - 75)
              .style('color', 'black')
              .style('font-size', '18px')
              .style('text-decoration', 'underline')
@@ -593,7 +610,7 @@
               .attr('class','typeText')
               .text(function (d) {return d.num})
               .attr('x', function(d){return 35*(d.index-4)+25})
-              .attr('y', height - 85)
+              .attr('y', height - 55)
               .style('color', 'black')
               .style('font-size', '18px')
               .style('text-anchor', 'middle')
@@ -681,7 +698,7 @@
        .attr('class','hitHead')
        .text(function (d) {return outNameMap[d.outcome]})
        .attr('x', function(d){return 35*(d.index)+25})
-       .attr('y', height - 50)
+       .attr('y', height - 30)
        .style('color', 'black')
        .style('font-size', '18px')
        .style('text-decoration', 'underline')
@@ -695,7 +712,7 @@
         .attr('class','hitText')
         .text(function (d) {return d.num})
         .attr('x', function(d){return 35*(d.index)+25})
-        .attr('y', height - 30)
+        .attr('y', height - 10)
         .style('color', 'black')
         .style('font-size', '18px')
         .style('text-anchor', 'middle')
@@ -708,7 +725,7 @@
          .attr('class', 'typeHead')
          .text(function (d) {return outNameMap[d.outcome]})
          .attr('x', function(d){return 35*(d.index-4)+25})
-         .attr('y', height - 105)
+         .attr('y', height - 75)
          .style('color', 'black')
          .style('font-size', '18px')
          .style('text-decoration', 'underline')
@@ -722,7 +739,7 @@
           .attr('class','typeText')
           .text(function (d) {return d.num})
           .attr('x', function(d){return 35*(d.index-4)+25})
-          .attr('y', height - 85)
+          .attr('y', height - 55)
           .style('color', 'black')
           .style('font-size', '18px')
           .style('text-anchor', 'middle')
@@ -738,26 +755,8 @@
        .attr('class', 'playStr')
        .html(function(d){ return d.DESCRIPTION.length > 50 ? d.DESCRIPTION.split(';')[0].substring(0,50) + '...' : d.DESCRIPTION.split(';')[0]})
        .style('width', '70%')
-       // .on('mouseenter', function(d){
-       //   $('#textTip').css('left', d3.event.pageX-50)
-       //   $('#textTip').css('top', d3.event.pageY-50)
-       //   d3.select('#textTip').html(d.DESCRIPTION)
-       //   $('#textTip').show()
-       //
-       // })
-       // .on('mouseout', function(d){
-       //   $('#textTip').hide()
-       //   d3.select('#textTip').html('')
-       // })
-
 
   }
-
-
-  function aggOuts(data){
-
-  }
-
   $(function(){
       $("#searchTeam").autocomplete({
       source: teams,
@@ -778,7 +777,7 @@
             $("#roster").empty()
 
             d3.select('#roster').append('tr')
-            .html("<th>Name</th><th>Pos</th><th>Num</th><th> Year </th>")
+            .html("<th>Name</th><th>Pos</th><th>Num</th><th>Year</th><th></th>")
 
             d3.select('#roster')
             .selectAll('tr.row')
@@ -814,6 +813,21 @@
              .append('td')
              .html(function(d){ return d.CLASS} )
 
+             d3.selectAll('tr.row')
+             .append('td')
+             .attr('class', 'print')
+             .html(function(d){ return "<i class='fa'>&#xf02f</i>"})
+             .on('click', function(d){
+               if(d3.select(this.parentNode).classed('selected')){
+                 console.log(d.PLAYER_KEY)
+                 window.open("{{url_for('printSprays')}}?keys="+d.PLAYER_KEY)
+                }
+              })
+            $('#printAll').show()
+            $('#printAll').click(function(){
+              keyString = data.map(function(d){ return d.PLAYER_KEY }).join(',')
+              window.open("{{url_for('printSprays')}}?keys="+keyString)
+            })
 
 
 

@@ -1,6 +1,7 @@
 from flask import *
 from flask_jsglue import JSGlue
 from flask_sqlalchemy import SQLAlchemy
+import pdfkit
 import requests
 import pandas as pd
 from bs4 import BeautifulSoup
@@ -11,9 +12,11 @@ import subprocess
 from datetime import datetime
 from app import app, db
 from app.models import *
-
+from fuzzywuzzy import fuzz
+import Levenshtein as lev
 
 jsglue = JSGlue(app)
+app.config['PDF_FOLDER'] = 'static/pdf/'
 
 yearCodes = {
 		 '2020': '15204',
@@ -34,7 +37,7 @@ locations = ['1b', '2b', '3b', 'ss', ' p ', ' p.', ' p,',' p;' ' c ', ' c.', ' c
 ]
 
 locMult = ['through the left side', 'through the right side', 'up the middle', 'left field line',
-'right field line', 'left center', 'right center', 'third base', 'first bsae', 'second base',
+'right field line', 'left center', 'right center', 'third base', 'first base', 'second base',
 'rf line', 'lf line']
 
 outcomes = ['grounded','muffed','error','line','lined','flied','fly','force','pop','single','double','triple','home','choice','foul','bunt', 'out at']
@@ -133,6 +136,13 @@ def scrapeRoster():
 		db.session.commit()
 		exists = player_dim.query.filter_by(YEAR=str(year)).filter_by(TEAM_KEY=team).all()
 		if len(exists) > 0 and r == '':
+			db.session.commit()
+			db.engine.execute(f"""
+			UPDATE TEAM_DIM SET ACTIVE_RECORD = 0 WHERE TEAM_KEY = {team}
+			""")
+			db.session.commit()
+			db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 1")
+			db.session.commit()
 			return 'Already Scraped'
 		else:
 			player_dim.query.filter_by(YEAR=str(year)).filter_by(TEAM_KEY=team).delete()
@@ -148,7 +158,7 @@ def scrapeRoster():
 						text = cell.text.replace("\n", '')
 						text = cell.text.replace('nbsp&', '')
 						cells.append(text)
-					player = player_dim(cells[0], cells[1], cells[2], cells[3], year, team)
+					player = player_dim(cells[0].replace('â€™',"'"), cells[1], cells[2], cells[3], year, team)
 					db.session.add(player)
 				i = i+1
 				if i % 10 == 0:
@@ -176,6 +186,18 @@ def scrapeRoster():
 		return 'use'
 
 
+## Levenshtein Distance -- https://towardsdatascience.com/fuzzywuzzy-how-to-measure-string-distance-on-python-4e8852d7c18f
+def dist(a, b):
+	dist = 0
+	if len(a) > 3 and len(b) > 3:
+		dist = fuzz.ratio(a.lower(),b.lower())/100
+		dist2 = fuzz.partial_ratio(a.lower(),b.lower())
+	else:
+		return False
+	if dist >= (max([len(a), len(b)])-2)/max([len(a), len(b)]) or dist2 == 100:
+		return True
+
+
 @app.route('/scrapePlays', methods = ['POST', 'GET'])
 def scrapePlays():
 	db.session.commit()
@@ -188,120 +210,127 @@ def scrapePlays():
 
 	now = datetime.now()
 	time_now = int(str(now.year) + str(now.month) + str(now.day) + str(now.hour) + str(now.minute))
-	try:
-		if allow == 1 or (time_now - time_last >= 10):
-			db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 0")
-			db.engine.execute(f"UPDATE ALLOW_SCRAPE SET TIME = {time_now}")
+	# try:
+	if allow == 1 or (time_now - time_last >= 10):
+		db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 0")
+		db.engine.execute(f"UPDATE ALLOW_SCRAPE SET TIME = {time_now}")
+		db.session.commit()
+		team = request.values.get('team', '755')
+		year = request.values.get('year', '2020')
+		## Get team name
+
+		play_by_play.query.filter_by(YEAR=int(year)).filter_by(BATTER_TEAM_KEY=team).delete()
+
+
+		teamName = team_dim.query.filter_by(TEAM_KEY=team).first().NAME
+
+		## Get team roster
+		roster = player_dim.query.filter_by(TEAM_KEY=team).filter_by(YEAR=year).all()
+		if len(roster) == 0:
 			db.session.commit()
-			team = request.values.get('team', '755')
-			year = request.values.get('year', '2020')
-			## Get team name
+			db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 1")
+			db.session.commit()
+			return 'no roster'
+		players = {}
+		playersNotLast = {}
 
-			play_by_play.query.filter_by(YEAR=int(year)).filter_by(BATTER_TEAM_KEY=team).delete()
+		## For each guy on the roster, list the different ways his name can be stored
+		for r in roster:
+			names = []
+			namesNotLast = []
+			full = r.FULL_NAME.split(', ')
+			full = [f.replace(' ','') for f in full]
+			last = full[0].split(' ')
+			names.append(full[1] + ' ' + full[0])
+			names.append(full[1][0] + '. ' + full[0])
+			names.append(full[1][0] + '.' + full[0])
+			names.append(full[1][0] + full[0])
+			names.append(full[0] + ', ' + full[1][0]+'.')
+			names.append(full[0] + ', ' + full[1][0])
+			names.append(full[0] + ',' + full[1][0]+'.')
+			names.append(full[0] + ',' + full[1][0])
+			names.append(full[1][0:2] + '. ' + full[0])
+			names.append(full[1][0:3] + '. ' + full[0])
+			names.append(full[0] + ', ' + full[1][0:2]+'.')
+			names.append(full[0] + ', ' + full[1][0:3]+'.')
+			names.append(full[0])
+			names.append(full[0] + ' ' + full[1][0])
+			names.append(r.FULL_NAME)
+			namesNotLast.append(full[1] + ' ' + full[0])
+			namesNotLast.append(full[1][0] + '. ' + full[0])
+			namesNotLast.append(full[1][0] + '.' + full[0])
+			namesNotLast.append(full[1][0] + full[0])
+			namesNotLast.append(full[0] + ', ' + full[1][0]+'.')
+			namesNotLast.append(full[0] + ', ' + full[1][0])
+			namesNotLast.append(full[0] + ',' + full[1][0]+'.')
+			namesNotLast.append(full[0] + ',' + full[1][0])
+			namesNotLast.append(full[1][0:2] + '. ' + full[0])
+			namesNotLast.append(full[1][0:3] + '. ' + full[0])
+			namesNotLast.append(full[0] + ', ' + full[1][0:2]+'.')
+			namesNotLast.append(full[0] + ', ' + full[1][0:3]+'.')
+			namesNotLast.append(full[0] + ' ' + full[1][0])
+			namesNotLast.append(r.FULL_NAME)
+			if "'" in r.FULL_NAME:
+				names.append(r.FULL_NAME.replace("'",'').replace("'",''))
+				names.append(full[0].replace("'",'').replace("'",''))
+				namesNotLast.append(r.FULL_NAME.replace("'",'').replace("'",''))
+			if len(last) == 2:
+				names.append(last[0][0] + '. ' + last[1])
+				namesNotLast.append(last[0][0] + '. ' + last[1])
+			names = names + [x.upper() for x in names]
+			namesNotLast = namesNotLast + [x.upper() for x in namesNotLast]
+			players[r.PLAYER_KEY] = names
+			playersNotLast[r.PLAYER_KEY] = namesNotLast
+		unwanted = ['picked off', 'caught stealing', 'struck', 'walked', 'stole', 'for']
+		## start on the team-year roster page
+		start = f'https://stats.ncaa.org/team/{team}/roster/{yearCodes[year]}'
+		soup = BeautifulSoup(requests.get(start, headers = {"User-Agent":"Mozilla/5.0"}).content, 'lxml')
 
+		## Get possible links to list of games
+		direct = []
 
-			teamName = team_dim.query.filter_by(TEAM_KEY=team).first().NAME
+		for link in soup.findAll('a', attrs={'href': re.compile("^/teams")}):
+			direct.append(link.get('href'))
+		if len(direct) == 0:
+			db.session.commit()
+			db.engine.execute(f"""
+			UPDATE TEAM_DIM SET ACTIVE_RECORD = 0 WHERE TEAM_KEY = {team}
+			""")
+			db.session.commit()
+			db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 1")
+			db.session.commit()
+			return 'no'
 
-			## Get team roster
-			roster = player_dim.query.filter_by(TEAM_KEY=team).filter_by(YEAR=year).all()
-			if len(roster) == 0:
-				db.session.commit()
-				db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 1")
-				db.session.commit()
-				return 'no roster'
-			players = {}
-			playersNotLast = {}
+		if len(direct) < 3:
+			db.session.commit()
+			db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 1")
+			db.session.commit()
+			return 'no games'
 
-			## For each guy on the roster, list the different ways his name can be stored
-			for r in roster:
-				names = []
-				namesNotLast = []
-				full = r.FULL_NAME.split(', ')
-				last = full[0].split(' ')
-				names.append(full[1] + ' ' + full[0])
-				names.append(full[1][0] + '. ' + full[0])
-				names.append(full[1][0] + '.' + full[0])
-				names.append(full[1][0] + full[0])
-				names.append(full[0] + ', ' + full[1][0]+'.')
-				names.append(full[0] + ', ' + full[1][0])
-				names.append(full[0] + ',' + full[1][0]+'.')
-				names.append(full[0] + ',' + full[1][0])
-				names.append(full[1][0:2] + '. ' + full[0])
-				names.append(full[1][0:3] + '. ' + full[0])
-				names.append(full[0])
-				names.append(r.FULL_NAME)
-				namesNotLast.append(full[1] + ' ' + full[0])
-				namesNotLast.append(full[1][0] + '. ' + full[0])
-				namesNotLast.append(full[1][0] + '.' + full[0])
-				namesNotLast.append(full[1][0] + full[0])
-				namesNotLast.append(full[0] + ', ' + full[1][0]+'.')
-				namesNotLast.append(full[0] + ', ' + full[1][0])
-				namesNotLast.append(full[0] + ',' + full[1][0]+'.')
-				namesNotLast.append(full[0] + ',' + full[1][0])
-				namesNotLast.append(full[1][0:2] + '. ' + full[0])
-				namesNotLast.append(full[1][0:3] + '. ' + full[0])
-				namesNotLast.append(r.FULL_NAME)
-				if "'" in r.FULL_NAME:
-					names.append(r.FULL_NAME.replace("'",'').replace("'",''))
-					names.append(full[0].replace("'",'').replace("'",''))
-					namesNotLast.append(r.FULL_NAME.replace("'",'').replace("'",''))
-				if len(last) == 2:
-					names.append(last[0][0] + '. ' + last[1])
-					namesNotLast.append(last[0][0] + '. ' + last[1])
-				names = names + [x.upper() for x in names]
-				namesNotLast = namesNotLast + [x.upper() for x in namesNotLast]
-				players[r.PLAYER_KEY] = names
-				playersNotLast[r.PLAYER_KEY] = namesNotLast
+		## Get the link to the list of games. There are two similar links; we need the third one down
+		url = "https://stats.ncaa.org" + direct[2]
+		soup = BeautifulSoup(requests.get(url, headers = {"User-Agent":"Mozilla/5.0"}).content, 'lxml')
 
-			unwanted = ['picked off', 'caught stealing', 'struck', 'walked', 'stole', 'for']
-			## start on the team-year roster page
-			start = f'https://stats.ncaa.org/team/{team}/roster/{yearCodes[year]}'
-			soup = BeautifulSoup(requests.get(start, headers = {"User-Agent":"Mozilla/5.0"}).content, 'lxml')
+		## Get all the box score links. Different attribute depending on year
+		links = []
+		target = 'BOX_SCORE_WINDOW' if int(year) >= 2019 else 'TEAM_WIN'
+		for link in soup.findAll('a', attrs={'target': target}):
+			links.append(link.get('href'))
 
-			## Get possible links to list of games
-			direct = []
-
-			for link in soup.findAll('a', attrs={'href': re.compile("^/teams")}):
-				direct.append(link.get('href'))
-			if len(direct) == 0:
-				db.session.commit()
-				db.engine.execute(f"""
-				UPDATE TEAM_DIM SET ACTIVE_RECORD = 0 WHERE TEAM_KEY = {team}
-				""")
-				db.session.commit()
-				db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 1")
-				db.session.commit()
-				return 'no'
-
-			if len(direct) < 3:
-				db.session.commit()
-				db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 1")
-				db.session.commit()
-				return 'no games'
-
-			## Get the link to the list of games. There are two similar links; we need the third one down
-			url = "https://stats.ncaa.org" + direct[2]
+		## Get all the play by play links from the box score links
+		pbp = []
+		boxes = [f'https://stats.ncaa.org/{s}' for s in links]
+		for url in boxes[0:]:
 			soup = BeautifulSoup(requests.get(url, headers = {"User-Agent":"Mozilla/5.0"}).content, 'lxml')
+			link = soup.find('a', attrs={'href': re.compile("/play_by_play")})
+			if link is not None:
+				pbp.append(link.get('href'))
 
-			## Get all the box score links. Different attribute depending on year
-			links = []
-			target = 'BOX_SCORE_WINDOW' if int(year) >= 2019 else 'TEAM_WIN'
-			for link in soup.findAll('a', attrs={'target': target}):
-				links.append(link.get('href'))
-
-			## Get all the play by play links from the box score links
-			pbp = []
-			boxes = [f'https://stats.ncaa.org/{s}' for s in links]
-			for url in boxes[0:]:
-				soup = BeautifulSoup(requests.get(url, headers = {"User-Agent":"Mozilla/5.0"}).content, 'lxml')
-				link = soup.find('a', attrs={'href': re.compile("/play_by_play")})
-				if link is not None:
-					pbp.append(link.get('href'))
-
-			## For each game, get all of the plays with intended batter team
-			games = [f'https://stats.ncaa.org/{s}' for s in pbp]
-			allPlays = []
-			for game in games:
+		## For each game, get all of the plays with intended batter team
+		games = [f'https://stats.ncaa.org/{s}' for s in pbp]
+		allPlays = []
+		for game in games:
+			try:
 				plays = []
 
 				soup = BeautifulSoup(requests.get(game, headers = {"User-Agent":"Mozilla/5.0"}).content, 'lxml')
@@ -345,7 +374,7 @@ def scrapePlays():
 							play_details['ptk'] = ptk
 							play_details['description'] = play
 							## get the first 3 words -- contains the batters names
-							start = ' '.join(play.split(' ')[0:4])
+							start = ' '.join(play.split(' ')[0:3])
 
 
 							## store all potential batters in the subject list
@@ -362,6 +391,45 @@ def scrapePlays():
 								for p in roster:
 									if bool([pl for pl in playersNotLast[p.PLAYER_KEY] if(pl in start)]):
 										subject.append(p.PLAYER_KEY)
+
+							## if still more than 1, check if one is a pitcher
+							if len(subject) > 1:
+								ros = [r.PLAYER_KEY for r in roster if r.PLAYER_KEY in subject and r.POSITION.upper() not in ('P', 'RP', 'SP', 'RHP', 'LHP', 'LHRP', 'RHRP', 'LHSP', 'RHSP')]
+								if len(ros) == 1:
+									subject = []
+									subject.append(ros[0])
+
+							## if there are still 2 check to see which one comes first and which one is closest if they start at the same spot
+
+
+							## if no potential subjects check to see if they just missed the last couple letters
+							if len(subject) == 0:
+								for p in roster:
+									if bool([pl for pl in players[p.PLAYER_KEY] if(pl[0:max([int(len(pl)*.66), 6])] in start)]):
+										subject.append(p.PLAYER_KEY)
+
+							# Or check if theres a slight misspell
+							if len(subject) == 0:
+								for p in roster:
+									if bool([pl for pl in players[p.PLAYER_KEY] if(dist(pl,start.split(' ')[0]))]):
+										subject.append(p.PLAYER_KEY)
+							# Or check if theres a slight misspell
+							if len(subject) == 0:
+								for p in roster:
+									if bool([pl for pl in players[p.PLAYER_KEY] if(dist(pl,' '.join(start.split(' ')[0:2])))]):
+										subject.append(p.PLAYER_KEY)
+
+							# Or check if theres a slight misspell
+							if len(subject) == 0:
+								for p in roster:
+									if bool([pl for pl in players[p.PLAYER_KEY] if(dist(pl,' '.join(start.split(' ')[0:3])))]):
+										subject.append(p.PLAYER_KEY)
+
+
+
+							print(start, subject)
+
+
 
 							subject = subject[0] if len(subject) > 0 else None
 							play_details['batter'] = subject
@@ -415,25 +483,27 @@ def scrapePlays():
 							else:
 								play_details['outcome'] = None
 
-							pbp = play_by_play(play_details['date'], play_details['batter'], play_details['btk'], play_details['ptk'], play_details['outcome'], play_details['location'], year, play_details['description'])
-							db.session.add(pbp)
-							db.session.commit()
+							# pbp = play_by_play(play_details['date'], play_details['batter'], play_details['btk'], play_details['ptk'], play_details['outcome'], play_details['location'], year, play_details['description'])
+							# db.session.add(pbp)
+							# db.session.commit()
 							allPlays.append(play_details)
-			db.session.commit()
-			db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 1")
-			db.session.commit()
-			return jsonify(allPlays)
-		else:
-			return 'use'
-	except:
-		db.session.commit()
-		db.engine.execute(f"""
-		UPDATE TEAM_DIM SET ACTIVE_RECORD = 0 WHERE TEAM_KEY = {team}
-		""")
+			except:
+				continue
 		db.session.commit()
 		db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 1")
 		db.session.commit()
-		return 'no'
+		return jsonify(allPlays)
+	else:
+		return 'use'
+	# except:
+	# 	db.session.commit()
+	# 	db.engine.execute(f"""
+	# 	UPDATE TEAM_DIM SET ACTIVE_RECORD = 0 WHERE TEAM_KEY = {team}
+	# 	""")
+	# 	db.session.commit()
+	# 	db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 1")
+	# 	db.session.commit()
+	# 	return 'no'
 
 
 @app.route('/getData/<key>/<year>/<type>', methods = ['POST', 'GET'])
@@ -507,11 +577,27 @@ def sprays():
 	JOIN TEAM_DIM t on t.TEAM_KEY = a.TEAM_KEY
 	ORDER BY NAME, a.YEAR
 	""")
-	return render_template('sprays.html', teams=teams, data = json.dumps([dict(s) for s in teams]))
+	return render_template('sprays.html', data = json.dumps([dict(s) for s in teams]))
+
+@app.route('/printSprays', methods = ['POST', 'GET'])
+def printSprays():
+	keys = request.values.get('keys', '144')
+	keyList = list(keys.split(','))
+	plays = list(db.engine.execute(f"""
+	SELECT d.FULL_NAME, d.NUMBER, p.* FROM PLAY_BY_PLAY p
+	JOIN PLAYER_DIM d on d.PLAYER_KEY = p.BATTER_PLAYER_KEY
+	WHERE BATTER_PLAYER_KEY in ({keys})
+	"""))
+	return render_template('printSprays.html', keys = keyList, plays = json.dumps([dict(s) for s in plays]))
+
 
 @app.route('/about')
 def about():
 	return render_template('about.html')
+
+@app.route('/faq')
+def faq():
+	return render_template('faq.html')
 
 
 @app.route('/resetDB')
@@ -555,14 +641,14 @@ def allPlays():
 		play['play'] = d.DESCRIPTION
 		play['location'] = d.LOCATION
 		play['outcome'] = d.OUTCOME
+		play['active_record'] = d.ACTIVE_RECORD
 		data.append(play)
 
 	if p == 'p':
 		return jsonify(data)
 
-
-
 	return render_template('allPlays.html', plays = plays, playsJS = json.dumps([dict(r) for r in playsORG]))
+
 
 @app.route('/PBPWrite')
 def PBPWrite():

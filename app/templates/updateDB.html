@@ -12,7 +12,7 @@
   <table id = headTable>
     <tr>
       <td id = name><h1 id = pageHead>  </h1> </td>
-      <td id = search><input id =  searchTeam type="text" placeholder="Find Team..."></td>
+      <td id = search><input id =  searchTeam type="text" placeholder=" Find Team..."></td>
     </tr>
 </table>
   <table id = teamTable>
@@ -389,7 +389,7 @@ th.plays{
        var year = $(this).data('year')
        if(col == 'pbpT'){
          var str = `{{url_for('scrapePlays')}}?team=${key}&year=${year}`
-         $('.wait').text("Scraping plays. This may take up to 2 minutes. Don't refresh the page")
+         $('.wait').text("Gathering data. This may take a few minutes. Don't refresh the page.")
          $('.wait').slideDown()
        }else{
          var str = `{{url_for('scrapeRoster')}}?team=${key}&year=${year}`
@@ -416,7 +416,7 @@ th.plays{
             $('.use').slideDown()
          }else{
            let team = init.filter(function(d){ return d.TEAM_KEY == key})[0].NAME
-           let type = col == 'pbp' ? 'play by play data' : 'roster'
+           let type = col == 'pbpT' ? 'play by play data' : 'roster'
            loader.parent('td').addClass('done')
            loader.parent('td').css('background-color', 'rgb(102, 204, 145)').css('color', 'white')
            $('.success').text(`${team + ' ' + year + ' ' + type} loaded successfully.` )

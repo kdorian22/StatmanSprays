@@ -14,6 +14,8 @@
     {{ JSGlue.include() }}
     <!-- JSX -->
     <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+    <!-- font awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <title>{% block title %}{% endblock %}</title>
   </head>
 
@@ -24,7 +26,8 @@
           <a class = headAnchor href = "{{url_for('index')}}">HOME</a> |
           <a class = headAnchor href = "{{url_for('sprays')}}">SPRAYS</a> |
           <a class = headAnchor href = "{{url_for('updateDB')}}">UPDATE DB</a> |
-          <a class = headAnchor href = "{{url_for('about')}}">ABOUT</a>
+          <a class = headAnchor href = "{{url_for('about')}}">ABOUT</a> |
+          <a class = headAnchor href = "{{url_for('faq')}}">FAQ</a>
         </div>
         <!--<img id = icon src = 'static/field.png'> -->
         <div id = title > <a id = titleAnchor href = "{{url_for('index')}}">STATMAN SPRAYS </a> </div>
@@ -36,6 +39,7 @@
         <a class = footAnchor href = "{{url_for('sprays')}}">Sprays</a> |
         <a class = footAnchor href = "{{url_for('updateDB')}}">Update DB</a> |
         <a class = footAnchor href = "{{url_for('about')}}">About</a> |
+        <a class = footAnchor href = "{{url_for('faq')}}">FAQ</a> |
         <a class = footAnchor href = "{{url_for('about')}}#contact">Contact</a>
     </div>
    </body>

@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<head>
+  <head>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <script src="https://d3js.org/d3-array.v2.min.js"></script>
+    <script src="https://d3js.org/d3-shape.v2.min.js"></script>
+    <title>Print Sprays</title>
+  </head>
+</head>
+<html>
+<body>
+  <div id = body>
+    {% for key in keys %}
+    <div>
+      <svg class = field height=420 width=650 id = field{{key}}> </svg>
+    </div>
+    {% endfor %}
+  </div>
+</body>
+</html>
+
+<style>
+
+.field{
+}
+
+.ofWedge, .infWedge{
+  stroke: black;
+}
+
+#body{
+  font-family: trebuchet MS;
+  text-align: center;
+}
+
+</style>
+
+
+<script>
+var plays = {{plays|safe}}
+var keys = {{keys|safe}}
+if(plays.length > 0){
+  for(key of keys){
+    player = plays.filter(function(d){
+      return d.BATTER_PLAYER_KEY == key
+    })
+    if(player.length > 5){
+      var playerName = player[0].FULL_NAME
+      var playerNum = player[0].NUMBER
+      var svg = '#field'+key
+      makeSpray(player, playerName, playerNum, svg,key)
+    }else{
+      $('#field'+key).hide()
+    }
+  }
+  setTimeout(function(){ print(); }, 500)
+}else{
+  $('#body').html("<span style = 'font-size: 30px; margin-top: 30px;'>No Plays Found. Contact site administrator is this is in error</span>")
+  $('body').css('background-color', 'lightgray')
+}
+
+
+function makeSpray(plays, name, num, fieldSVG,id){
+
+    var colScale = d3.scaleLinear().domain([0,1]).range(['white', 'red'])
+
+    var plays = plays.filter(function(d){ return d.OUTCOME != null & d.OUTCOME != 'null'})
+    let buckets = []
+    let hrBuckets = []
+    var infPlays = plays.filter(function(d){ return ['3b', 'third base', 'ss', 'shortstop',
+    'through the left side', 'up the middle', '2b', 'second base', 'through the right side',
+    '1b', 'first base', 'p', 'c'].indexOf(d.LOCATION) > -1})
+
+    var ofPlays = plays.filter(function(d){ return ['lf', 'left', 'lf line', 'left center',
+    'cf', 'center', 'rf', 'right', 'rf line', 'right center'].indexOf(d.LOCATION) > -1})
+
+    plays = infPlays.concat(ofPlays)
+
+    infPlays = infPlays.length
+    ofPlays = ofPlays.length
+
+    const locDict = {
+      '1': ['3b', 'third base'],
+      '2': ['ss', 'shortstop', 'through the left side'],
+      '3': ['2b', 'second base', 'through the right side'],
+      '4': ['1b', 'first base'],
+      '5': ['lf', 'left', 'lf line', 'left center'],
+      '6': ['cf', 'center'],
+      '7': ['rf', 'right', 'rf line', 'right center'],
+      '8': ['up the middle']
+    }
+
+    const plotDict = {
+      '0': [240,290],
+      '1': [295,270],
+      '2': [355,270],
+      '3': [410,290],
+      '4': [165, 170],
+      '5': [325, 120],
+      '6': [485, 170]
+    }
+
+    const hrDict = {
+      '4': [125, 70],
+      '5': [325, 20],
+      '6': [525, 70]
+    }
+
+    const outcomes = ['1B', '2B', '3B', 'HR', 'LD','FB', 'GB']
+    const outNameMap = {
+      '1B': '1B',
+      '2B': '2B',
+      '3B': '3B',
+      'HR': 'HR',
+      'LD': 'LO',
+      'FB': 'FO',
+      'GB': 'GO'
+    }
+
+    for(loc in locDict){
+      if(loc < 8){
+        buckets.push({
+         'loc': loc,
+         'plays': plays.filter(function(d){return locDict[loc].indexOf(d.LOCATION.replace(';','')) > -1})
+        })
+        hrBuckets.push({
+         'loc': loc,
+         'plays': plays.filter(function(d){return locDict[loc].indexOf(d.LOCATION.replace(';','')) > -1 & d.OUTCOME == 'HR'})
+        })
+      }else{
+        middle = plays.filter(function(d){return locDict[loc].indexOf(d.LOCATION.replace(';','')) > -1})
+        for(i = 0; i < middle.length; ++i){
+          ssRate = (buckets[1].plays.length+buckets[0].plays.length)/(infPlays)
+          if(Math.random() < ssRate){
+            buckets[1].plays.push(middle[i])
+          }else{
+            buckets[2].plays.push(middle[i])
+          }
+        }
+      }
+    }
+
+
+    var margins = {'bottom': '5', 'left': '5', 'right': '5', 'top': '5'}
+    var height = d3.select(fieldSVG).attr('height')
+    var width = d3.select(fieldSVG).attr('width')
+    var field = d3.select(fieldSVG).append('g').attr('transform', `translate(${width}, ${height-margins.bottom})`)
+    var fieldSVG = d3.select(fieldSVG).style('border', '1px solid black')
+
+
+    var lfLine = -Math.PI/4
+    var fieldWidth = Math.PI/2
+    var ofBuckets = 3
+    var infBuckets = buckets.length - ofBuckets
+
+      for(var i = 0; i < infBuckets; ++i){
+        wedgePlays = buckets[i].plays.sort(function(a, b){
+          return d3.ascending(a.DATE_KEY, b.DATE_KEY)
+        })
+
+        var start = lfLine+(fieldWidth/infBuckets)*i
+        var end = lfLine+(fieldWidth/infBuckets)*(i+1)
+        var arc = d3.arc()
+          .innerRadius(0)
+          .outerRadius(190)
+          .startAngle(start)
+          .endAngle(end);
+
+        field.append('path')
+        .attr('d', arc)
+        .attr('transform', `translate(-${width/2}, 0)`)
+        .attr('class', 'infWedge')
+        .attr('index', i)
+        .style('fill', function(d){
+          val = buckets[i].plays.length/infPlays
+          val = val > .6 ? .6 : val
+          if(!isNaN(parseFloat(val))){
+            return colScale(val)
+          }else{
+            return 'lightgray'
+          }
+        })
+
+        if(infPlays > 0){
+          str = (Math.round(buckets[i].plays.length/infPlays*100))+"%"
+        }else{
+          str = ''
+        }
+        fieldSVG.append('text')
+        .text(str)
+        .attr('x', plotDict[i][0])
+        .attr('y', plotDict[i][1])
+        .style('font-size', '18px')
+        .style('text-anchor', 'middle')
+        .style('font-weight', 'bold')
+      }
+
+
+      for(var i = infBuckets; i < buckets.length; i++){
+        wedgePlays = buckets[i].plays.sort(function(a, b){
+          return d3.ascending(a.DATE_KEY, b.DATE_KEY)
+        })
+
+        start = lfLine+(fieldWidth/ofBuckets)*(i-infBuckets)
+        end = lfLine+(fieldWidth/ofBuckets)*((i-infBuckets)+1)
+        arc = d3.arc()
+          .innerRadius(190)
+          .outerRadius(390)
+          .startAngle(start)
+          .endAngle(end)
+
+
+
+        field.append('path')
+        .attr('d', arc)
+        .attr('transform', `translate(-${width/2}, 0)`)
+        .attr('class', 'ofWedge')
+        .attr('index', i)
+        .style('fill', function(d){
+          val = buckets[i].plays.length/ofPlays
+          val = val > .6 ? .6 : val
+          if(!isNaN(parseFloat(val))){
+            return colScale(val)
+          }else{
+            return 'lightgray'
+          }
+        })
+
+
+
+        if(ofPlays > 0){
+          str = (Math.round(buckets[i].plays.length/ofPlays*100))+"%"
+          strHR = hrBuckets[i].plays.length
+        }else{
+          str = ''
+          strHR = ''
+        }
+        fieldSVG.append('text')
+        .text(str)
+        .attr('x', plotDict[i][0])
+        .attr('y', plotDict[i][1])
+        .style('font-size', '28px')
+        .style('text-anchor', 'middle')
+        .style('font-weight', 'bold')
+
+        fieldSVG.append('text')
+        .text(strHR)
+        .attr('x', hrDict[i][0])
+        .attr('y', hrDict[i][1])
+        .style('font-size', '20px')
+        .style('text-anchor', 'middle')
+        .style('font-weight', 'bold')
+      }
+
+      fieldSVG.append('text')
+      .text(name )
+      .attr('x', margins.left).attr('y', margins.top*5)
+      .style('font-size', '22px')
+
+      fieldSVG.append('text')
+      .text(`#${num}` + ' - ' + String(plays[0].YEAR))
+      .attr('x', margins.left).attr('y', margins.top*9.5)
+      .style('font-size', '22px')
+
+      fieldSVG.append('text')
+      .text(`Total Inf BIP: ${infPlays}`)
+      .attr('x', width - margins.right).attr('y', height-margins.bottom)
+      .style('font-size', '22px')
+      .style('text-anchor', 'end')
+
+      fieldSVG.append('text')
+      .text(`Total OF BIP: ${ofPlays}`)
+      .attr('x', width - margins.right).attr('y', margins.top*5)
+      .style('font-size', '22px')
+      .style('text-anchor', 'end')
+
+
+      var outMap = []
+      for(i = 0; i < outcomes.length; ++i){
+        outMap.push({'index': i, 'outcome': outcomes[i], 'num': plays.filter(function(d){ return d.OUTCOME == outcomes[i]}).length})
+      }
+
+      fieldSVG.selectAll(".hitHead")
+       .data(outMap.filter(function(d){ return ['1B', '2B', '3B', 'HR'].indexOf(d.outcome) > -1}))
+       .enter()
+       .append("text")
+       .attr('class','hitHead')
+       .text(function (d) {return outNameMap[d.outcome]})
+       .attr('x', function(d){return 35*(d.index)+25})
+       .attr('y', height - 30)
+       .style('color', 'black')
+       .style('font-size', '18px')
+       .style('text-decoration', 'underline')
+       .style('font-weight', 'bold')
+       .style('text-anchor', 'middle')
+
+       fieldSVG.selectAll(".hitText")
+        .data(outMap.filter(function(d){ return ['1B', '2B', '3B', 'HR'].indexOf(d.outcome) > -1}))
+        .enter()
+        .append("text")
+        .attr('class','hitText')
+        .text(function (d) {return d.num})
+        .attr('x', function(d){return 35*(d.index)+25})
+        .attr('y', height - 10)
+        .style('color', 'black')
+        .style('font-size', '18px')
+        .style('text-anchor', 'middle')
+
+
+        fieldSVG.selectAll(".typeHead")
+         .data(outMap.filter(function(d){ return ['GB', 'FB', 'LD'].indexOf(d.outcome) > -1}))
+         .enter()
+         .append("text")
+         .attr('class', 'typeHead')
+         .text(function (d) {return outNameMap[d.outcome]})
+         .attr('x', function(d){return 35*(d.index-4)+25})
+         .attr('y', height - 75)
+         .style('color', 'black')
+         .style('font-size', '18px')
+         .style('text-decoration', 'underline')
+         .style('font-weight', 'bold')
+         .style('text-anchor', 'middle')
+
+         fieldSVG.selectAll(".typeText")
+          .data(outMap.filter(function(d){ return ['GB', 'FB', 'LD'].indexOf(d.outcome) > -1}))
+          .enter()
+          .append("text")
+          .attr('class','typeText')
+          .text(function (d) {return d.num})
+          .attr('x', function(d){return 35*(d.index-4)+25})
+          .attr('y', height - 55)
+          .style('color', 'black')
+          .style('font-size', '18px')
+          .style('text-anchor', 'middle')
+
+
+      d3.selectAll('tr.play')
+      .append('td').html(function(d){ return String(d.DATE_KEY).substring(4,6)+'-'+String(d.DATE_KEY).substring(6,8)+'-'+String(d.DATE_KEY).substring(0,4) })
+      .style('font-weight', 'bold')
+      .style('width', '30%')
+
+       d3.selectAll('tr.play')
+       .append('td')
+       .attr('class', 'playStr')
+       .html(function(d){ return d.DESCRIPTION.length > 50 ? d.DESCRIPTION.split(';')[0].substring(0,50) + '...' : d.DESCRIPTION.split(';')[0]})
+       .style('width', '70%')
+}
+
+
+</script>
