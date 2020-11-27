@@ -117,52 +117,24 @@ def scrapeRoster():
 	year = request.values.get('year','2020')
 	team = request.values.get('team','')
 	r = request.values.get('r', '')
-
-	db.session.commit()
-	allow = list(db.engine.execute(f"""
-	SELECT * from ALLOW_SCRAPE
-	"""))[0].ALLOW
-	time_last = list(db.engine.execute(f"""
-	SELECT * from ALLOW_SCRAPE
-	"""))[0].TIME
-
-	now = datetime.now()
-	time_now = int(str(now.year) + str(now.month) + str(now.day) + str(now.hour) + str(now.minute))
-
-	if allow == 1 or (time_now - time_last > 10):
-		db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 0")
-		db.engine.execute(f"UPDATE ALLOW_SCRAPE SET TIME = {time_now}")
+	try:
 		db.session.commit()
-		exists = player_dim.query.filter_by(YEAR=str(year)).filter_by(TEAM_KEY=team).all()
-		if len(exists) > 0 and r == '':
+		allow = list(db.engine.execute(f"""
+		SELECT * from ALLOW_SCRAPE
+		"""))[0].ALLOW
+		time_last = list(db.engine.execute(f"""
+		SELECT * from ALLOW_SCRAPE
+		"""))[0].TIME
+
+		now = datetime.now()
+		time_now = int(str(now.year) + str(now.month) + str(now.day) + str(now.hour) + str(now.minute))
+
+		if allow == 1 or (time_now - time_last > 10):
+			db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 0")
+			db.engine.execute(f"UPDATE ALLOW_SCRAPE SET TIME = {time_now}")
 			db.session.commit()
-			db.engine.execute(f"""
-			UPDATE TEAM_DIM SET ACTIVE_RECORD = 0 WHERE TEAM_KEY = {team}
-			""")
-			db.session.commit()
-			db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 1")
-			db.session.commit()
-			return 'Already Scraped'
-		else:
-			player_dim.query.filter_by(YEAR=str(year)).filter_by(TEAM_KEY=team).delete()
-			db.session.commit()
-			i = 0
-			url=f'https://stats.ncaa.org/team/{team}/roster/{yearCodes[year]}'
-			soup = BeautifulSoup(requests.get(url, headers = {"User-Agent":"Mozilla/5.0"}).content, 'lxml')
-			table = soup.find('tbody')
-			if table is not None:
-				for row in table.findAll('tr'):
-					cells = []
-					for cell in row.findAll('td'):
-						text = cell.text.replace("\n", '')
-						text = cell.text.replace('nbsp&', '')
-						cells.append(text)
-					player = player_dim(cells[0].replace('â€™',"'"), cells[1], cells[2], cells[3], year, team)
-					db.session.add(player)
-				i = i+1
-				if i % 10 == 0:
-					db.session.commit()
-			else:
+			exists = player_dim.query.filter_by(YEAR=str(year)).filter_by(TEAM_KEY=team).all()
+			if len(exists) > 0 and r == '':
 				db.session.commit()
 				db.engine.execute(f"""
 				UPDATE TEAM_DIM SET ACTIVE_RECORD = 0 WHERE TEAM_KEY = {team}
@@ -170,19 +142,49 @@ def scrapeRoster():
 				db.session.commit()
 				db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 1")
 				db.session.commit()
-				return 'no'
+				return 'Already Scraped'
+			else:
+				player_dim.query.filter_by(YEAR=str(year)).filter_by(TEAM_KEY=team).delete()
+				db.session.commit()
+				i = 0
+				url=f'https://stats.ncaa.org/team/{team}/roster/{yearCodes[year]}'
+				soup = BeautifulSoup(requests.get(url, headers = {"User-Agent":"Mozilla/5.0"}).content, 'lxml')
+				table = soup.find('tbody')
+				if table is not None:
+					for row in table.findAll('tr'):
+						cells = []
+						for cell in row.findAll('td'):
+							text = cell.text.replace("\n", '')
+							text = cell.text.replace('nbsp&', '')
+							cells.append(text)
+						player = player_dim(cells[0].replace('â€™',"'"), cells[1], cells[2], cells[3], year, team)
+						db.session.add(player)
+					i = i+1
+					if i % 10 == 0:
+						db.session.commit()
+				else:
+					db.session.commit()
+					# db.engine.execute(f"""
+					# UPDATE TEAM_DIM SET ACTIVE_RECORD = 0 WHERE TEAM_KEY = {team}
+					# """)
+					db.session.commit()
+					db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 1")
+					db.session.commit()
+					return 'no'
 
 
-		change = player_dim.query.filter_by(NUMBER=4).filter_by(TEAM_KEY=16).filter_by(CLASS='So').first()
-		change.ACTIVE_RECORD = 0
-		db.session.commit()
-		players = list(db.engine.execute(f"SELECT * FROM PLAYER_DIM WHERE YEAR = '{year}' and TEAM_KEY = {team}"))
-		db.session.commit()
-		db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 1")
-		db.session.commit()
-		return json.dumps([dict(e) for e in players])
-	else:
-		return 'use'
+			change = player_dim.query.filter_by(NUMBER=4).filter_by(TEAM_KEY=16).filter_by(CLASS='So').first()
+			change.ACTIVE_RECORD = 0
+			db.session.commit()
+			players = list(db.engine.execute(f"SELECT * FROM PLAYER_DIM WHERE YEAR = '{year}' and TEAM_KEY = {team}"))
+			db.session.commit()
+			db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 1")
+			db.session.commit()
+			return json.dumps([dict(e) for e in players])
+		else:
+			return 'use'
+	except:
+		return 'no'
 
 
 ## Levenshtein Distance -- https://towardsdatascience.com/fuzzywuzzy-how-to-measure-string-distance-on-python-4e8852d7c18f
