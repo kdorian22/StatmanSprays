@@ -13,6 +13,10 @@ from fuzzywuzzy import fuzz
 import Levenshtein as lev
 import gc
 
+
+
+
+
 jsglue = JSGlue(app)
 app.config['PDF_FOLDER'] = 'static/pdf/'
 
