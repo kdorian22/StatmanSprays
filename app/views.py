@@ -1,14 +1,11 @@
 from flask import *
 from flask_jsglue import JSGlue
 from flask_sqlalchemy import SQLAlchemy
-import pdfkit
 import requests
 import pandas as pd
 from bs4 import BeautifulSoup
 import numpy as np
 import re
-import os, sys
-import subprocess
 from datetime import datetime
 from app import app, db
 from app.models import *
