@@ -1,1 +1,1 @@
-from app import app, views, models
+from statman import app, views, models
