@@ -174,7 +174,8 @@ def scrapeRoster():
 
 
 			change = player_dim.query.filter_by(NUMBER=4).filter_by(TEAM_KEY=16).filter_by(CLASS='So').first()
-			change.ACTIVE_RECORD = 0
+			if change is not None:
+				change.ACTIVE_RECORD = 0
 			db.session.commit()
 			players = list(db.engine.execute(f"SELECT * FROM PLAYER_DIM WHERE YEAR = '{year}' and TEAM_KEY = {team}"))
 			db.session.commit()
