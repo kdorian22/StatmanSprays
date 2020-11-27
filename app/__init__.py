@@ -2,6 +2,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__)
+print(app.config)
 from app.config import Config
 app.config.from_object(Config)
 
