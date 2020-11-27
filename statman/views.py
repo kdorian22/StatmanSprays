@@ -12,6 +12,7 @@ from statman.models import *
 from fuzzywuzzy import fuzz
 import Levenshtein as lev
 import gc
+import time
 
 
 jsglue = JSGlue(app)
@@ -210,309 +211,300 @@ def calcDist(a, b):
 
 @app.route('/scrapePlays', methods = ['POST', 'GET'])
 def scrapePlays():
+	team = request.values.get('team', '755')
+	year = request.values.get('year', '2020')
+	## Get team name
+
+
+	teamName = team_dim.query.filter_by(TEAM_KEY=team).first().NAME
+
+	## Get team roster
+	roster = player_dim.query.filter_by(TEAM_KEY=team).filter_by(YEAR=year).all()
+	if len(roster) == 0:
+		return 'no roster'
+	players = {}
+	playersNotLast = {}
+
+	## For each guy on the roster, list the different ways his name can be stored
+	for r in roster:
+		names = []
+		full = r.FULL_NAME.split(', ')
+		fullNS = full
+		full = [f.replace(' ','') for f in full]
+		last = fullNS[0].split(' ')
+		names.append(full[1] + ' ' + full[0])
+		names.append(full[1][0] + '. ' + full[0])
+		names.append(full[1][0] + '.' + full[0])
+		names.append(full[1][0] + full[0])
+		names.append(full[0] + ', ' + full[1][0]+'.')
+		names.append(full[0] + ', ' + full[1][0])
+		names.append(full[0] + ',' + full[1][0]+'.')
+		names.append(full[0] + ',' + full[1][0])
+		names.append(full[1][0:2] + '. ' + full[0])
+		names.append(full[1][0:3] + '. ' + full[0])
+		names.append(full[0] + ', ' + full[1][0:2]+'.')
+		names.append(full[0] + ', ' + full[1][0:3]+'.')
+		names.append(full[0] + ' ' + full[1][0])
+		names.append(r.FULL_NAME)
+		namesNotLast = names
+		names.append(full[0])
+		if "'" in r.FULL_NAME:
+			names.append(r.FULL_NAME.replace("'",'').replace("'",''))
+			names.append(full[0].replace("'",'').replace("'",''))
+			namesNotLast.append(r.FULL_NAME.replace("'",'').replace("'",''))
+		if len(last) == 2:
+			names.append(last[0][0] + '. ' + last[1])
+			namesNotLast.append(last[0][0] + '. ' + last[1])
+		names = names + [x.upper() for x in names]
+		namesNotLast = namesNotLast + [x.upper() for x in namesNotLast]
+		players[r.PLAYER_KEY] = names
+		playersNotLast[r.PLAYER_KEY] = namesNotLast
+	unwanted = ['picked off', 'caught stealing', 'struck', 'walked', 'stole', 'for']
+	## start on the team-year roster page
+	start = f'https://stats.ncaa.org/team/{team}/roster/{yearCodes[year]}'
+	soup = BeautifulSoup(requests.get(start, headers = {"User-Agent":"Mozilla/5.0"}).content, 'lxml')
+
+	## Get possible links to list of games
+	direct = []
+
+	for link in soup.findAll('a', attrs={'href': re.compile("^/teams")}):
+		direct.append(link.get('href'))
+	if len(direct) == 0:
+		# db.session.commit()
+		# db.engine.execute(f"""
+		# UPDATE TEAM_DIM SET ACTIVE_RECORD = 0 WHERE TEAM_KEY = {team}
+		# """)
+		# db.session.commit()
+		return 'no'
+
+	if len(direct) < 3:
+		# db.session.commit()
+		# db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 1")
+		# db.session.commit()
+		return 'no games'
+
+	## Get the link to the list of games. There are two similar links; we need the third one down
+	url = "https://stats.ncaa.org" + direct[2]
+	soup = BeautifulSoup(requests.get(url, headers = {"User-Agent":"Mozilla/5.0"}).content, 'lxml')
+
+	## Get all the box score links. Different attribute depending on year
+	links = []
+	target = 'BOX_SCORE_WINDOW' if int(year) >= 2019 else 'TEAM_WIN'
+	for link in soup.findAll('a', attrs={'target': target}):
+		links.append(link.get('href'))
+
+	## Get all the play by play links from the box score links
+	pbp = []
+	boxes = [f'https://stats.ncaa.org/{s}' for s in links]
+	for url in boxes[0:]:
+		soup = BeautifulSoup(requests.get(url, headers = {"User-Agent":"Mozilla/5.0"}).content, 'lxml')
+		link = soup.find('a', attrs={'href': re.compile("/play_by_play")})
+		if link is not None:
+			pbp.append(link.get('href'))
+
+	## For each game, get all of the plays with intended batter team
+	games = [f'https://stats.ncaa.org/{s}' for s in pbp]
+	allPlays = []
+	for game in games:
+		try:
+			plays = []
+
+			soup = BeautifulSoup(requests.get(game, headers = {"User-Agent":"Mozilla/5.0"}).content, 'lxml')
+			## filter out missing games
+			if len(soup) > 1:
+			## Get the date from the top of the play by play page
+				try:
+					date = soup.find(text='Game Date:').parent.parent.findNext('td', attrs={'class': None}).text.strip()
+					date = date[6:10] + date[0:2] + date[3:5]
+				except:
+					date = None
+
+				## Plays are stored in a 3-column table. This is how we identify which column we want
+				index = 10
+				for i, td in enumerate(soup.find('table', {'class': 'mytable', 'width': '1000px'}).find('tr', {'class': 'grey_heading'}).findAll('td')):
+					if td.text != teamName and td.text != 'Score':
+						oppTeamName = td.text
+					if td.text == teamName or (td.text in teamName.split()):
+						index = i
+
+				if index < 10:
+					oppTeam = team_dim.query.filter_by(NAME=oppTeamName).first()
+					if oppTeam != None:
+						ptk = oppTeam.TEAM_KEY
+					else:
+						ptk = None
+
+
+					for table in soup.findAll('table', {'class': 'mytable', 'width': '1000px'}):
+						for play in table.findAll('tr', {'class': None}):
+							## Select the correct column
+							string = play.select_one(f"tr td:nth-of-type({index+1})").text.replace("\n", '')
+							if len(string) > 5 and len([pl for pl in unwanted if(pl in string)]) == 0:
+								plays.append(string)
+
+					for play in plays:
+						play = play.replace('3a', ';').replace('unassisted', '')
+						play_details = {}
+						play_details['date'] = date
+						play_details['btk'] = team
+						play_details['ptk'] = ptk
+						play_details['description'] = play
+						## get the first 3 words -- contains the batters names
+						start = ' '.join(play.split(' ')[0:3])
+
+
+						## store all potential batters in the subject list
+						subject = []
+
+						for p in roster:
+							if bool([pl for pl in players[p.PLAYER_KEY] if(pl in start)]):
+								subject.append(p.PLAYER_KEY)
+
+
+						## if more than 1 potential subject, check again, but don't look for last names
+						if len(subject) > 1:
+							subject = []
+							for p in roster:
+								if bool([pl for pl in playersNotLast[p.PLAYER_KEY] if(pl in start)]):
+									subject.append(p.PLAYER_KEY)
+
+						## if still more than 1, check if one is a pitcher
+						if len(subject) > 1:
+							ros = [r.PLAYER_KEY for r in roster if r.PLAYER_KEY in subject and r.POSITION.upper() not in ('P', 'RP', 'SP', 'RHP', 'LHP', 'LHRP', 'RHRP', 'LHSP', 'RHSP')]
+							if len(ros) == 1:
+								subject = []
+								subject.append(ros[0])
+
+
+						# ## if no potential subjects check to see if they just missed the last couple letters
+						# if len(subject) == 0:
+						# 	for p in roster:
+						# 		if bool([pl for pl in players[p.PLAYER_KEY] if(pl[0:max([int(len(pl)*.66), 6])] in start)]):
+						# 			subject.append(p.PLAYER_KEY)
+
+						# Or check if theres a slight misspell in the first word
+						if len(subject) == 0:
+							for p in roster:
+								if bool([pl for pl in players[p.PLAYER_KEY] if(dist(pl,start.split(' ')[0]))]):
+									subject.append(p.PLAYER_KEY)
+
+						# Or check if theres a slight misspell in the first 2 words
+						if len(subject) == 0:
+							for p in roster:
+								if bool([pl for pl in players[p.PLAYER_KEY] if(dist(pl,' '.join(start.split(' ')[0:2])))]):
+									subject.append(p.PLAYER_KEY)
+
+						# Or check if theres a slight misspell in the first 3 words
+						if len(subject) == 0:
+							for p in roster:
+								if bool([pl for pl in players[p.PLAYER_KEY] if(dist(pl,' '.join(start.split(' ')[0:3])))]):
+									subject.append(p.PLAYER_KEY)
+
+						# if there are still 2 check to see which one comes first and which one is closest if they start at the same spot
+						if len(subject) > 1:
+							cor = []
+							distance = 0
+							for s in subject:
+								for p in players[s]:
+									distNew = calcDist(p, ' '.join(start.split(' ')[0:3]))
+									if distNew > distance:
+										distance = distNew
+										cor = []
+										cor.append(s)
+							subject = cor
+
+						subject = subject[0] if len(subject) > 0 else None
+
+
+						play_details['batter'] = subject
+
+						loc = [l for l in locMult if(l in play)]
+						if len(loc) == 0:
+							loc = [l for l in locations if(l in play)]
+
+						if 'double play' in play:
+							dpLoc = [str(play.split('play')[1]).split(' ')]
+							for l in dpLoc:
+								if l in locations:
+									loc = l
+									break
+
+						indLoc = 1000
+						if len(loc) > 1:
+							for l in loc:
+								indexLoc = play.find(l)
+
+								if indexLoc < indLoc:
+									indLoc = indexLoc
+									loc = [l]
+						loc = loc[0].replace('.','').replace(',','').strip() if len(loc) > 0 else None
+						loc = None if loc == 'ss' and 'passed ball' in play else loc
+						play_details['location'] = loc
+
+						out = [t for t in outcomes if(t in play)]
+
+
+						indOut = 1000
+						if len(out) > 1:
+							for t in out:
+								indexOut = play.find(t)
+
+								if indexOut < indOut:
+									indOut = indexOut
+									out = [t]
+						out = out[0].strip() if len(out) > 0 else None
+
+
+						if out is not None:
+							if out == 'error':
+								if loc in ['lf', 'rf', 'cf', 'left', 'right', 'center']:
+									play_details['outcome'] = 'FB'
+								else:
+									play_details['outcome'] = 'GB'
+							else:
+								play_details['outcome'] = outDict[out]
+						else:
+							play_details['outcome'] = None
+
+						if play_details['outcome'] == None and 'to' in start:
+							play_details['batter'] = None
+						allPlays.append(play_details)
+		except:
+			continue
+
+	now = datetime.now()
+	time_last = list(db.engine.execute(f"""
+	SELECT * from ALLOW_SCRAPE
+	"""))[0].TIME
 	db.session.commit()
 	allow = list(db.engine.execute(f"""
 	SELECT * from ALLOW_SCRAPE
 	"""))[0].ALLOW
-	time_last = list(db.engine.execute(f"""
-	SELECT * from ALLOW_SCRAPE
-	"""))[0].TIME
-
-	now = datetime.now()
 	time_now = int(str(now.year) + str(now.month) + str(now.day) + str(now.hour) + str(now.minute))
-	# try:
-	if allow == 1 or (time_now - time_last >= 10):
-		db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 0")
-		db.engine.execute(f"UPDATE ALLOW_SCRAPE SET TIME = {time_now}")
-		db.session.commit()
-		team = request.values.get('team', '755')
-		year = request.values.get('year', '2020')
-		## Get team name
-
-		play_by_play.query.filter_by(YEAR=int(year)).filter_by(BATTER_TEAM_KEY=team).delete()
-
-
-		teamName = team_dim.query.filter_by(TEAM_KEY=team).first().NAME
-
-		## Get team roster
-		roster = player_dim.query.filter_by(TEAM_KEY=team).filter_by(YEAR=year).all()
-		if len(roster) == 0:
-			db.session.commit()
-			db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 1")
-			db.session.commit()
-			return 'no roster'
-		players = {}
-		playersNotLast = {}
-
-		## For each guy on the roster, list the different ways his name can be stored
-		for r in roster:
-			names = []
-			full = r.FULL_NAME.split(', ')
-			fullNS = full
-			full = [f.replace(' ','') for f in full]
-			last = fullNS[0].split(' ')
-			names.append(full[1] + ' ' + full[0])
-			names.append(full[1][0] + '. ' + full[0])
-			names.append(full[1][0] + '.' + full[0])
-			names.append(full[1][0] + full[0])
-			names.append(full[0] + ', ' + full[1][0]+'.')
-			names.append(full[0] + ', ' + full[1][0])
-			names.append(full[0] + ',' + full[1][0]+'.')
-			names.append(full[0] + ',' + full[1][0])
-			names.append(full[1][0:2] + '. ' + full[0])
-			names.append(full[1][0:3] + '. ' + full[0])
-			names.append(full[0] + ', ' + full[1][0:2]+'.')
-			names.append(full[0] + ', ' + full[1][0:3]+'.')
-			names.append(full[0] + ' ' + full[1][0])
-			names.append(r.FULL_NAME)
-			namesNotLast = names
-			names.append(full[0])
-			if "'" in r.FULL_NAME:
-				names.append(r.FULL_NAME.replace("'",'').replace("'",''))
-				names.append(full[0].replace("'",'').replace("'",''))
-				namesNotLast.append(r.FULL_NAME.replace("'",'').replace("'",''))
-			if len(last) == 2:
-				names.append(last[0][0] + '. ' + last[1])
-				namesNotLast.append(last[0][0] + '. ' + last[1])
-			names = names + [x.upper() for x in names]
-			namesNotLast = namesNotLast + [x.upper() for x in namesNotLast]
-			players[r.PLAYER_KEY] = names
-			playersNotLast[r.PLAYER_KEY] = namesNotLast
-		unwanted = ['picked off', 'caught stealing', 'struck', 'walked', 'stole', 'for']
-		## start on the team-year roster page
-		start = f'https://stats.ncaa.org/team/{team}/roster/{yearCodes[year]}'
-		soup = BeautifulSoup(requests.get(start, headers = {"User-Agent":"Mozilla/5.0"}).content, 'lxml')
-
-		## Get possible links to list of games
-		direct = []
-
-		for link in soup.findAll('a', attrs={'href': re.compile("^/teams")}):
-			direct.append(link.get('href'))
-		if len(direct) == 0:
-			db.session.commit()
-			db.engine.execute(f"""
-			UPDATE TEAM_DIM SET ACTIVE_RECORD = 0 WHERE TEAM_KEY = {team}
-			""")
-			db.session.commit()
-			db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 1")
-			db.session.commit()
-			return 'no'
-
-		if len(direct) < 3:
-			db.session.commit()
-			db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 1")
-			db.session.commit()
-			return 'no games'
-
-		## Get the link to the list of games. There are two similar links; we need the third one down
-		url = "https://stats.ncaa.org" + direct[2]
-		soup = BeautifulSoup(requests.get(url, headers = {"User-Agent":"Mozilla/5.0"}).content, 'lxml')
-
-		## Get all the box score links. Different attribute depending on year
-		links = []
-		target = 'BOX_SCORE_WINDOW' if int(year) >= 2019 else 'TEAM_WIN'
-		for link in soup.findAll('a', attrs={'target': target}):
-			links.append(link.get('href'))
-
-		## Get all the play by play links from the box score links
-		pbp = []
-		boxes = [f'https://stats.ncaa.org/{s}' for s in links]
-		for url in boxes[0:]:
-			soup = BeautifulSoup(requests.get(url, headers = {"User-Agent":"Mozilla/5.0"}).content, 'lxml')
-			link = soup.find('a', attrs={'href': re.compile("/play_by_play")})
-			if link is not None:
-				pbp.append(link.get('href'))
-
-		## For each game, get all of the plays with intended batter team
-		games = [f'https://stats.ncaa.org/{s}' for s in pbp]
-		allPlays = []
-		for game in games:
-			try:
-				plays = []
-
-				soup = BeautifulSoup(requests.get(game, headers = {"User-Agent":"Mozilla/5.0"}).content, 'lxml')
-				## filter out missing games
-				if len(soup) > 1:
-				## Get the date from the top of the play by play page
-					try:
-						date = soup.find(text='Game Date:').parent.parent.findNext('td', attrs={'class': None}).text.strip()
-						date = date[6:10] + date[0:2] + date[3:5]
-					except:
-						date = None
-
-					## Plays are stored in a 3-column table. This is how we identify which column we want
-					index = 10
-					for i, td in enumerate(soup.find('table', {'class': 'mytable', 'width': '1000px'}).find('tr', {'class': 'grey_heading'}).findAll('td')):
-						if td.text != teamName and td.text != 'Score':
-							oppTeamName = td.text
-						if td.text == teamName or (td.text in teamName.split()):
-							index = i
-
-					if index < 10:
-						oppTeam = team_dim.query.filter_by(NAME=oppTeamName).first()
-						if oppTeam != None:
-							ptk = oppTeam.TEAM_KEY
-						else:
-							ptk = None
-
-
-						for table in soup.findAll('table', {'class': 'mytable', 'width': '1000px'}):
-							for play in table.findAll('tr', {'class': None}):
-								## Select the correct column
-								string = play.select_one(f"tr td:nth-of-type({index+1})").text.replace("\n", '')
-								if len(string) > 5 and len([pl for pl in unwanted if(pl in string)]) == 0:
-									plays.append(string)
-
-						for play in plays:
-							play = play.replace('3a', ';').replace('unassisted', '')
-							play_details = {}
-							play_details['date'] = date
-							play_details['btk'] = team
-							play_details['ptk'] = ptk
-							play_details['description'] = play
-							## get the first 3 words -- contains the batters names
-							start = ' '.join(play.split(' ')[0:3])
-
-
-							## store all potential batters in the subject list
-							subject = []
-
-							for p in roster:
-								if bool([pl for pl in players[p.PLAYER_KEY] if(pl in start)]):
-									subject.append(p.PLAYER_KEY)
-
-
-							## if more than 1 potential subject, check again, but don't look for last names
-							if len(subject) > 1:
-								subject = []
-								for p in roster:
-									if bool([pl for pl in playersNotLast[p.PLAYER_KEY] if(pl in start)]):
-										subject.append(p.PLAYER_KEY)
-
-							## if still more than 1, check if one is a pitcher
-							if len(subject) > 1:
-								ros = [r.PLAYER_KEY for r in roster if r.PLAYER_KEY in subject and r.POSITION.upper() not in ('P', 'RP', 'SP', 'RHP', 'LHP', 'LHRP', 'RHRP', 'LHSP', 'RHSP')]
-								if len(ros) == 1:
-									subject = []
-									subject.append(ros[0])
-
-
-							# ## if no potential subjects check to see if they just missed the last couple letters
-							# if len(subject) == 0:
-							# 	for p in roster:
-							# 		if bool([pl for pl in players[p.PLAYER_KEY] if(pl[0:max([int(len(pl)*.66), 6])] in start)]):
-							# 			subject.append(p.PLAYER_KEY)
-
-							# Or check if theres a slight misspell in the first word
-							if len(subject) == 0:
-								for p in roster:
-									if bool([pl for pl in players[p.PLAYER_KEY] if(dist(pl,start.split(' ')[0]))]):
-										subject.append(p.PLAYER_KEY)
-
-							# Or check if theres a slight misspell in the first 2 words
-							if len(subject) == 0:
-								for p in roster:
-									if bool([pl for pl in players[p.PLAYER_KEY] if(dist(pl,' '.join(start.split(' ')[0:2])))]):
-										subject.append(p.PLAYER_KEY)
-
-							# Or check if theres a slight misspell in the first 3 words
-							if len(subject) == 0:
-								for p in roster:
-									if bool([pl for pl in players[p.PLAYER_KEY] if(dist(pl,' '.join(start.split(' ')[0:3])))]):
-										subject.append(p.PLAYER_KEY)
-
-							# if there are still 2 check to see which one comes first and which one is closest if they start at the same spot
-							if len(subject) > 1:
-								cor = []
-								distance = 0
-								for s in subject:
-									for p in players[s]:
-										distNew = calcDist(p, ' '.join(start.split(' ')[0:3]))
-										if distNew > distance:
-											distance = distNew
-											cor = []
-											cor.append(s)
-								subject = cor
-
-							subject = subject[0] if len(subject) > 0 else None
-
-
-							play_details['batter'] = subject
-
-							loc = [l for l in locMult if(l in play)]
-							if len(loc) == 0:
-								loc = [l for l in locations if(l in play)]
-
-							if 'double play' in play:
-								dpLoc = [str(play.split('play')[1]).split(' ')]
-								for l in dpLoc:
-									if l in locations:
-										loc = l
-										break
-
-							indLoc = 1000
-							if len(loc) > 1:
-								for l in loc:
-									indexLoc = play.find(l)
-
-									if indexLoc < indLoc:
-										indLoc = indexLoc
-										loc = [l]
-							loc = loc[0].replace('.','').replace(',','').strip() if len(loc) > 0 else None
-							loc = None if loc == 'ss' and 'passed ball' in play else loc
-							play_details['location'] = loc
-
-							out = [t for t in outcomes if(t in play)]
-
-
-							indOut = 1000
-							if len(out) > 1:
-								for t in out:
-									indexOut = play.find(t)
-
-									if indexOut < indOut:
-										indOut = indexOut
-										out = [t]
-							out = out[0].strip() if len(out) > 0 else None
-
-
-							if out is not None:
-								if out == 'error':
-									if loc in ['lf', 'rf', 'cf', 'left', 'right', 'center']:
-										play_details['outcome'] = 'FB'
-									else:
-										play_details['outcome'] = 'GB'
-								else:
-									play_details['outcome'] = outDict[out]
-							else:
-								play_details['outcome'] = None
-
-							if play_details['outcome'] == None and 'to' in start:
-								play_details['batter'] = None
-
-
-							pbp = play_by_play(play_details['date'], play_details['batter'], play_details['btk'], play_details['ptk'], play_details['outcome'], play_details['location'], year, play_details['description'])
-							db.session.add(pbp)
-							db.session.commit()
-							allPlays.append(play_details)
-			except:
+	try:
+		print(h)
+		for w in range(50):
+			print(w, allow, time_last, time_now)
+			if allow == 1 or (time_now - time_last >= 1):
+				time_now = int(str(now.year) + str(now.month) + str(now.day) + str(now.hour) + str(now.minute))
+				db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 0")
+				db.engine.execute(f"UPDATE ALLOW_SCRAPE SET TIME = {time_now}")
+				for play in allPlays:
+					pbp = play_by_play(play['date'], play['batter'], play['btk'], play['ptk'], play['outcome'], play['location'], year, play['description'])
+					db.session.add(pbp)
+					db.session.commit()
+				db.session.commit()
+				db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 1")
+				db.session.commit()
+				break
+			else:
+				time.sleep(0.25)
 				continue
-		gc.collect()
-		db.session.commit()
-		db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 1")
-		db.session.commit()
-		return jsonify(allPlays)
-	else:
+	except:
 		return 'use'
-	# except:
-	# 	db.session.commit()
-	# 	db.engine.execute(f"""
-	# 	UPDATE TEAM_DIM SET ACTIVE_RECORD = 0 WHERE TEAM_KEY = {team}
-	# 	""")
-	# 	db.session.commit()
-	# 	db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 1")
-	# 	db.session.commit()
-	# 	return 'no'
+
+	gc.collect()
+	return jsonify(allPlays)
 
 
 @app.route('/getData/<key>/<year>/<type>', methods = ['POST', 'GET'])
