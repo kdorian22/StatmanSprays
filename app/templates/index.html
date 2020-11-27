@@ -2,6 +2,7 @@
 {% extends 'base.html' %}
 {% block title %}Statman Sprays{% endblock %}
 {% block content %}
+<script type="text/javascript" src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js" data-name="bmc-button" data-slug="StatmanSprays" data-color="slategray" data-emoji=""  data-font="Lato" data-text="Buy me a coffee" data-outline-color="#000000" data-font-color="#ffffff" data-coffee-color="#FFDD00" ></script>
 
       <div>
         <a class = redirect href = "{{url_for('sprays')}}"> <div class = pageSelect> Spray Charts  </div> </a>
@@ -70,6 +71,10 @@
   #faq, #about{
     display: block
   }
+
+  .bmc-btn{
+    display: none !important
+  }
 }
 
 
@@ -81,10 +86,27 @@
     border: 6px solid slategray
   }
 
+  .bmc-btn{
+    border: 2px solid rgb(254, 246, 235) !important;
+    color: 2px solid rgb(254, 246, 235);
+    position: absolute;
+    margin-top: 5px !important;
+    right: 5px !important;
+    padding: 2px !important;
+    border-radius: 0px !important;
+    font-size: 14px !important;
+    display: inline-block !important;
+    min-width: 0px !important;
+    height: inherit !important;
+    display: none !important;
+  }
 
 </style>
 
+
 <script>
+
+  $(".bmc-btn").text('Support the Statman')
   const teamsObj = {{data|safe}}
   console.log(teamsObj)
   const teams = teamsObj.map(function(d){ return d.NAME})

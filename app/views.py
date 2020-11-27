@@ -14,6 +14,7 @@ from app import app, db
 from app.models import *
 from fuzzywuzzy import fuzz
 import Levenshtein as lev
+import gc
 
 jsglue = JSGlue(app)
 app.config['PDF_FOLDER'] = 'static/pdf/'
@@ -30,7 +31,7 @@ statCodes = {
 		 'pitch':'14761',
 		 'field':'14762'}
 
-locations = ['1b', '2b', '3b', 'ss', ' p ', ' p.', ' p,',' p;' ' c ', ' c.', ' c,', 'catcher', 'pitcher',
+locations = ['1b', '2b', '3b', 'ss', ' p ', ' p.', ' p,',' p;', ' c ', ' c.', ' c,', 'catcher', 'pitcher',
 ' lf', ' rf', ' cf', 'shortstop', 'center',
 'lcf', 'rcf',
 '1b line', '3b line', 'left', 'right',
@@ -197,6 +198,14 @@ def dist(a, b):
 	if dist >= (max([len(a), len(b)])-2)/max([len(a), len(b)]) or dist2 == 100:
 		return True
 
+def calcDist(a, b):
+	if len(a) > 3 and len(b) > 3:
+		dist = max([fuzz.ratio(a.lower(),b.lower())/100, fuzz.partial_ratio(a.lower(),b.lower())])
+	else:
+		dist = 0
+	return dist
+
+
 
 @app.route('/scrapePlays', methods = ['POST', 'GET'])
 def scrapePlays():
@@ -237,10 +246,10 @@ def scrapePlays():
 		## For each guy on the roster, list the different ways his name can be stored
 		for r in roster:
 			names = []
-			namesNotLast = []
 			full = r.FULL_NAME.split(', ')
+			fullNS = full
 			full = [f.replace(' ','') for f in full]
-			last = full[0].split(' ')
+			last = fullNS[0].split(' ')
 			names.append(full[1] + ' ' + full[0])
 			names.append(full[1][0] + '. ' + full[0])
 			names.append(full[1][0] + '.' + full[0])
@@ -253,23 +262,10 @@ def scrapePlays():
 			names.append(full[1][0:3] + '. ' + full[0])
 			names.append(full[0] + ', ' + full[1][0:2]+'.')
 			names.append(full[0] + ', ' + full[1][0:3]+'.')
-			names.append(full[0])
 			names.append(full[0] + ' ' + full[1][0])
 			names.append(r.FULL_NAME)
-			namesNotLast.append(full[1] + ' ' + full[0])
-			namesNotLast.append(full[1][0] + '. ' + full[0])
-			namesNotLast.append(full[1][0] + '.' + full[0])
-			namesNotLast.append(full[1][0] + full[0])
-			namesNotLast.append(full[0] + ', ' + full[1][0]+'.')
-			namesNotLast.append(full[0] + ', ' + full[1][0])
-			namesNotLast.append(full[0] + ',' + full[1][0]+'.')
-			namesNotLast.append(full[0] + ',' + full[1][0])
-			namesNotLast.append(full[1][0:2] + '. ' + full[0])
-			namesNotLast.append(full[1][0:3] + '. ' + full[0])
-			namesNotLast.append(full[0] + ', ' + full[1][0:2]+'.')
-			namesNotLast.append(full[0] + ', ' + full[1][0:3]+'.')
-			namesNotLast.append(full[0] + ' ' + full[1][0])
-			namesNotLast.append(r.FULL_NAME)
+			namesNotLast = names
+			names.append(full[0])
 			if "'" in r.FULL_NAME:
 				names.append(r.FULL_NAME.replace("'",'').replace("'",''))
 				names.append(full[0].replace("'",'').replace("'",''))
@@ -399,39 +395,47 @@ def scrapePlays():
 									subject = []
 									subject.append(ros[0])
 
-							## if there are still 2 check to see which one comes first and which one is closest if they start at the same spot
 
+							# ## if no potential subjects check to see if they just missed the last couple letters
+							# if len(subject) == 0:
+							# 	for p in roster:
+							# 		if bool([pl for pl in players[p.PLAYER_KEY] if(pl[0:max([int(len(pl)*.66), 6])] in start)]):
+							# 			subject.append(p.PLAYER_KEY)
 
-							## if no potential subjects check to see if they just missed the last couple letters
-							if len(subject) == 0:
-								for p in roster:
-									if bool([pl for pl in players[p.PLAYER_KEY] if(pl[0:max([int(len(pl)*.66), 6])] in start)]):
-										subject.append(p.PLAYER_KEY)
-
-							# Or check if theres a slight misspell
+							# Or check if theres a slight misspell in the first word
 							if len(subject) == 0:
 								for p in roster:
 									if bool([pl for pl in players[p.PLAYER_KEY] if(dist(pl,start.split(' ')[0]))]):
 										subject.append(p.PLAYER_KEY)
-							# Or check if theres a slight misspell
+
+							# Or check if theres a slight misspell in the first 2 words
 							if len(subject) == 0:
 								for p in roster:
 									if bool([pl for pl in players[p.PLAYER_KEY] if(dist(pl,' '.join(start.split(' ')[0:2])))]):
 										subject.append(p.PLAYER_KEY)
 
-							# Or check if theres a slight misspell
+							# Or check if theres a slight misspell in the first 3 words
 							if len(subject) == 0:
 								for p in roster:
 									if bool([pl for pl in players[p.PLAYER_KEY] if(dist(pl,' '.join(start.split(' ')[0:3])))]):
 										subject.append(p.PLAYER_KEY)
 
-
-
-							print(start, subject)
-
-
+							# if there are still 2 check to see which one comes first and which one is closest if they start at the same spot
+							if len(subject) > 1:
+								cor = []
+								distance = 0
+								for s in subject:
+									for p in players[s]:
+										distNew = calcDist(p, ' '.join(start.split(' ')[0:3]))
+										if distNew > distance:
+											distance = distNew
+											cor = []
+											cor.append(s)
+								subject = cor
 
 							subject = subject[0] if len(subject) > 0 else None
+
+
 							play_details['batter'] = subject
 
 							loc = [l for l in locMult if(l in play)]
@@ -458,8 +462,7 @@ def scrapePlays():
 							play_details['location'] = loc
 
 							out = [t for t in outcomes if(t in play)]
-							# if len(out) == 0:
-							# 	out = [t for t in outcomes if(t in play)]
+
 
 							indOut = 1000
 							if len(out) > 1:
@@ -483,12 +486,17 @@ def scrapePlays():
 							else:
 								play_details['outcome'] = None
 
-							# pbp = play_by_play(play_details['date'], play_details['batter'], play_details['btk'], play_details['ptk'], play_details['outcome'], play_details['location'], year, play_details['description'])
-							# db.session.add(pbp)
-							# db.session.commit()
+							if play_details['outcome'] == None and 'to' in start:
+								play_details['batter'] = None
+
+
+							pbp = play_by_play(play_details['date'], play_details['batter'], play_details['btk'], play_details['ptk'], play_details['outcome'], play_details['location'], year, play_details['description'])
+							db.session.add(pbp)
+							db.session.commit()
 							allPlays.append(play_details)
 			except:
 				continue
+		gc.collect()
 		db.session.commit()
 		db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 1")
 		db.session.commit()
