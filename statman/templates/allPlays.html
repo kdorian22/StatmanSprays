@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+{% extends 'base.html' %}
+{% block title %} All Plays {% endblock %}
+
+{% block content %}
+<html>
+  <div id = body>
+  <span id = playTot> {{plays|length }} total plays </span>
+  <table id = playTable>
+    <tr class = head>
+      <th class = 'head'> DATE </th>
+      <th class = 'head' > TEAM </th>
+      <th class = 'head'> BATTER </th>
+      <th class = 'head des'> DESCRIPTION </th>
+      <th class = 'head'> LOCATION </th>
+      <th class = 'head'> OUTCOME </th>
+    </tr>
+    <tbody>
+  </tbody>
+  </table>
+</div>
+
+</html>
+
+<style>
+#playTot{
+  font-size: 30px
+}
+#playTable th{
+  background-color: slategray;
+  color: rgb(254, 246, 235);
+  font-size: 30px;
+
+}
+
+#playTable td{
+  font-size: 12px;
+  padding: 4px
+}
+
+#playTable td, #playTable th{
+  text-align: center;
+  border: 1px solid slategray;
+}
+#playTable tr{
+  background-color: rgb(254, 246, 235);
+  cursor: pointer;
+}
+
+#playTable tr:hover{
+  border: 2px solid black
+}
+
+#playTable tr:nth-child(2n){
+  background-color: lightgray
+}
+
+#playTable{
+  clear: both;
+  border-collapse: collapse;
+  width: 100%;
+  box-shadow: 0px 0px 10px slategray;
+  display: table;
+
+}
+
+#body{
+  margin-top: 20px;
+  width: 96%;
+  margin-left: 2%;
+
+}
+
+.des{
+  width: 40%;
+}
+
+.inact{
+  background-color: rgba(255,0,0,.5) !important
+}
+
+textarea{
+  text-align: center;
+  vertical-align: middle;
+}
+
+
+
+</style>
+
+
+<script>
+
+    const plays = {{playsJS|safe}}
+    console.log(plays)
+    const cols = ['DATE_KEY', 'TEAM_NAME', 'NAME', 'DESCRIPTION', 'LOCATION', 'OUTCOME']
+
+
+    table = d3.select('tbody')
+
+    rows = table.selectAll('.tr')
+    .data(plays)
+    .enter().append('tr')
+
+
+
+    rows.append('td')
+    .html(function(d){ return d.DATE_KEY})
+
+    rows.append('td')
+    .html(function(d){ return d.TEAM_NAME})
+
+    rows.append('td')
+    .html(function(d){ return d.NAME})
+
+    rows.append('td')
+    .html(function(d){ return d.DESCRIPTION})
+    .attr('data-id', function(d){ return d.PLAY_ID})
+    .attr('class', function(d){ return d.ACTIVE_RECORD == 1 ? 'act' : 'inact'})
+
+    rows.append('td')
+    .html(function(d){ return `<textarea data-id = ${d.PLAY_ID} class = 'loc'> ${d.LOCATION} </textarea>`})
+
+    rows.append('td')
+    .html(function(d){ return d.OUTCOME})
+
+
+
+
+
+    $('.act, .inact').click(function(){
+      if($(this).hasClass('act')){
+        $(this).addClass('inact')
+        $(this).removeClass('act')
+      }else{
+        $(this).addClass('act')
+        $(this).removeClass('inact')
+      }
+      $.get(`{{url_for('PBPWrite')}}?id=${$(this).data('id')}&col=ar`, function(d){
+          return d
+      })
+    })
+
+    $('.loc').on('keyup', function(){
+      $.get(`{{url_for('PBPWrite')}}?id=${$(this).data('id')}&col=loc&val=${$(this).val()}`, function(d){
+          return d
+      })
+    })
+</script>
+
+<script >
+
+
+
+
+
+
+</script>
+
+{% endblock %}
