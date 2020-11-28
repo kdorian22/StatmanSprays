@@ -489,6 +489,9 @@
         .style('font-size', '18px')
         .style('text-anchor', 'middle')
         .style('font-weight', 'bold')
+        .on('click', function(){
+          event.stopPropagation()
+        })
       }
 
 
@@ -642,6 +645,9 @@
         .style('font-size', '28px')
         .style('text-anchor', 'middle')
         .style('font-weight', 'bold')
+        .on('click', function(){
+          event.stopPropagation()
+        })
 
         fieldSVG.append('text')
         .text(strHR)
