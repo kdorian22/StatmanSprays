@@ -563,6 +563,7 @@ def updateDB():
 		LEFT JOIN a on a.TEAM_KEY = t.TEAM_KEY
 		LEFT JOIN b on b.BATTER_TEAM_KEY = t.TEAM_KEY
 		WHERE t.ACTIVE_RECORD = 1
+		ORDER BY NAME
 		"""))
 	return render_template('updateDB.html', status=status, data = json.dumps([dict(s) for s in status]))
 
