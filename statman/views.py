@@ -482,7 +482,6 @@ def scrapePlays():
 	"""))[0].ALLOW
 	time_now = int(str(now.year) + str(now.month) + str(now.day) + str(now.hour) + str(now.minute))
 	try:
-		print(h)
 		for w in range(50):
 			print(w, allow, time_last, time_now)
 			if allow == 1 or (time_now - time_last >= 1):

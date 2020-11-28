@@ -412,7 +412,7 @@ th.plays{
             $('.failure').slideDown()
          }else if(data == 'use'){
            loader.parent('td').css('background-color', 'orange')
-            $('.use').text('Other user updating DB currently. Try again later')
+            $('.use').text('Other user updating DB currently. Try again in a minute.')
             $('.use').slideDown()
          }else{
            let team = init.filter(function(d){ return d.TEAM_KEY == key})[0].NAME
