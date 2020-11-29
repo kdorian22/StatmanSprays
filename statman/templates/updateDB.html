@@ -18,9 +18,9 @@
   <table id = teamTable>
     <tr class = scaf>
       <th class = scaf >  </th>
-      <th class = scaf colspan="2"> 2020 </th>
-      <th class = scaf colspan="2"> 2019 </th>
-      <th class = scaf colspan="2"> 2018 </th>
+      <th class = scaf colspan="2"> {{years[0]}} </th>
+      <th class = scaf colspan="2"> {{years[1]}} </th>
+      <th class = scaf colspan="2"> {{years[2]}} </th>
     </tr>
     <tr class = head>
       <th class = 'head team'> TEAM </th>
@@ -133,9 +133,11 @@ th.plays{
   border: 1px solid slategray;
   font-size: 30px;
 }
+
 #teamTable tr{
   background-color: rgb(254, 246, 235)
 }
+
 #teamTable tr:nth-child(2n){
   background-color: lightgray !important
 }
@@ -149,7 +151,8 @@ th.plays{
   border-collapse: collapse;
   width: 100%;
   box-shadow: 0px 0px 10px slategray;
-  display: table
+  display: table;
+
 }
 
 #teamBody{
@@ -169,8 +172,8 @@ th.plays{
   width: 100%;
   position: fixed;
   top: 0px;
-  height: 80px;
-  line-height: 80px;
+  height: 70px;
+  line-height: 70px;
   text-align: left;
   padding-left: 20px;
   font-size: 30px;
@@ -231,7 +234,7 @@ th.plays{
 <script>
   const init = {{data|safe}}
   const teams = init.map(function(d){ return d.NAME})
-
+  const years = {{years|safe}}
   function addRows(data){
     d3.select('#teamBody')
     .selectAll('tr.row')
@@ -245,36 +248,36 @@ th.plays{
 
      d3.selectAll('tr.row')
      .append('td')
-     .attr('class', function(d){ return d.ROS_20 == 0 ? '' : 'done'})
-     .html(function(d){ return '<div class = upd data-col = ros data-key ='+d.TEAM_KEY+' data-year = 2020>&#8634; </div>'} )
+     .attr('class', function(d){ return d.ROS_0 == 0 ? '' : 'done'})
+     .html(function(d){ return '<div class = upd data-col = ros data-key ='+d.TEAM_KEY+' data-year = {{years[0]}}>&#8634; </div>'} )
 
      d3.selectAll('tr.row')
      .append('td')
-     .attr('class', function(d){ return d.PBP_20 == 0 ? '' : 'done'})
-     .html(function(d){return '<div class = upd data-col = pbpT data-key ='+d.TEAM_KEY+' data-year = 2020>&#8634; </div>'})
+     .attr('class', function(d){ return d.PBP_0 == 0 ? '' : 'done'})
+     .html(function(d){return '<div class = upd data-col = pbpT data-key ='+d.TEAM_KEY+' data-year = {{years[0]}}>&#8634; </div>'})
 
      d3.selectAll('tr.row')
      .append('td')
-     .attr('class', function(d){ return d.ROS_19 == 0 ? '' : 'done'})
-     .html(function(d){ return '<div class = upd data-col = ros data-key ='+d.TEAM_KEY+' data-year = 2019>&#8634; </div>'})
-
-
-     d3.selectAll('tr.row')
-     .append('td')
-     .attr('class', function(d){ return d.PBP_19 == 0 ? '' : 'done'})
-     .html(function(d){return '<div class = upd data-col = pbpT data-key ='+d.TEAM_KEY+' data-year = 2019>&#8634; </div>'})
+     .attr('class', function(d){ return d.ROS_1 == 0 ? '' : 'done'})
+     .html(function(d){ return '<div class = upd data-col = ros data-key ='+d.TEAM_KEY+' data-year = {{years[1]}}>&#8634; </div>'})
 
 
      d3.selectAll('tr.row')
      .append('td')
-     .attr('class', function(d){ return d.ROS_18 == 0 ? '' : 'done'})
-     .html(function(d){ return '<div class = upd data-col = ros data-key ='+d.TEAM_KEY+' data-year = 2018>&#8634; </div>'})
+     .attr('class', function(d){ return d.PBP_1 == 0 ? '' : 'done'})
+     .html(function(d){return '<div class = upd data-col = pbpT data-key ='+d.TEAM_KEY+' data-year = {{years[1]}}>&#8634; </div>'})
 
 
      d3.selectAll('tr.row')
      .append('td')
-     .attr('class', function(d){ return d.PBP_18 == 0 ? '' : 'done'})
-     .html(function(d){return '<div class = upd data-col = pbpT data-key ='+d.TEAM_KEY+' data-year = 2018>&#8634; </div>'})
+     .attr('class', function(d){ return d.ROS_2 == 0 ? '' : 'done'})
+     .html(function(d){ return '<div class = upd data-col = ros data-key ='+d.TEAM_KEY+' data-year = {{years[2]}}>&#8634; </div>'})
+
+
+     d3.selectAll('tr.row')
+     .append('td')
+     .attr('class', function(d){ return d.PBP_2 == 0 ? '' : 'done'})
+     .html(function(d){return '<div class = upd data-col = pbpT data-key ='+d.TEAM_KEY+' data-year = {{years[2]}}>&#8634; </div>'})
 
      function toolTip(el, ev){
        // clearTimeout()

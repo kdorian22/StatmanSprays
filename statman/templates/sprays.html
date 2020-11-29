@@ -4,23 +4,47 @@
 
 {% block content %}
 <html>
+  <div hidden class="success banner">  </div>
+  <div hidden class="failure banner">  </div>
+  <div hidden class="wait banner">  </div>
+  <div hidden class="use banner">  </div>
   <div id = body>
-  <table id = headTable>
-    <tr>
-      <td id = name><h1 id = pageHead>  </h1> </td>
-      <td id = search><input id =  searchTeam type="text" placeholder="Select Team..."></td>
-    </tr>
-  </table>
+  <div id = headCont>
+      <div id = name>  </div>
+      <div id = search><input id =  searchTeam type="text" placeholder="Select Team..."></div>
+  </div>
+  <div id = updateDiv>
+    <table id = teamTable>
+      <tr class = scaf>
+        <!-- <th class = scaf >  </th> -->
+        <th class = scaf colspan="1"> <span class = 'seasonSpan sea{{years[0]}} selectedSpan'> {{years[0]}} </span> </th>
+        <th class = scaf colspan="1"> <span class = 'seasonSpan sea{{years[1]}}'> {{years[1]}} </span> </th>
+        <th class = scaf colspan="1"> <span class = 'seasonSpan sea{{years[2]}}'> {{years[2]}} </span> </th>
+      </tr>
+      <!-- <tr class = head>
+        <th class = 'head team'> TEAM </th>
+        <th class = 'head' > ROSTER </th>
+        <th class = 'head plays'> PLAYS </th>
+        <th class = 'head'> ROSTER </th>
+        <th class = 'head plays'> PLAYS </th>
+        <th class = 'head'> ROSTER </th>
+        <th class = 'head plays'> PLAYS </th>
+      </tr> -->
+      <tr>
+      <tbody id = teamBody>
+      </tbody>
+      </tr>
+    </table>
+  </div>
   <div id = container>
     <div id = rosterDiv>
       <span hidden id = printAll> Print All </span>
       <span id = teamName> No Team Selected </span>
       <table id = roster>
-
       </table>
     </div>
     <div id = fieldDiv>
-      <svg id = field height=450 width=650></svg>
+      <svg id = field height=450 width=650> </svg>
       <div hidden id = playDiv>
         <table id = playTable>
         </table>
@@ -35,6 +59,160 @@
 </html>
 
 <style>
+#selectText{
+  text-anchor: middle;
+  font-size: 40px;
+}
+
+th.scaf{
+  background-color: slategray !important;
+  font-size: 35px !important;
+  border: 1px solid slategray;
+  color: rgb(254, 246, 235);
+  letter-spacing: 4px;
+  text-align: center;
+  border: 1px solid slategray;
+}
+
+.selectedSpan{
+  color: black;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.seasonSpan:hover{
+  color: black;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+th.head{
+  border:none !important
+}
+
+tr.head{
+  border: 1px solid slategray
+}
+
+th.team{
+  width: 28%
+}
+
+th.ros{
+  width: 12%;
+}
+
+th.plays{
+  width: 12%;
+}
+
+.upd{
+  font-size: 40px;
+  cursor: pointer;
+  display: inline-block;
+}
+
+.upd:hover{
+  font-weight: bold;
+  color: slategray;
+  text-decoration: underline
+}
+
+
+.progress{
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(360deg); }
+  100% { transform: rotate(0deg); }
+}
+
+
+#teamTable td, #teamTable th{
+  text-align: center;
+  border: 1px solid slategray;
+  font-size: 20px;
+}
+#teamTable tr{
+  background-color: rgb(254, 246, 235)
+}
+#teamTable tr:nth-child(2n){
+  background-color: lightgray !important
+}
+
+#teamTable tr:not(.scaf):not(.head):hover{
+  border: 2px solid slategray !important
+}
+
+#teamTable{
+  clear: both;
+  border-collapse: collapse;
+  width: 100%;
+  box-shadow: 0px 0px 10px slategray;
+  margin-top: 10px;
+}
+
+#teamBody{
+  height: 80px;
+  width: 100%;
+  overflow: scroll;
+}
+
+
+.done{
+  background-color: rgb(102, 204, 145);
+  color: rgb(254, 246, 235)
+}
+
+.success{
+  background-color: rgb(102, 204, 145);
+  color: black;
+  z-index: 10;
+}
+
+.failure{
+  background-color: red;
+  color: black;
+  z-index: 10;
+}
+
+.wait{
+  background-color: lightgray;
+  color: black;
+  z-index: 1;
+}
+
+.use{
+  background-color: orange;
+  color: black;
+  z-index: 10;
+}
+
+.dataTab{
+  float:left;
+  padding: 20px;
+  font-size: 12px;
+  border-collapse: separate;
+  text-align: center
+}
+
+.dataTab td{
+  text-align: center;
+  padding: 3px
+}
+
+.dataDiv{
+  padding: 10px;
+  text-align: center
+}
+
+#toolTip{
+  position: absolute;
+  background-color:  rgb(254, 246, 235);
+  border: 2px solid slategray;
+  border-radius: 6px;
+}
 
 #printAll{
   position: absolute;
@@ -57,10 +235,14 @@
   padding: 10px;
   position: absolute;
 }
-#headTable{
+#headCont{
   width: 100%;
-  margin-top: 5px
+  margin-top: 5px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline
 }
+
 #teamName{
   font-size: 36px;
   font-weight: bold
@@ -68,7 +250,7 @@
 
 
 #field{
-  border-radius: 5px;
+  /* border-radius: 5px; */
   border: 2px solid slategray;
   background-color: rgb(254, 246, 235);
 }
@@ -93,9 +275,11 @@
     justify-content: space-evenly;
   }
   #body{
-    width: 70% !important;
+    width: 650px !important;
     margin-left: 15% !important;
     text-align: center;
+    min-width: 650px;
+
   }
   #rosterDiv{
     max-height: 200px!important;
@@ -125,13 +309,15 @@
   border: 2px solid rgb(254, 246, 235);
   background-color: slategray;
   color: rgb(254, 246, 235);
-  border-radius: 5px;
-  box-sizing: 0px 0px 5px gray;
+  /* border-radius: 5px; */
+  box-shadow: 0px 0px 5px gray;
   margin-bottom: 20px;
   max-height: 450px;
   overflow: scroll;
   width: 650px;
+  margin-right: 10px;
 }
+
 
 #roster{
   border-collapse: collapse;
@@ -166,7 +352,7 @@
   border: 2px solid rgb(254, 246, 235);
   background-color: slategray;
   color: rgb(254, 246, 235);
-  border-radius: 5px;
+  /* border-radius: 5px; */
   box-sizing: 0px 0px 5px gray;
   margin-top: 20px;
   max-height: 200px;
@@ -206,6 +392,8 @@
 
 #name{
   vertical-align: bottom;
+  font-size: 40px;
+  font-weight: bold
 }
 
 #search{
@@ -233,6 +421,23 @@
   stroke-width: 3 !important;
 }
 
+.banner{
+  width: 100%;
+  position: fixed;
+  top: 0px;
+  height: 70px;
+  line-height: 70px;
+  text-align: left;
+  padding-left: 20px;
+  font-size: 30px;
+}
+
+.plRow:hover{
+  background-color: rgb(254, 246, 235);
+  color: slategray;
+  cursor: pointer
+}
+
 
 
 </style>
@@ -240,12 +445,319 @@
 
 <script>
   const init = {{data|safe}}
-  const teams = init.map(function(d){ return {'label': d.NAME+ ' - ' + d.YEAR, 'value': {'key': d.TEAM_KEY, 'year': d.YEAR, 'name': d.NAME}}})
+  const years = {{years|safe}}
+  const teams = init.map(function(d){ return {'label': d.NAME, 'value': {'key': d.TEAM_KEY, 'name': d.NAME}}})
   const teams2 = init.map(function(d){ return d.NAME})
 
   $('#searchTeam').click(function(d){
       $("#searchTeam").val('')
   });
+
+  $('body').click(function(d){
+      $('#toolTip').hide()
+  });
+
+  $('.seasonSpan').click(function(){
+    $('.seasonSpan').each(function(){
+      $(this).removeClass('selectedSpan')
+    })
+    $(this).addClass('selectedSpan')
+    addData($(this).text().replace(/\s+/g,''), $(this).attr('data-key'), $(this).attr('data-name'))
+  })
+
+  function addRows(data){
+      name = data[0].NAME
+      $('.seasonSpan').each(function(){
+        $(this).attr('data-key', data[0].TEAM_KEY)
+        $(this).attr('data-name', data[0].NAME)
+      })
+      d3.select('#teamBody')
+      .selectAll('tr.row')
+      .data(data, function(d){ return d.TEAM_KEY})
+      .enter()
+      .append('tr')
+      .attr('class', 'row')
+
+      // d3.selectAll('tr.row')
+      // .append('td').html(function(d){ return d.NAME })
+
+       // d3.selectAll('tr.row')
+       // .append('td')
+       // .attr('class', function(d){ return d.ROS_0 == 0 ? "" : 'done'})
+       // .html(function(d){ return `<div class = upd data-col = ros data-key = ${d.TEAM_KEY} data-name = '${d.NAME}' data-year = {{years[0]}}>&#8634; </div>`} )
+
+       d3.selectAll("tr.row")
+       .append("td")
+       .attr("class", function(d){ return d.PBP_0 == 0 ? "" : "done"})
+       .html(function(d){return `<div class = upd data-col = pbpT data-key = ${d.TEAM_KEY} data-name = '${d.NAME}' data-year = {{years[0]}}>&#8634; </div>`})
+
+       // d3.selectAll("tr.row")
+       // .append("td")
+       // .attr("class", function(d){ return d.ROS_1 == 0 ? "" : "done"})
+       // .html(function(d){ return `<div class = upd data-col = ros data-key = ${d.TEAM_KEY} data-name = '${d.NAME}' data-year = {{years[1]}}>&#8634; </div>`})
+
+
+       d3.selectAll("tr.row")
+       .append("td")
+       .attr("class", function(d){ return d.PBP_1 == 0 ? "" : "done"})
+       .html(function(d){return `<div class = upd data-col = pbpT data-key = ${d.TEAM_KEY} data-name = '${d.NAME}' data-year = {{years[1]}}>&#8634; </div>`})
+
+
+       // d3.selectAll("tr.row")
+       // .append("td")
+       // .attr("class", function(d){ return d.ROS_2 == 0 ? "" : "done"})
+       // .html(function(d){ return `<div class = upd data-col = ros data-key = ${d.TEAM_KEY} data-name = '${d.NAME}' data-year = {{years[2]}}>&#8634; </div>`})
+
+
+       d3.selectAll("tr.row")
+       .append("td")
+       .attr("class", function(d){ return d.PBP_2 == 0 ? "" : "done"})
+       .html(function(d){return `<div class = upd data-col = pbpT data-key = ${d.TEAM_KEY} data-name = '${d.NAME}' data-year = {{years[2]}}>&#8634; </div>`})
+
+       function toolTip(el, ev){
+         // clearTimeout()
+         $('#toolTip').css('top', 0).css('left', 0)
+         $("#toolTip").empty()
+         child = $(el)
+         var col = child.data('col')
+         var key = child.data('key')
+         var year = child.data('year')
+         $.get(Flask.url_for('getData', {key: key, year: year, type: col}), function(data){
+           if(data.length > 0){
+             if(col == 'ros'){
+               $("#toolTip").empty()
+               data = JSON.parse(data)
+               $('#toolTip').show()
+               if(window.innerWidth < 1200){
+                 x = ev.clientX > 500 ? (ev.pageX - 450) : (ev.pageX + 30)
+               }else{
+                 x = ev.clientX > 750 ? (ev.pageX - 450) : (ev.pageX + 30)
+               }
+               y = ev.clientY > 300 ? ev.clientY > 400 ? (ev.pageY - 400) : (ev.pageY - 200) : (ev.pageY)
+               $('#toolTip').css('left', x+'px').css('top', y+'px')
+               let pitchers = data.filter(function(d){ return d.POSITION == 'P'})
+               let pos = data.filter(function(d){ return d.POSITION != 'P'})
+
+               d3.select('#toolTip')
+               .append('table')
+               .attr('class', 'dataTab')
+               .selectAll('tr.pit')
+               .data(pitchers)
+               .enter()
+               .append('tr')
+               .attr('class', 'pit')
+
+               d3.selectAll('tr.pit')
+               .append('td').html(function(d){ return d.FULL_NAME })
+               .style('font-weight', 'bold')
+
+                d3.selectAll('tr.pit')
+                .append('td')
+                .html(function(d){ return d.POSITION} )
+
+                // d3.selectAll('tr.pit')
+                // .append('td')
+                // .html(function(d){ return d.NUMBER} )
+
+                d3.selectAll('tr.pit')
+                .append('td')
+                .html(function(d){ return d.CLASS} )
+
+                d3.select('#toolTip')
+                .append('table')
+                .attr('class', 'dataTab')
+                .selectAll('tr.pos')
+                .data(pos)
+                .enter()
+                .append('tr')
+                .attr('class', 'pos')
+
+                d3.selectAll('tr.pos')
+                .append('td').html(function(d){ return d.FULL_NAME })
+                .style('font-weight', 'bold')
+
+                 d3.selectAll('tr.pos')
+                 .append('td')
+                 .html(function(d){ return d.POSITION} )
+
+                 // d3.selectAll('tr.pos')
+                 // .append('td')
+                 // .html(function(d){ return d.NUMBER} )
+
+                 d3.selectAll('tr.pos')
+                 .append('td')
+                 .html(function(d){ return d.CLASS} )
+
+
+             }else if(col == 'pbpT'){
+               $("#toolTip").empty()
+               data = JSON.parse(data)
+               $('#toolTip').show()
+               x = ev.pageX - 50
+               y = ev.pageY + 30
+               $('#toolTip').css('left', x+'px').css('top', y+'px')
+               let date = d3.max(data.map(function(d){ return d.DATE_KEY }))
+               let maxDate = '<span style = "font-weight: bold"> Most Recent Game: </span><br>'+
+               String(date).substring(4,6)+'-'+String(date).substring(6,8)+'-'+String(date).substring(0,4)
+               d3.select('#toolTip')
+               .append('div')
+               .attr('class', 'dataDiv')
+               .html(maxDate)
+             }
+             // setTimeout(function(){
+             //   $("#toolTip").hide()
+             //   $("#toolTip").empty() }
+             //  , 20000)
+           }
+         })
+       }
+
+       $('.done .upd').on('mouseenter', function(e){toolTip(this, e)})
+
+       $('.done').on('mouseout', function(d){
+         $("#toolTip").hide()
+         $("#toolTip").empty()
+       })
+
+       $('.upd').click(function(d){
+         $('#teamBody').css("pointer-events", "none")
+         var loader = $(this)
+         var col = $(this).data('col')
+         var key = $(this).data('key')
+         var year = $(this).data('year')
+         var str = `{{url_for('scrapeRoster')}}?team=${key}&year=${year}`
+         loader.addClass('progress')
+         $('.wait').text("Gathering data. This may take a few minutes. Don't refresh the page.")
+         $('.wait').slideDown()
+         $.get(str, function(data){
+           if(data == 'no'){
+             console.log('no roster here')
+             loader.parent('td').css('background-color', 'red')
+              $('.failure').text('No roster found. Contact site administrator if this is an error.')
+              $('.failure').slideDown()
+              setTimeout(function(){ $('.banner').slideUp('slow') }, 2000)
+              loader.removeClass('progress')
+              $('#teamBody').css("pointer-events", "auto")
+           }else if(data == 'use'){
+             loader.parent('td').css('background-color', 'orange')
+              $('.use').text('Other user updating DB currently. Try again in a minute.')
+              $('.use').slideDown()
+              setTimeout(function(){ $('.banner').slideUp('slow') }, 2000)
+              loader.removeClass('progress')
+              $('#teamBody').css("pointer-events", "auto")
+           }else{
+             let team = init.filter(function(d){ return d.TEAM_KEY == key})[0].NAME
+             strP = `{{url_for('scrapePlays')}}?team=${key}&year=${year}`
+             $.get(strP, function(p){
+               if(p == 'no'){
+                 console.log('no data here')
+                 loader.parent('td').css('background-color', 'red')
+                  $('.failure').text('No data found. Contact site administrator if this is an error.')
+                  $('.failure').slideDown()
+               }else if(p == 'no games'){
+                 loader.parent('td').css('background-color', 'red')
+                  $('.failure').text('No games played this season.')
+                  $('.failure').slideDown()
+               }else if(p == 'use'){
+                 loader.parent('td').css('background-color', 'orange')
+                  $('.use').text('Other user updating DB currently. Try again in a minute.')
+                  $('.use').slideDown()
+               }else{
+                 let team = init.filter(function(d){ return d.TEAM_KEY == key})[0].NAME
+                 loader.parent('td').addClass('done')
+                 loader.parent('td').css('background-color', 'rgb(102, 204, 145)').css('color', 'white')
+                 $('.success').text(`${team + ' ' + year + ' '} data loaded successfully.` )
+                 $('.success').slideDown()
+                 $('.done .upd').on('mouseenter', function(e){toolTip(this, e)})
+                 $('.done .upd').on('mouseout', function(d){
+                   $("#toolTip").hide()
+                   $("#toolTip").empty()
+                 })
+                 $('.seasonSpan').each(function(){
+                   $(this).removeClass('selectedSpan')
+                 })
+                 $(`.sea${year}`).addClass('selectedSpan')
+                 addData(year, key, name)
+               }
+               loader.removeClass('progress')
+               $('#teamBody').css("pointer-events", "auto")
+               setTimeout(function(){ $('.banner').slideUp('slow') }, 2000)
+             })
+           }
+
+         })
+      })
+    }
+
+
+  function addData(year, key, name){
+    $("#playTable").empty()
+    $('#field').empty()
+    $.get(Flask.url_for('getData', {key: key, year: year, type: 'ros'}), function(data){
+      if(data.length > 0){
+        data = JSON.parse(data)
+        $("#teamName").text(name + ' - ' + year)
+        $("#roster").empty()
+        d3.select('#roster').append('tr')
+        .html("<th>Name</th><th>Pos</th><th>Num</th><th>Year</th><th></th>")
+
+        d3.select('#roster')
+        .selectAll('tr.plRow')
+        .data(data, function(d){ return d.PLAYER_KEY})
+        .enter()
+        .append('tr')
+        .attr('class', 'plRow')
+        .on('click', function(d){
+          $("#playTable").empty()
+          $('#playDiv').hide()
+          $('.selected').removeClass('selected')
+          $(this).addClass('selected')
+          $.get(Flask.url_for('getData', {key: d.PLAYER_KEY, year: d.YEAR, type: 'pbpP'}), function(data){
+            data = JSON.parse(data)
+            FULL_NAME = d.FULL_NAME
+            NUMBER = d.NUMBER
+            makeSpray(data, FULL_NAME, NUMBER)
+          })
+        })
+
+        d3.selectAll('tr.plRow')
+        .append('td').html(function(d){ return d.FULL_NAME })
+
+         d3.selectAll('tr.plRow')
+         .append('td')
+         .html(function(d){ return d.POSITION} )
+
+         d3.selectAll('tr.plRow')
+         .append('td')
+         .html(function(d){ return d.NUMBER} )
+
+         d3.selectAll('tr.plRow')
+         .append('td')
+         .html(function(d){ return d.CLASS} )
+
+         d3.selectAll('tr.plRow')
+         .append('td')
+         .attr('class', 'print')
+         .html(function(d){ return "<i class='fa'>&#xf02f</i>"})
+         .on('click', function(d){
+           if(d3.select(this.parentNode).classed('selected')){
+             window.open("{{url_for('printSprays')}}?keys="+d.PLAYER_KEY)
+            }
+          })
+        $('#printAll').show()
+        $('#printAll').click(function(){
+          keyString = data.map(function(d){ return d.PLAYER_KEY }).join(',')
+          window.open("{{url_for('printSprays')}}?keys="+keyString)
+        })
+
+
+
+
+      }
+    })
+  }
+
+
   function makeSpray(plays, name, num){
 
     $("#playTable").empty()
@@ -765,7 +1277,10 @@
   }
   $(function(){
       $("#searchTeam").autocomplete({
-      source: teams,
+      source: function(request, response){
+        results = $.ui.autocomplete.filter(teams, request.term);
+        response(results.slice(0,10))
+      },
       minLength:2,
       select: function(event, ui){
         $("#playTable").empty()
@@ -774,72 +1289,16 @@
         $('#field').empty()
         var name = ui.item.value.name
         var key = ui.item.value.key
-        var year = ui.item.value.year
-        var col = 'ros'
-        $.get(Flask.url_for('getData', {key: key, year: year, type: col}), function(data){
-          if(data.length > 0){
-            data = JSON.parse(data)
-            $("#teamName").text(ui.item.label)
-            $("#roster").empty()
-
-            d3.select('#roster').append('tr')
-            .html("<th>Name</th><th>Pos</th><th>Num</th><th>Year</th><th></th>")
-
-            d3.select('#roster')
-            .selectAll('tr.row')
-            .data(data, function(d){ return d.PLAYER_KEY})
-            .enter()
-            .append('tr')
-            .attr('class', 'row')
-            .on('click', function(d){
-              $("#playTable").empty()
-              $('#playDiv').hide()
-              $('.selected').removeClass('selected')
-              $(this).addClass('selected')
-              $.get(Flask.url_for('getData', {key: d.PLAYER_KEY, year: d.YEAR, type: 'pbpP'}), function(data){
-                data = JSON.parse(data)
-                FULL_NAME = d.FULL_NAME
-                NUMBER = d.NUMBER
-                makeSpray(data, FULL_NAME, NUMBER)
-              })
-            })
-
-            d3.selectAll('tr.row')
-            .append('td').html(function(d){ return d.FULL_NAME })
-
-             d3.selectAll('tr.row')
-             .append('td')
-             .html(function(d){ return d.POSITION} )
-
-             d3.selectAll('tr.row')
-             .append('td')
-             .html(function(d){ return d.NUMBER} )
-
-             d3.selectAll('tr.row')
-             .append('td')
-             .html(function(d){ return d.CLASS} )
-
-             d3.selectAll('tr.row')
-             .append('td')
-             .attr('class', 'print')
-             .html(function(d){ return "<i class='fa'>&#xf02f</i>"})
-             .on('click', function(d){
-               if(d3.select(this.parentNode).classed('selected')){
-                 console.log(d.PLAYER_KEY)
-                 window.open("{{url_for('printSprays')}}?keys="+d.PLAYER_KEY)
-                }
-              })
-            $('#printAll').show()
-            $('#printAll').click(function(){
-              keyString = data.map(function(d){ return d.PLAYER_KEY }).join(',')
-              window.open("{{url_for('printSprays')}}?keys="+keyString)
-            })
-
-
-
-
-          }
+        $('#name').text(ui.item.value.name)
+        $.get("{{url_for('updateDB')}}?key="+key, function(d){
+          var status = JSON.parse(d)
+          $("#teamBody").empty()
+          addRows(status)
+          addData($('.selectedSpan').text().replace(/\s+/g,''), key, name)
         })
+
+
+
         return false
       },
       focus: function(event, ui) {

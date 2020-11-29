@@ -25,6 +25,8 @@ yearCodes = {
 		 '2017':'12560',
 		 '2016':'12360'}
 
+years = ['2020', '2019', '2018']
+
 statCodes = {
 		 'hit': '14760',
 		 'pitch':'14761',
@@ -113,78 +115,70 @@ def scrapeTeams():
 
 @app.route('/scrapeRoster', methods = ['GET'])
 def scrapeRoster():
-
 	db.session.commit()
-	year = request.values.get('year','2020')
+	year = request.values.get('year', years[0])
 	team = request.values.get('team','')
 	r = request.values.get('r', '')
+	rosterToAdd = []
 	try:
+		db.session.commit()
+		exists = player_dim.query.filter_by(YEAR=str(year)).filter_by(TEAM_KEY=team).all()
+		if len(exists) > 0 and r == '':
+			return 'Already Scraped'
+		else:
+			player_dim.query.filter_by(YEAR=str(year)).filter_by(TEAM_KEY=team).delete()
+			db.session.commit()
+			url=f'https://stats.ncaa.org/team/{team}/roster/{yearCodes[year]}'
+			soup = BeautifulSoup(requests.get(url, headers = {"User-Agent":"Mozilla/5.0"}).content, 'lxml')
+			table = soup.find('tbody')
+			if table is not None:
+				for row in table.findAll('tr'):
+					cells = []
+					for cell in row.findAll('td'):
+						text = cell.text.replace("\n", '')
+						text = cell.text.replace('nbsp&', '')
+						cells.append(text)
+					rosterToAdd.append(player_dim(cells[0].replace('â€™',"'"), cells[1], cells[2], cells[3], year, team))
+			else:
+				return 'no'
+
+
+		change = player_dim.query.filter_by(NUMBER=4).filter_by(TEAM_KEY=16).filter_by(CLASS='So').first()
+		if change is not None:
+			change.ACTIVE_RECORD = 0
+
+		now = datetime.now()
+		time_last = list(db.engine.execute(f"""
+		SELECT * from ALLOW_SCRAPE
+		"""))[0].TIME
 		db.session.commit()
 		allow = list(db.engine.execute(f"""
 		SELECT * from ALLOW_SCRAPE
 		"""))[0].ALLOW
-		time_last = list(db.engine.execute(f"""
-		SELECT * from ALLOW_SCRAPE
-		"""))[0].TIME
-
-		now = datetime.now()
 		time_now = int(str(now.year) + str(now.month) + str(now.day) + str(now.hour) + str(now.minute))
-
-		if allow == 1 or (time_now - time_last > 10):
-			db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 0")
-			db.engine.execute(f"UPDATE ALLOW_SCRAPE SET TIME = {time_now}")
-			db.session.commit()
-			exists = player_dim.query.filter_by(YEAR=str(year)).filter_by(TEAM_KEY=team).all()
-			if len(exists) > 0 and r == '':
-				db.session.commit()
-				db.engine.execute(f"""
-				UPDATE TEAM_DIM SET ACTIVE_RECORD = 0 WHERE TEAM_KEY = {team}
-				""")
+		for w in range(50):
+			if allow == 1 or (time_now - time_last >= 1):
+				time_now = int(str(now.year) + str(now.month) + str(now.day) + str(now.hour) + str(now.minute))
+				db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 0")
+				db.engine.execute(f"UPDATE ALLOW_SCRAPE SET TIME = {time_now}")
+				for player in rosterToAdd:
+					db.session.add(player)
+					db.session.commit()
 				db.session.commit()
 				db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 1")
 				db.session.commit()
-				return 'Already Scraped'
+				break
 			else:
-				player_dim.query.filter_by(YEAR=str(year)).filter_by(TEAM_KEY=team).delete()
-				db.session.commit()
-				i = 0
-				url=f'https://stats.ncaa.org/team/{team}/roster/{yearCodes[year]}'
-				soup = BeautifulSoup(requests.get(url, headers = {"User-Agent":"Mozilla/5.0"}).content, 'lxml')
-				table = soup.find('tbody')
-				if table is not None:
-					for row in table.findAll('tr'):
-						cells = []
-						for cell in row.findAll('td'):
-							text = cell.text.replace("\n", '')
-							text = cell.text.replace('nbsp&', '')
-							cells.append(text)
-						player = player_dim(cells[0].replace('â€™',"'"), cells[1], cells[2], cells[3], year, team)
-						db.session.add(player)
-					i = i+1
-					if i % 10 == 0:
-						db.session.commit()
-				else:
-					db.session.commit()
-					# db.engine.execute(f"""
-					# UPDATE TEAM_DIM SET ACTIVE_RECORD = 0 WHERE TEAM_KEY = {team}
-					# """)
-					db.session.commit()
-					db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 1")
-					db.session.commit()
-					return 'no'
+				time.sleep(0.25)
+				continue
 
-
-			change = player_dim.query.filter_by(NUMBER=4).filter_by(TEAM_KEY=16).filter_by(CLASS='So').first()
-			if change is not None:
-				change.ACTIVE_RECORD = 0
-			db.session.commit()
-			players = list(db.engine.execute(f"SELECT * FROM PLAYER_DIM WHERE YEAR = '{year}' and TEAM_KEY = {team}"))
-			db.session.commit()
-			db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 1")
-			db.session.commit()
-			return json.dumps([dict(e) for e in players])
-		else:
-			return 'use'
+		db.session.commit()
+		players = list(db.engine.execute(f"SELECT * FROM PLAYER_DIM WHERE YEAR = '{year}' and TEAM_KEY = {team}"))
+		db.session.commit()
+		db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 1")
+		db.session.commit()
+		time.sleep(2)
+		return json.dumps([dict(e) for e in players])
 	except:
 		return 'no'
 
@@ -212,14 +206,15 @@ def calcDist(a, b):
 @app.route('/scrapePlays', methods = ['POST', 'GET'])
 def scrapePlays():
 	team = request.values.get('team', '755')
-	year = request.values.get('year', '2020')
+	year = request.values.get('year', years[0])
 	## Get team name
-
 
 	teamName = team_dim.query.filter_by(TEAM_KEY=team).first().NAME
 
 	## Get team roster
-	roster = player_dim.query.filter_by(TEAM_KEY=team).filter_by(YEAR=year).all()
+	roster = player_dim.query.filter_by(TEAM_KEY=team).filter_by(YEAR=year).filter_by(ACTIVE_RECORD=1).all()
+	print('plays', team)
+
 	if len(roster) == 0:
 		return 'no roster'
 	players = {}
@@ -481,13 +476,20 @@ def scrapePlays():
 	SELECT * from ALLOW_SCRAPE
 	"""))[0].ALLOW
 	time_now = int(str(now.year) + str(now.month) + str(now.day) + str(now.hour) + str(now.minute))
+	print(time_now, time_last, time_now-time_last)
 	try:
-		for w in range(50):
-			print(w, allow, time_last, time_now)
+		for w in range(100):
+			print('loop', team, allow, w, time_now - time_last)
 			if allow == 1 or (time_now - time_last >= 1):
-				time_now = int(str(now.year) + str(now.month) + str(now.day) + str(now.hour) + str(now.minute))
+				print(team, 'made it')
+				db.session.commit()
 				db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 0")
+				db.session.commit()
 				db.engine.execute(f"UPDATE ALLOW_SCRAPE SET TIME = {time_now}")
+				db.session.commit()
+				play_by_play.query.filter_by(YEAR=int(year)).filter_by(BATTER_TEAM_KEY=team).delete()
+				db.session.commit()
+				time_now = int(str(now.year) + str(now.month) + str(now.day) + str(now.hour) + str(now.minute))
 				for play in allPlays:
 					pbp = play_by_play(play['date'], play['batter'], play['btk'], play['ptk'], play['outcome'], play['location'], year, play['description'])
 					db.session.add(pbp)
@@ -495,15 +497,20 @@ def scrapePlays():
 				db.session.commit()
 				db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 1")
 				db.session.commit()
+				gc.collect()
+				return jsonify(allPlays)
 				break
 			else:
+				allow = list(db.engine.execute(f"""
+				SELECT * from ALLOW_SCRAPE
+				"""))[0].ALLOW
 				time.sleep(0.25)
 				continue
 	except:
 		return 'use'
 
 	gc.collect()
-	return jsonify(allPlays)
+	return 'use'
 
 
 @app.route('/getData/<key>/<year>/<type>', methods = ['POST', 'GET'])
@@ -533,52 +540,65 @@ def getData(key, year, type):
 
 @app.route('/updateDB', methods = ['POST', 'GET'])
 def updateDB():
+	key = request.values.get('key', '')
+	string = ''
+	if key != '' and len(key) < 7:
+		string = f'and t.TEAM_KEY = {key}'
 	status = list(db.engine.execute(f"""
 		With a as (
 		SELECT
 		TEAM_KEY,
-		SUM(CASE WHEN YEAR = 2020 THEN 1 ELSE 0 END) as ROS_20,
-		SUM(CASE WHEN YEAR = 2019 THEN 1 ELSE 0 END) as ROS_19,
-		SUM(CASE WHEN YEAR = 2018 THEN 1 ELSE 0 END) as ROS_18
+		SUM(CASE WHEN YEAR = {years[0]} THEN 1 ELSE 0 END) as ROS_0,
+		SUM(CASE WHEN YEAR = {years[1]} THEN 1 ELSE 0 END) as ROS_1,
+		SUM(CASE WHEN YEAR = {years[2]} THEN 1 ELSE 0 END) as ROS_2
 		 FROM PLAYER_DIM
 		 GROUP BY TEAM_KEY
 		 )
 		, b as (
 		SELECT
 		BATTER_TEAM_KEY,
-		MAX(CASE WHEN YEAR = 2020 THEN DATE_KEY ELSE 0 END) as PBP_20,
-		MAX(CASE WHEN YEAR = 2019 THEN DATE_KEY ELSE 0 END) as PBP_19,
-		MAX(CASE WHEN YEAR = 2018 THEN DATE_KEY ELSE 0 END) as PBP_18
+		MAX(CASE WHEN YEAR = {years[0]} THEN DATE_KEY ELSE 0 END) as PBP_0,
+		MAX(CASE WHEN YEAR = {years[1]} THEN DATE_KEY ELSE 0 END) as PBP_1,
+		MAX(CASE WHEN YEAR = {years[2]} THEN DATE_KEY ELSE 0 END) as PBP_2
 		 FROM PLAY_BY_PLAY
 		 GROUP BY BATTER_TEAM_KEY
 		)
 		SELECT t.NAME, t.TEAM_KEY, t.ACTIVE_RECORD,
-		IFNULL(ROS_20, 0) ROS_20,
-		IFNULL(ROS_19, 0) ROS_19,
-		IFNULL(ROS_18, 0) ROS_18,
-		IFNULL(PBP_20, 0) PBP_20,
-		IFNULL(PBP_19, 0) PBP_19,
-		IFNULL(PBP_18, 0) PBP_18
+		IFNULL(ROS_0, 0) ROS_0,
+		IFNULL(ROS_1, 0) ROS_1,
+		IFNULL(ROS_2, 0) ROS_2,
+		IFNULL(PBP_0, 0) PBP_0,
+		IFNULL(PBP_1, 0) PBP_1,
+		IFNULL(PBP_2, 0) PBP_2
 		FROM TEAM_DIM t
 		LEFT JOIN a on a.TEAM_KEY = t.TEAM_KEY
 		LEFT JOIN b on b.BATTER_TEAM_KEY = t.TEAM_KEY
-		WHERE t.ACTIVE_RECORD = 1
+		WHERE t.ACTIVE_RECORD = 1 {string}
 		ORDER BY NAME
 		"""))
-	return render_template('updateDB.html', status=status, data = json.dumps([dict(s) for s in status]))
+	if string != '':
+		return json.dumps([dict(s) for s in status])
+
+	return render_template('updateDB.html', status=status, data = json.dumps([dict(s) for s in status]), years=years)
 
 
 @app.route('/sprays', methods = ['POST', 'GET'])
 def sprays():
-	teams = db.engine.execute(f"""
-	with a as (SELECT BATTER_TEAM_KEY TEAM_KEY, COUNT(*), YEAR  FROM
-	PLAY_BY_PLAY
-	GROUP BY BATTER_TEAM_KEY, YEAR)
-	SELECT a.*, NAME FROM a
-	JOIN TEAM_DIM t on t.TEAM_KEY = a.TEAM_KEY
-	ORDER BY NAME, a.YEAR
-	""")
-	return render_template('sprays.html', data = json.dumps([dict(s) for s in teams]))
+	# teams = db.engine.execute(f"""
+	# with a as (SELECT BATTER_TEAM_KEY TEAM_KEY, COUNT(*), YEAR  FROM
+	# PLAY_BY_PLAY
+	# GROUP BY BATTER_TEAM_KEY, YEAR)
+	# SELECT a.*, NAME FROM a
+	# JOIN TEAM_DIM t on t.TEAM_KEY = a.TEAM_KEY
+	# ORDER BY NAME, a.YEAR
+	# """)
+	teams = []
+	data = db.engine.execute(f"""SELECT a.NAME, a.TEAM_KEY FROM TEAM_DIM a
+	ORDER BY NAME"""
+ 	)
+	for d in data:
+		teams.append({'NAME': d.NAME, 'TEAM_KEY': d.TEAM_KEY})
+	return render_template('sprays.html', data = json.dumps(teams), years = years)
 
 @app.route('/printSprays', methods = ['POST', 'GET'])
 def printSprays():
@@ -589,7 +609,7 @@ def printSprays():
 	JOIN PLAYER_DIM d on d.PLAYER_KEY = p.BATTER_PLAYER_KEY
 	WHERE BATTER_PLAYER_KEY in ({keys})
 	"""))
-	return render_template('printSprays.html', keys = keyList, plays = json.dumps([dict(s) for s in plays]))
+	return render_template('printSprays.html', keys = keyList, plays = json.dumps([dict(s) for s in plays]), years = years)
 
 
 @app.route('/about')
@@ -618,7 +638,7 @@ def lastUpdate():
 @app.route('/allPlays')
 def allPlays():
 	org = request.values.get('org', 'WashU')
-	year = request.values.get('year', '2020')
+	year = request.values.get('year', years[0])
 	p = request.values.get('p', '')
 	plays = list(db.engine.execute("""SELECT p.FULL_NAME NAME, t.NAME TEAM_NAME, pbp.* FROM PLAY_BY_PLAY pbp
 	JOIN PLAYER_DIM p on p.PLAYER_KEY = pbp.BATTER_PLAYER_KEY
