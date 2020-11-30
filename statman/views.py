@@ -126,8 +126,9 @@ def scrapeRoster():
 		if len(exists) > 0 and r == '':
 			return 'Already Scraped'
 		else:
-			player_dim.query.filter_by(YEAR=str(year)).filter_by(TEAM_KEY=team).delete()
-			db.session.commit()
+			if r == 'r':
+				player_dim.query.filter_by(YEAR=str(year)).filter_by(TEAM_KEY=team).delete()
+				db.session.commit()
 			url=f'https://stats.ncaa.org/team/{team}/roster/{yearCodes[year]}'
 			soup = BeautifulSoup(requests.get(url, headers = {"User-Agent":"Mozilla/5.0"}).content, 'lxml')
 			table = soup.find('tbody')
@@ -205,9 +206,11 @@ def calcDist(a, b):
 
 @app.route('/scrapePlays', methods = ['POST', 'GET'])
 def scrapePlays():
+
 	team = request.values.get('team', '755')
 	year = request.values.get('year', years[0])
 	## Get team name
+
 
 	teamName = team_dim.query.filter_by(TEAM_KEY=team).first().NAME
 
@@ -476,7 +479,23 @@ def scrapePlays():
 	SELECT * from ALLOW_SCRAPE
 	"""))[0].ALLOW
 	time_now = int(str(now.year) + str(now.month) + str(now.day) + str(now.hour) + str(now.minute))
-	print(time_now, time_last, time_now-time_last)
+
+
+	url=f'https://stats.ncaa.org/team/{team}/stats/{yearCodes[year]}'
+	soup = BeautifulSoup(requests.get(url, headers = {"User-Agent":"Mozilla/5.0"}).content, 'html.parser')
+	table = soup.find('tbody')
+	rosterToAdd = []
+	if table is not None:
+		for row in table.findAll('tr'):
+			cells = []
+			for cell in row.findAll('td'):
+				text = cell.text.replace("\n", '')
+				text = cell.text.replace('nbsp&', '')
+				cells.append(text)
+			rosterToAdd.append(hitter_stats(cells[1].replace('â€™',"'").replace("\n\n\n", '0'), cells[3].replace("\n\n\n", '0'), cells[0].replace("\n\n\n", '0'), cells[2].replace("\n\n\n", '0'), year, cells[4].replace("\n\n\n", '0'),
+			cells[5].replace("\n\n\n", '0'), cells[6].replace("\n\n\n", '0') if int(year) > 2019 else cells[7].replace("\n\n\n", '0'), 
+			cells[8].replace("\n\n\n", '0'), cells[9].replace("\n\n\n", '0'),
+			cells[22].replace("\n\n\n", '0'), cells[18].replace("\n\n\n", '0'), cells[26].replace("\n\n\n", '0'), cells[24].replace('\n\n\n', '0'), team))
 	try:
 		for w in range(100):
 			print('loop', team, allow, w, time_now - time_last)
@@ -495,6 +514,11 @@ def scrapePlays():
 					db.session.add(pbp)
 					db.session.commit()
 				db.session.commit()
+				hitter_stats.query.filter_by(YEAR=str(year)).filter_by(TEAM_KEY=team).delete()
+				db.session.commit()
+				for player in rosterToAdd:
+					db.session.add(player)
+					db.session.commit()
 				db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 1")
 				db.session.commit()
 				gc.collect()
@@ -532,6 +556,16 @@ def getData(key, year, type):
 		data = list(db.engine.execute(
 			f"""SELECT * FROM {tab} WHERE {keyCol} = {key} and YEAR = {year} and ACTIVE_RECORD = 1 ORDER BY {order}"""
 		))
+	else:
+		data = []
+	return json.dumps([dict(d) for d in data])
+
+
+@app.route('/getStats/<name>/<num>/<pos>/<fresh>/<year>/<team>', methods = ['POST', 'GET'])
+def getStats(name, num, pos, fresh, year, team):
+	string = f"""SELECT * FROM HITTER_STATS WHERE FULL_NAME = '{name}' and NUMBER = '{num}' and POSITION = '{pos}' and YEAR = '{year}' and CLASS = '{fresh}' and TEAM_KEY = '{team}'"""
+	if ';' not in string:
+		data = list(db.engine.execute(string))
 	else:
 		data = []
 	return json.dumps([dict(d) for d in data])
@@ -609,7 +643,16 @@ def printSprays():
 	JOIN PLAYER_DIM d on d.PLAYER_KEY = p.BATTER_PLAYER_KEY
 	WHERE BATTER_PLAYER_KEY in ({keys})
 	"""))
-	return render_template('printSprays.html', keys = keyList, plays = json.dumps([dict(s) for s in plays]), years = years)
+
+	stats = list(db.engine.execute(f"""
+	SELECT p.PLAYER_KEY, h.* FROM HITTER_STATS h
+	JOIN PLAYER_DIM p on p.FULL_NAME = h.FULL_NAME
+	and h.TEAM_KEY = p.TEAM_KEY and h.NUMBER = p.NUMBER
+	and h.POSITION = p.POSITION and h.CLASS = p.CLASS and h.YEAR = p.YEAR
+	WHERE p.PLAYER_KEY in ({keys})
+	"""))
+	return render_template('printSprays.html', keys = keyList, plays = json.dumps([dict(s) for s in plays]),
+	stats = json.dumps([dict(s) for s in stats]), years = years)
 
 
 @app.route('/about')

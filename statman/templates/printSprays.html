@@ -42,16 +42,24 @@
 <script>
 var plays = {{plays|safe}}
 var keys = {{keys|safe}}
+var statsAll = {{stats|safe}}
 if(plays.length > 0){
   for(key of keys){
     player = plays.filter(function(d){
       return d.BATTER_PLAYER_KEY == key
     })
+
+    statPlayer = statsAll.filter(function(d){
+      return d.PLAYER_KEY == key
+    })
+
     if(player.length > 5){
-      var playerName = player[0].FULL_NAME
-      var playerNum = player[0].NUMBER
       var svg = '#field'+key
-      makeSpray(player, playerName, playerNum, svg,key)
+      name = player[0].FULL_NAME
+      num = player[0].NUMBER
+
+
+      makeSpray(player, name, num, svg, key, statPlayer)
     }else{
       $('#field'+key).hide()
     }
@@ -78,6 +86,8 @@ function makeSpray(plays, name, num, fieldSVG,id){
     'cf', 'center', 'rf', 'right', 'rf line', 'right center'].indexOf(d.LOCATION) > -1})
 
     plays = infPlays.concat(ofPlays)
+
+    infPlaysEx = infPlays.filter(function(d){ return d.LOCATION != 'p' & d.LOCATION != 'c' }).length
 
     infPlays = infPlays.length
     ofPlays = ofPlays.length
@@ -110,6 +120,9 @@ function makeSpray(plays, name, num, fieldSVG,id){
     }
 
     const outcomes = ['1B', '2B', '3B', 'HR', 'LD','FB', 'GB']
+
+    const stats = ['BA', 'OBP', 'SLG', 'K', 'BB', 'SB', 'CS']
+
     const outNameMap = {
       '1B': '1B',
       '2B': '2B',
@@ -175,7 +188,7 @@ function makeSpray(plays, name, num, fieldSVG,id){
         .attr('class', 'infWedge')
         .attr('index', i)
         .style('fill', function(d){
-          val = buckets[i].plays.length/infPlays
+          val = buckets[i].plays.length/infPlaysEx
           val = val > .6 ? .6 : val
           if(!isNaN(parseFloat(val))){
             return colScale(val)
@@ -185,7 +198,7 @@ function makeSpray(plays, name, num, fieldSVG,id){
         })
 
         if(infPlays > 0){
-          str = (Math.round(buckets[i].plays.length/infPlays*100))+"%"
+          str = (Math.round(buckets[i].plays.length/infPlaysEx*100))+"%"
         }else{
           str = ''
         }
@@ -256,7 +269,7 @@ function makeSpray(plays, name, num, fieldSVG,id){
       }
 
       fieldSVG.append('text')
-      .text(name )
+      .text(name)
       .attr('x', margins.left).attr('y', margins.top*5)
       .style('font-size', '22px')
 
@@ -266,13 +279,13 @@ function makeSpray(plays, name, num, fieldSVG,id){
       .style('font-size', '22px')
 
       fieldSVG.append('text')
-      .text(`Total Inf BIP: ${infPlays}`)
-      .attr('x', width - margins.right).attr('y', height-margins.bottom)
+      .text(`Tot. INF BIP: ${infPlays}`)
+      .attr('x', width - margins.right).attr('y', margins.top*9)
       .style('font-size', '22px')
       .style('text-anchor', 'end')
 
       fieldSVG.append('text')
-      .text(`Total OF BIP: ${ofPlays}`)
+      .text(`Tot. OF BIP: ${ofPlays}`)
       .attr('x', width - margins.right).attr('y', margins.top*5)
       .style('font-size', '22px')
       .style('text-anchor', 'end')
@@ -347,6 +360,72 @@ function makeSpray(plays, name, num, fieldSVG,id){
        .attr('class', 'playStr')
        .html(function(d){ return d.DESCRIPTION.length > 50 ? d.DESCRIPTION.split(';')[0].substring(0,50) + '...' : d.DESCRIPTION.split(';')[0]})
        .style('width', '70%')
+
+       fieldSVG.selectAll(".statHead")
+        .data(stats.slice(0,3))
+        .enter()
+        .append("text")
+        .attr('class','statHead')
+        .text(function (e) {return e})
+        .attr('x', function(e, i){return 45*i+(width-110)})
+        .attr('y', height - 75)
+        .style('color', 'black')
+        .style('font-size', '18px')
+        .style('text-decoration', 'underline')
+        .style('font-weight', 'bold')
+        .style('text-anchor', 'middle')
+        .style('padding-left', '3px')
+        .style('padding-right', '3px')
+
+         fieldSVG.selectAll(".statHead2")
+          .data(stats.slice(3,7))
+          .enter()
+          .append("text")
+          .attr('class','statHead2')
+          .text(function (e) {return e})
+          .attr('x', function(e, i){return 35*i+(width-123)})
+          .attr('y', height - 30)
+          .style('color', 'black')
+          .style('font-size', '18px')
+          .style('text-decoration', 'underline')
+          .style('font-weight', 'bold')
+          .style('text-anchor', 'middle')
+          .style('padding-left', '3px')
+          .style('padding-right', '3px')
+
+          if(statPlayer.length > 0){
+            statData = statPlayer[0]
+
+            fieldSVG.selectAll(".stat")
+             .data(stats.slice(0,3))
+             .enter()
+             .append("text")
+             .attr('class','stat')
+             .text(function (e) {return String(d3.format('.3f')(parseFloat(statData[e]))).replace('0.', '.')})
+             .attr('x', function(e, i){return 45*i+(width-110)})
+             .attr('y', height - 55)
+             .style('color', 'black')
+             .style('font-size', '16px')
+             .style('font-weight', 'bold')
+             .style('text-anchor', 'middle')
+             .style('padding-left', '3px')
+             .style('padding-right', '3px')
+
+            fieldSVG.selectAll(".stat2")
+             .data(stats.slice(3,7))
+             .enter()
+             .append("text")
+             .attr('class','stat2')
+             .text(function (e) {return String(parseFloat(statData[e]))})
+             .attr('x', function(e, i){return 35*i+(width-123)})
+             .attr('y', height - 10)
+             .style('color', 'black')
+             .style('font-size', '16px')
+             .style('font-weight', 'bold')
+             .style('text-anchor', 'middle')
+             .style('padding-left', '3px')
+             .style('padding-right', '3px')
+          }
 }
 
 

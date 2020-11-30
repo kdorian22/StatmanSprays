@@ -716,7 +716,11 @@ th.plays{
             data = JSON.parse(data)
             FULL_NAME = d.FULL_NAME
             NUMBER = d.NUMBER
-            makeSpray(data, FULL_NAME, NUMBER)
+            POSITION = d.POSITION
+            FRESH = d.CLASS
+            YEAR = d.YEAR
+            TEAM_KEY = d.TEAM_KEY
+            makeSpray(data, FULL_NAME, NUMBER, POSITION, FRESH, YEAR, TEAM_KEY)
           })
         })
 
@@ -757,7 +761,6 @@ th.plays{
     })
   }
 
-
   function makeSpray(plays, name, num){
 
     $("#playTable").empty()
@@ -781,8 +784,11 @@ th.plays{
 
     plays = infPlays.concat(ofPlays)
 
+    infPlaysEx = infPlays.filter(function(d){ return d.LOCATION != 'p' & d.LOCATION != 'c' }).length
+
     infPlays = infPlays.length
     ofPlays = ofPlays.length
+
 
     const locDict = {
       '1': ['3b', 'third base'],
@@ -812,6 +818,8 @@ th.plays{
     }
 
     const outcomes = ['1B', '2B', '3B', 'HR', 'LD','FB', 'GB']
+
+    const stats = ['BA', 'OBP', 'SLG', 'K', 'BB', 'SB', 'CS']
 
     const outNameMap = {
       '1B': '1B',
@@ -920,67 +928,67 @@ th.plays{
              // })
           }
 
-          $('.hitHead, .typeHead, .hitText, .typeText').remove()
-          var outMap = []
-          for(i = 0; i < outcomes.length; ++i){
-            outMap.push({'index': i, 'outcome': outcomes[i], 'num': wedgePlays.filter(function(d){ return d.OUTCOME == outcomes[i]}).length})
-          }
+          // $('.hitHead, .typeHead, .hitText, .typeText').remove()
+          // var outMap = []
+          // for(i = 0; i < outcomes.length; ++i){
+          //   outMap.push({'index': i, 'outcome': outcomes[i], 'num': wedgePlays.filter(function(d){ return d.OUTCOME == outcomes[i]}).length})
+          // }
 
-          fieldSVG.selectAll(".hitHead")
-           .data(outMap.filter(function(d){ return ['1B', '2B', '3B', 'HR'].indexOf(d.outcome) > -1}))
-           .enter()
-           .append("text")
-           .attr('class','hitHead')
-           .text(function (d) {return outNameMap[d.outcome]})
-           .attr('x', function(d){return 35*(d.index)+25})
-           .attr('y', height - 30)
-           .style('color', 'black')
-           .style('font-size', '18px')
-           .style('text-decoration', 'underline')
-           .style('font-weight', 'bold')
-           .style('text-anchor', 'middle')
-
-           fieldSVG.selectAll(".hitText")
-            .data(outMap.filter(function(d){ return ['1B', '2B', '3B', 'HR'].indexOf(d.outcome) > -1}))
-            .enter()
-            .append("text")
-            .attr('class','hitText')
-            .text(function (d) {return d.num})
-            .attr('x', function(d){return 35*(d.index)+25})
-            .attr('y', height - 10)
-            .style('color', 'black')
-            .style('font-size', '18px')
-            .style('text-anchor', 'middle')
-
-
-            fieldSVG.selectAll(".typeHead")
-             .data(outMap.filter(function(d){ return ['GB', 'FB', 'LD'].indexOf(d.outcome) > -1}))
-             .enter()
-             .append("text")
-             .attr('class', 'typeHead')
-             .text(function (d) {return outNameMap[d.outcome]})
-             .attr('x', function(d){return 35*(d.index-4)+25})
-             .attr('y', height - 75)
-             .style('color', 'black')
-             .style('font-size', '18px')
-             .style('text-decoration', 'underline')
-             .style('font-weight', 'bold')
-             .style('text-anchor', 'middle')
-
-             fieldSVG.selectAll(".typeText")
-              .data(outMap.filter(function(d){ return ['GB', 'FB', 'LD'].indexOf(d.outcome) > -1}))
-              .enter()
-              .append("text")
-              .attr('class','typeText')
-              .text(function (d) {return d.num})
-              .attr('x', function(d){return 35*(d.index-4)+25})
-              .attr('y', height - 55)
-              .style('color', 'black')
-              .style('font-size', '18px')
-              .style('text-anchor', 'middle')
+          // fieldSVG.selectAll(".hitHead")
+          //  .data(outMap.filter(function(d){ return ['1B', '2B', '3B', 'HR'].indexOf(d.outcome) > -1}))
+          //  .enter()
+          //  .append("text")
+          //  .attr('class','hitHead')
+          //  .text(function (d) {return outNameMap[d.outcome]})
+          //  .attr('x', function(d){return 35*(d.index)+25})
+          //  .attr('y', height - 30)
+          //  .style('color', 'black')
+          //  .style('font-size', '18px')
+          //  .style('text-decoration', 'underline')
+          //  .style('font-weight', 'bold')
+          //  .style('text-anchor', 'middle')
+          //
+          //  fieldSVG.selectAll(".hitText")
+          //   .data(outMap.filter(function(d){ return ['1B', '2B', '3B', 'HR'].indexOf(d.outcome) > -1}))
+          //   .enter()
+          //   .append("text")
+          //   .attr('class','hitText')
+          //   .text(function (d) {return d.num})
+          //   .attr('x', function(d){return 35*(d.index)+25})
+          //   .attr('y', height - 10)
+          //   .style('color', 'black')
+          //   .style('font-size', '18px')
+          //   .style('text-anchor', 'middle')
+          //
+          //
+          //   fieldSVG.selectAll(".typeHead")
+          //    .data(outMap.filter(function(d){ return ['GB', 'FB', 'LD'].indexOf(d.outcome) > -1}))
+          //    .enter()
+          //    .append("text")
+          //    .attr('class', 'typeHead')
+          //    .text(function (d) {return outNameMap[d.outcome]})
+          //    .attr('x', function(d){return 35*(d.index-4)+25})
+          //    .attr('y', height - 75)
+          //    .style('color', 'black')
+          //    .style('font-size', '18px')
+          //    .style('text-decoration', 'underline')
+          //    .style('font-weight', 'bold')
+          //    .style('text-anchor', 'middle')
+          //
+          //    fieldSVG.selectAll(".typeText")
+          //     .data(outMap.filter(function(d){ return ['GB', 'FB', 'LD'].indexOf(d.outcome) > -1}))
+          //     .enter()
+          //     .append("text")
+          //     .attr('class','typeText')
+          //     .text(function (d) {return d.num})
+          //     .attr('x', function(d){return 35*(d.index-4)+25})
+          //     .attr('y', height - 55)
+          //     .style('color', 'black')
+          //     .style('font-size', '18px')
+          //     .style('text-anchor', 'middle')
         })
         .style('fill', function(d){
-          val = buckets[i].plays.length/infPlays
+          val = buckets[i].plays.length/infPlaysEx
           val = val > .6 ? .6 : val
           if(!isNaN(parseFloat(val))){
             return colScale(val)
@@ -990,7 +998,7 @@ th.plays{
         })
 
         if(infPlays > 0){
-          str = (Math.round(buckets[i].plays.length/infPlays*100))+"%"
+          str = (Math.round(buckets[i].plays.length/infPlaysEx*100))+"%"
         }else{
           str = ''
         }
@@ -1071,64 +1079,64 @@ th.plays{
              // })
           }
 
-          $('.hitHead, .typeHead, .hitText, .typeText').remove()
-          var outMap = []
-          for(i = 0; i < outcomes.length; ++i){
-            outMap.push({'index': i, 'outcome': outcomes[i], 'num': wedgePlays.filter(function(d){ return d.OUTCOME == outcomes[i]}).length})
-          }
-
-          fieldSVG.selectAll(".hitHead")
-           .data(outMap.filter(function(d){ return ['1B', '2B', '3B', 'HR'].indexOf(d.outcome) > -1}))
-           .enter()
-           .append("text")
-           .attr('class','hitHead')
-           .text(function (d) {return outNameMap[d.outcome]})
-           .attr('x', function(d){return 35*(d.index)+25})
-           .attr('y', height - 30)
-           .style('color', 'black')
-           .style('font-size', '18px')
-           .style('text-decoration', 'underline')
-           .style('font-weight', 'bold')
-           .style('text-anchor', 'middle')
-
-           fieldSVG.selectAll(".hitText")
-            .data(outMap.filter(function(d){ return ['1B', '2B', '3B', 'HR'].indexOf(d.outcome) > -1}))
-            .enter()
-            .append("text")
-            .attr('class','hitText')
-            .text(function (d) {return d.num})
-            .attr('x', function(d){return 35*(d.index)+25})
-            .attr('y', height - 10)
-            .style('color', 'black')
-            .style('font-size', '18px')
-            .style('text-anchor', 'middle')
-
-
-            fieldSVG.selectAll(".typeHead")
-             .data(outMap.filter(function(d){ return ['GB', 'FB', 'LD'].indexOf(d.outcome) > -1}))
-             .enter()
-             .append("text")
-             .attr('class', 'typeHead')
-             .text(function (d) {return outNameMap[d.outcome]})
-             .attr('x', function(d){return 35*(d.index-4)+25})
-             .attr('y', height - 75)
-             .style('color', 'black')
-             .style('font-size', '18px')
-             .style('text-decoration', 'underline')
-             .style('font-weight', 'bold')
-             .style('text-anchor', 'middle')
-
-             fieldSVG.selectAll(".typeText")
-              .data(outMap.filter(function(d){ return ['GB', 'FB', 'LD'].indexOf(d.outcome) > -1}))
-              .enter()
-              .append("text")
-              .attr('class','typeText')
-              .text(function (d) {return d.num})
-              .attr('x', function(d){return 35*(d.index-4)+25})
-              .attr('y', height - 55)
-              .style('color', 'black')
-              .style('font-size', '18px')
-              .style('text-anchor', 'middle')
+          // $('.hitHead, .typeHead, .hitText, .typeText').remove()
+          // var outMap = []
+          // for(i = 0; i < outcomes.length; ++i){
+          //   outMap.push({'index': i, 'outcome': outcomes[i], 'num': wedgePlays.filter(function(d){ return d.OUTCOME == outcomes[i]}).length})
+          // }
+          //
+          // fieldSVG.selectAll(".hitHead")
+          //  .data(outMap.filter(function(d){ return ['1B', '2B', '3B', 'HR'].indexOf(d.outcome) > -1}))
+          //  .enter()
+          //  .append("text")
+          //  .attr('class','hitHead')
+          //  .text(function (d) {return outNameMap[d.outcome]})
+          //  .attr('x', function(d){return 35*(d.index)+25})
+          //  .attr('y', height - 30)
+          //  .style('color', 'black')
+          //  .style('font-size', '18px')
+          //  .style('text-decoration', 'underline')
+          //  .style('font-weight', 'bold')
+          //  .style('text-anchor', 'middle')
+          //
+          //  fieldSVG.selectAll(".hitText")
+          //   .data(outMap.filter(function(d){ return ['1B', '2B', '3B', 'HR'].indexOf(d.outcome) > -1}))
+          //   .enter()
+          //   .append("text")
+          //   .attr('class','hitText')
+          //   .text(function (d) {return d.num})
+          //   .attr('x', function(d){return 35*(d.index)+25})
+          //   .attr('y', height - 10)
+          //   .style('color', 'black')
+          //   .style('font-size', '18px')
+          //   .style('text-anchor', 'middle')
+          //
+          //
+          //   fieldSVG.selectAll(".typeHead")
+          //    .data(outMap.filter(function(d){ return ['GB', 'FB', 'LD'].indexOf(d.outcome) > -1}))
+          //    .enter()
+          //    .append("text")
+          //    .attr('class', 'typeHead')
+          //    .text(function (d) {return outNameMap[d.outcome]})
+          //    .attr('x', function(d){return 35*(d.index-4)+25})
+          //    .attr('y', height - 75)
+          //    .style('color', 'black')
+          //    .style('font-size', '18px')
+          //    .style('text-decoration', 'underline')
+          //    .style('font-weight', 'bold')
+          //    .style('text-anchor', 'middle')
+          //
+          //    fieldSVG.selectAll(".typeText")
+          //     .data(outMap.filter(function(d){ return ['GB', 'FB', 'LD'].indexOf(d.outcome) > -1}))
+          //     .enter()
+          //     .append("text")
+          //     .attr('class','typeText')
+          //     .text(function (d) {return d.num})
+          //     .attr('x', function(d){return 35*(d.index-4)+25})
+          //     .attr('y', height - 55)
+          //     .style('color', 'black')
+          //     .style('font-size', '18px')
+          //     .style('text-anchor', 'middle')
 
         })
         .style('fill', function(d){
@@ -1181,15 +1189,15 @@ th.plays{
       .style('font-size', '26px')
 
       fieldSVG.append('text')
-      .text(`Total Inf BIP: ${infPlays}`)
-      .attr('x', width - margins.right).attr('y', height-margins.bottom)
-      .style('font-size', '22px')
+      .text(`Tot. INF BIP: ${infPlays}`)
+      .attr('x', width - margins.right).attr('y', margins.top*2.3)
+      .style('font-size', '20px')
       .style('text-anchor', 'end')
 
       fieldSVG.append('text')
-      .text(`Total OF BIP: ${ofPlays}`)
-      .attr('x', width - margins.right).attr('y', margins.top*2.5)
-      .style('font-size', '22px')
+      .text(`Tot. OF BIP: ${ofPlays}`)
+      .attr('x', width - margins.right).attr('y', margins.top*4.8)
+      .style('font-size', '20px')
       .style('text-anchor', 'end')
 
       $('#playDiv').show()
@@ -1274,7 +1282,77 @@ th.plays{
        .html(function(d){ return d.DESCRIPTION.length > 50 ? d.DESCRIPTION.split(';')[0].substring(0,50) + '...' : d.DESCRIPTION.split(';')[0]})
        .style('width', '70%')
 
+       $.get(Flask.url_for('getStats', {name: FULL_NAME, pos: POSITION, num: NUMBER, fresh: FRESH, year: YEAR, team: TEAM_KEY}), function(d){
+
+
+         fieldSVG.selectAll(".statHead")
+          .data(stats.slice(0,3))
+          .enter()
+          .append("text")
+          .attr('class','statHead')
+          .text(function (e) {return e})
+          .attr('x', function(e, i){return 45*i+(width-110)})
+          .attr('y', height - 75)
+          .style('color', 'black')
+          .style('font-size', '18px')
+          .style('text-decoration', 'underline')
+          .style('font-weight', 'bold')
+          .style('text-anchor', 'middle')
+          .style('padding-left', '3px')
+          .style('padding-right', '3px')
+
+           fieldSVG.selectAll(".statHead2")
+            .data(stats.slice(3,7))
+            .enter()
+            .append("text")
+            .attr('class','statHead2')
+            .text(function (e) {return e})
+            .attr('x', function(e, i){return 35*i+(width-123)})
+            .attr('y', height - 30)
+            .style('color', 'black')
+            .style('font-size', '18px')
+            .style('text-decoration', 'underline')
+            .style('font-weight', 'bold')
+            .style('text-anchor', 'middle')
+            .style('padding-left', '3px')
+            .style('padding-right', '3px')
+
+            if(JSON.parse(d).length > 0){
+              statData = JSON.parse(d)[0]
+
+              fieldSVG.selectAll(".stat")
+               .data(stats.slice(0,3))
+               .enter()
+               .append("text")
+               .attr('class','stat')
+               .text(function (e) {return String(d3.format('.3f')(parseFloat(statData[e]))).replace('0.', '.')})
+               .attr('x', function(e, i){return 45*i+(width-110)})
+               .attr('y', height - 55)
+               .style('color', 'black')
+               .style('font-size', '16px')
+               .style('font-weight', 'bold')
+               .style('text-anchor', 'middle')
+               .style('padding-left', '3px')
+               .style('padding-right', '3px')
+
+              fieldSVG.selectAll(".stat2")
+               .data(stats.slice(3,7))
+               .enter()
+               .append("text")
+               .attr('class','stat2')
+               .text(function (e) {return String(parseFloat(statData[e]))})
+               .attr('x', function(e, i){return 35*i+(width-123)})
+               .attr('y', height - 10)
+               .style('color', 'black')
+               .style('font-size', '16px')
+               .style('font-weight', 'bold')
+               .style('text-anchor', 'middle')
+               .style('padding-left', '3px')
+               .style('padding-right', '3px')
+            }
+       })
   }
+
   $(function(){
       $("#searchTeam").autocomplete({
       source: function(request, response){

@@ -29,6 +29,45 @@ class player_dim(db.Model):
         self.TEAM_KEY = tk
         self.ACTIVE_RECORD = 1
 
+
+class hitter_stats(db.Model):
+    __tablename__ = 'HITTER_STATS'
+
+    FULL_NAME = db.Column(db.String, primary_key=True)
+    POSITION = db.Column(db.String, primary_key=True)
+    NUMBER = db.Column(db.String, primary_key=True)
+    CLASS = db.Column(db.String, primary_key=True)
+    YEAR = db.Column(db.Integer, primary_key=True)
+    G = db.Column(db.Integer)
+    GS = db.Column(db.Integer)
+    BA = db.Column(db.Float)
+    OBP = db.Column(db.Float)
+    SLG = db.Column(db.Float)
+    K = db.Column(db.Integer)
+    BB = db.Column(db.Integer)
+    SB = db.Column(db.Integer)
+    CS = db.Column(db.Integer)
+    TEAM_KEY = db.Column(db.Integer, primary_key=True)
+    ACTIVE_RECORD = db.Column(db.Integer)
+
+    def __init__(self, name, pos, num, cl, y, g, gs, ba, obp, slg, k, bb, sb, cs, tk):
+        self.FULL_NAME = name
+        self.POSITION = pos
+        self.NUMBER = num
+        self.CLASS = cl
+        self.YEAR = y
+        self.G = g
+        self.GS = gs
+        self.BA = ba
+        self.OBP = obp
+        self.SLG = slg
+        self.K = k
+        self.BB = bb
+        self.SB = sb
+        self.CS = cs
+        self.TEAM_KEY = tk
+        self.ACTIVE_RECORD = 1
+
 class play_by_play(db.Model):
     __tablename__ = 'PLAY_BY_PLAY'
 
