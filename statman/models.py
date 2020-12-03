@@ -5,18 +5,23 @@ class team_dim(db.Model):
     __tablename__ = 'TEAM_DIM'
 
     TEAM_KEY = db.Column(db.Integer, primary_key=True)
-    NAME = db.Column(db.String)
+    NAME = db.Column(db.String(50))
     ACTIVE_RECORD = db.Column(db.Integer)
+
+    def __init__(self, key, name):
+        self.TEAM_KEY = key
+        self.NAME = name
+        self.ACTIVE_RECORD = 1
 
 class player_dim(db.Model):
     __tablename__ = 'PLAYER_DIM'
 
     PLAYER_KEY = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    NUMBER = db.Column(db.String)
-    FULL_NAME = db.Column(db.String)
-    POSITION = db.Column(db.String)
-    CLASS = db.Column(db.String)
-    YEAR = db.Column(db.String)
+    NUMBER = db.Column(db.String(5))
+    FULL_NAME = db.Column(db.String(50))
+    POSITION = db.Column(db.String(5))
+    CLASS = db.Column(db.String(20))
+    YEAR = db.Column(db.String(5))
     TEAM_KEY = db.Column(db.Integer)
     ACTIVE_RECORD = db.Column(db.Integer)
 
@@ -33,10 +38,10 @@ class player_dim(db.Model):
 class hitter_stats(db.Model):
     __tablename__ = 'HITTER_STATS'
 
-    FULL_NAME = db.Column(db.String, primary_key=True)
-    POSITION = db.Column(db.String, primary_key=True)
-    NUMBER = db.Column(db.String, primary_key=True)
-    CLASS = db.Column(db.String, primary_key=True)
+    FULL_NAME = db.Column(db.String(50), primary_key=True)
+    POSITION = db.Column(db.String(5), primary_key=True)
+    NUMBER = db.Column(db.String(5), primary_key=True)
+    CLASS = db.Column(db.String(5), primary_key=True)
     YEAR = db.Column(db.Integer, primary_key=True)
     G = db.Column(db.Integer)
     GS = db.Column(db.Integer)
@@ -76,9 +81,9 @@ class play_by_play(db.Model):
     BATTER_PLAYER_KEY = db.Column(db.Integer)
     BATTER_TEAM_KEY = db.Column(db.Integer)
     PITCHER_TEAM_KEY = db.Column(db.Integer)
-    OUTCOME = db.Column(db.String)
-    LOCATION = db.Column(db.String)
-    DESCRIPTION = db.Column(db.String)
+    OUTCOME = db.Column(db.String(50))
+    LOCATION = db.Column(db.String(50))
+    DESCRIPTION = db.Column(db.String(500))
     YEAR = db.Column(db.Integer)
     ACTIVE_RECORD = db.Column(db.Integer)
 
