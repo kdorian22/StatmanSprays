@@ -21,18 +21,7 @@
         <th class = scaf colspan="1"> <span class = 'seasonSpan sea{{years[1]}}'> {{years[1]}} </span> </th>
         <th class = scaf colspan="1"> <span class = 'seasonSpan sea{{years[2]}}'> {{years[2]}} </span> </th>
       </tr>
-      <!-- <tr class = head>
-        <th class = 'head team'> TEAM </th>
-        <th class = 'head' > ROSTER </th>
-        <th class = 'head plays'> PLAYS </th>
-        <th class = 'head'> ROSTER </th>
-        <th class = 'head plays'> PLAYS </th>
-        <th class = 'head'> ROSTER </th>
-        <th class = 'head plays'> PLAYS </th>
-      </tr> -->
       <tr>
-      <tbody id = teamBody>
-      </tbody>
       </tr>
     </table>
   </div>
@@ -465,227 +454,10 @@ th.plays{
     addData($(this).text().replace(/\s+/g,''), $(this).attr('data-key'), $(this).attr('data-name'))
   })
 
-  function addRows(data){
-      name = data[0].NAME
+  function addRows(key, name){
       $('.seasonSpan').each(function(){
-        $(this).attr('data-key', data[0].TEAM_KEY)
-        $(this).attr('data-name', data[0].NAME)
-      })
-      d3.select('#teamBody')
-      .selectAll('tr.row')
-      .data(data, function(d){ return d.TEAM_KEY})
-      .enter()
-      .append('tr')
-      .attr('class', 'row')
-
-      // d3.selectAll('tr.row')
-      // .append('td').html(function(d){ return d.NAME })
-
-       // d3.selectAll('tr.row')
-       // .append('td')
-       // .attr('class', function(d){ return d.ROS_0 == 0 ? "" : 'done'})
-       // .html(function(d){ return `<div class = upd data-col = ros data-key = ${d.TEAM_KEY} data-name = '${d.NAME}' data-year = {{years[0]}}>&#8634; </div>`} )
-
-       d3.selectAll("tr.row")
-       .append("td")
-       .attr("class", function(d){ return d.PBP_0 == 0 ? "" : "done"})
-       .html(function(d){return `<div class = upd data-col = pbpT data-key = ${d.TEAM_KEY} data-name = '${d.NAME}' data-year = {{years[0]}}>&#8634; </div>`})
-
-       // d3.selectAll("tr.row")
-       // .append("td")
-       // .attr("class", function(d){ return d.ROS_1 == 0 ? "" : "done"})
-       // .html(function(d){ return `<div class = upd data-col = ros data-key = ${d.TEAM_KEY} data-name = '${d.NAME}' data-year = {{years[1]}}>&#8634; </div>`})
-
-
-       d3.selectAll("tr.row")
-       .append("td")
-       .attr("class", function(d){ return d.PBP_1 == 0 ? "" : "done"})
-       .html(function(d){return `<div class = upd data-col = pbpT data-key = ${d.TEAM_KEY} data-name = '${d.NAME}' data-year = {{years[1]}}>&#8634; </div>`})
-
-
-       // d3.selectAll("tr.row")
-       // .append("td")
-       // .attr("class", function(d){ return d.ROS_2 == 0 ? "" : "done"})
-       // .html(function(d){ return `<div class = upd data-col = ros data-key = ${d.TEAM_KEY} data-name = '${d.NAME}' data-year = {{years[2]}}>&#8634; </div>`})
-
-
-       d3.selectAll("tr.row")
-       .append("td")
-       .attr("class", function(d){ return d.PBP_2 == 0 ? "" : "done"})
-       .html(function(d){return `<div class = upd data-col = pbpT data-key = ${d.TEAM_KEY} data-name = '${d.NAME}' data-year = {{years[2]}}>&#8634; </div>`})
-
-       function toolTip(el, ev){
-         // clearTimeout()
-         $('#toolTip').css('top', 0).css('left', 0)
-         $("#toolTip").empty()
-         child = $(el)
-         var col = child.data('col')
-         var key = child.data('key')
-         var year = child.data('year')
-         $.get(Flask.url_for('getData', {key: key, year: year, type: col}), function(data){
-           if(data.length > 0){
-             if(col == 'ros'){
-               $("#toolTip").empty()
-               data = JSON.parse(data)
-               $('#toolTip').show()
-               if(window.innerWidth < 1200){
-                 x = ev.clientX > 500 ? (ev.pageX - 450) : (ev.pageX + 30)
-               }else{
-                 x = ev.clientX > 750 ? (ev.pageX - 450) : (ev.pageX + 30)
-               }
-               y = ev.clientY > 300 ? ev.clientY > 400 ? (ev.pageY - 400) : (ev.pageY - 200) : (ev.pageY)
-               $('#toolTip').css('left', x+'px').css('top', y+'px')
-               let pitchers = data.filter(function(d){ return d.POSITION == 'P'})
-               let pos = data.filter(function(d){ return d.POSITION != 'P'})
-
-               d3.select('#toolTip')
-               .append('table')
-               .attr('class', 'dataTab')
-               .selectAll('tr.pit')
-               .data(pitchers)
-               .enter()
-               .append('tr')
-               .attr('class', 'pit')
-
-               d3.selectAll('tr.pit')
-               .append('td').html(function(d){ return d.FULL_NAME })
-               .style('font-weight', 'bold')
-
-                d3.selectAll('tr.pit')
-                .append('td')
-                .html(function(d){ return d.POSITION} )
-
-                // d3.selectAll('tr.pit')
-                // .append('td')
-                // .html(function(d){ return d.NUMBER} )
-
-                d3.selectAll('tr.pit')
-                .append('td')
-                .html(function(d){ return d.CLASS} )
-
-                d3.select('#toolTip')
-                .append('table')
-                .attr('class', 'dataTab')
-                .selectAll('tr.pos')
-                .data(pos)
-                .enter()
-                .append('tr')
-                .attr('class', 'pos')
-
-                d3.selectAll('tr.pos')
-                .append('td').html(function(d){ return d.FULL_NAME })
-                .style('font-weight', 'bold')
-
-                 d3.selectAll('tr.pos')
-                 .append('td')
-                 .html(function(d){ return d.POSITION} )
-
-                 // d3.selectAll('tr.pos')
-                 // .append('td')
-                 // .html(function(d){ return d.NUMBER} )
-
-                 d3.selectAll('tr.pos')
-                 .append('td')
-                 .html(function(d){ return d.CLASS} )
-
-
-             }else if(col == 'pbpT'){
-               $("#toolTip").empty()
-               data = JSON.parse(data)
-               $('#toolTip').show()
-               x = ev.pageX - 50
-               y = ev.pageY + 30
-               $('#toolTip').css('left', x+'px').css('top', y+'px')
-               let date = d3.max(data.map(function(d){ return d.DATE_KEY }))
-               let maxDate = '<span style = "font-weight: bold"> Most Recent Game: </span><br>'+
-               String(date).substring(4,6)+'-'+String(date).substring(6,8)+'-'+String(date).substring(0,4)
-               d3.select('#toolTip')
-               .append('div')
-               .attr('class', 'dataDiv')
-               .html(maxDate)
-             }
-             // setTimeout(function(){
-             //   $("#toolTip").hide()
-             //   $("#toolTip").empty() }
-             //  , 20000)
-           }
-         })
-       }
-
-       $('.done .upd').on('mouseenter', function(e){toolTip(this, e)})
-
-       $('.done').on('mouseout', function(d){
-         $("#toolTip").hide()
-         $("#toolTip").empty()
-       })
-
-       $('.upd').click(function(d){
-         $('#teamBody').css("pointer-events", "none")
-         var loader = $(this)
-         var col = $(this).data('col')
-         var key = $(this).data('key')
-         var year = $(this).data('year')
-         var str = `{{url_for('scrapeRoster')}}?team=${key}&year=${year}`
-         loader.addClass('progress')
-         $('.wait').text("Gathering data. This may take a few minutes. Don't refresh the page.")
-         $('.wait').slideDown()
-         $.get(str, function(data){
-           if(data == 'no'){
-             console.log('no roster here')
-             loader.parent('td').css('background-color', 'red')
-              $('.failure').text('No roster found. Contact site administrator if this is an error.')
-              $('.failure').slideDown()
-              setTimeout(function(){ $('.banner').slideUp('slow') }, 2000)
-              loader.removeClass('progress')
-              $('#teamBody').css("pointer-events", "auto")
-           }else if(data == 'use'){
-             loader.parent('td').css('background-color', 'orange')
-              $('.use').text('Other user updating DB currently. Try again in a minute.')
-              $('.use').slideDown()
-              setTimeout(function(){ $('.banner').slideUp('slow') }, 2000)
-              loader.removeClass('progress')
-              $('#teamBody').css("pointer-events", "auto")
-           }else{
-             let team = init.filter(function(d){ return d.TEAM_KEY == key})[0].NAME
-             strP = `{{url_for('scrapePlays')}}?team=${key}&year=${year}`
-             $.get(strP, function(p){
-               if(p == 'no'){
-                 console.log('no data here')
-                 loader.parent('td').css('background-color', 'red')
-                  $('.failure').text('No data found. Contact site administrator if this is an error.')
-                  $('.failure').slideDown()
-               }else if(p == 'no games'){
-                 loader.parent('td').css('background-color', 'red')
-                  $('.failure').text('No games played this season.')
-                  $('.failure').slideDown()
-               }else if(p == 'use'){
-                 loader.parent('td').css('background-color', 'orange')
-                  $('.use').text('Other user updating DB currently. Try again in a minute.')
-                  $('.use').slideDown()
-               }else{
-                 let team = init.filter(function(d){ return d.TEAM_KEY == key})[0].NAME
-                 loader.parent('td').addClass('done')
-                 loader.parent('td').css('background-color', 'rgb(102, 204, 145)').css('color', 'white')
-                 $('.success').text(`${team + ' ' + year + ' '} data loaded successfully.` )
-                 $('.success').slideDown()
-                 $('.done .upd').on('mouseenter', function(e){toolTip(this, e)})
-                 $('.done .upd').on('mouseout', function(d){
-                   $("#toolTip").hide()
-                   $("#toolTip").empty()
-                 })
-                 $('.seasonSpan').each(function(){
-                   $(this).removeClass('selectedSpan')
-                 })
-                 $(`.sea${year}`).addClass('selectedSpan')
-                 addData(year, key, name)
-               }
-               loader.removeClass('progress')
-               $('#teamBody').css("pointer-events", "auto")
-               setTimeout(function(){ $('.banner').slideUp('slow') }, 2000)
-             })
-           }
-
-         })
+        $(this).attr('data-key', key)
+        $(this).attr('data-name', name)
       })
     }
 
@@ -720,7 +492,7 @@ th.plays{
             FRESH = d.CLASS
             YEAR = d.YEAR
             TEAM_KEY = d.TEAM_KEY
-            makeSpray(data, FULL_NAME, NUMBER, POSITION, FRESH, YEAR, TEAM_KEY)
+            makeSpray(data, d.FULL_NAME, d.NUMBER, d.POSITION, d.CLASS, d.YEAR, d.TEAM_KEY)
           })
         })
 
@@ -915,77 +687,66 @@ th.plays{
              .attr('class', 'playStr')
              .html(function(d){ return d.DESCRIPTION.length > 50 ? d.DESCRIPTION.split(';')[0].substring(0,50) + '...' : d.DESCRIPTION.split(';')[0]})
              .style('width', '70%')
-             // .on('mouseenter', function(d){
-             //   $('#textTip').css('left', d3.event.pageX-50)
-             //   $('#textTip').css('top', d3.event.pageY-50)
-             //   d3.select('#textTip').html(d.DESCRIPTION)
-             //   $('#textTip').show()
-             //
-             // })
-             // .on('mouseout', function(d){
-             //   $('#textTip').hide()
-             //   d3.select('#textTip').html('')
-             // })
           }
 
-          // $('.hitHead, .typeHead, .hitText, .typeText').remove()
-          // var outMap = []
-          // for(i = 0; i < outcomes.length; ++i){
-          //   outMap.push({'index': i, 'outcome': outcomes[i], 'num': wedgePlays.filter(function(d){ return d.OUTCOME == outcomes[i]}).length})
-          // }
+          $('.hitHead, .typeHead, .hitText, .typeText').remove()
+          var outMap = []
+          for(i = 0; i < outcomes.length; ++i){
+            outMap.push({'index': i, 'outcome': outcomes[i], 'num': wedgePlays.filter(function(d){ return d.OUTCOME == outcomes[i]}).length})
+          }
 
-          // fieldSVG.selectAll(".hitHead")
-          //  .data(outMap.filter(function(d){ return ['1B', '2B', '3B', 'HR'].indexOf(d.outcome) > -1}))
-          //  .enter()
-          //  .append("text")
-          //  .attr('class','hitHead')
-          //  .text(function (d) {return outNameMap[d.outcome]})
-          //  .attr('x', function(d){return 35*(d.index)+25})
-          //  .attr('y', height - 30)
-          //  .style('color', 'black')
-          //  .style('font-size', '18px')
-          //  .style('text-decoration', 'underline')
-          //  .style('font-weight', 'bold')
-          //  .style('text-anchor', 'middle')
-          //
-          //  fieldSVG.selectAll(".hitText")
-          //   .data(outMap.filter(function(d){ return ['1B', '2B', '3B', 'HR'].indexOf(d.outcome) > -1}))
-          //   .enter()
-          //   .append("text")
-          //   .attr('class','hitText')
-          //   .text(function (d) {return d.num})
-          //   .attr('x', function(d){return 35*(d.index)+25})
-          //   .attr('y', height - 10)
-          //   .style('color', 'black')
-          //   .style('font-size', '18px')
-          //   .style('text-anchor', 'middle')
-          //
-          //
-          //   fieldSVG.selectAll(".typeHead")
-          //    .data(outMap.filter(function(d){ return ['GB', 'FB', 'LD'].indexOf(d.outcome) > -1}))
-          //    .enter()
-          //    .append("text")
-          //    .attr('class', 'typeHead')
-          //    .text(function (d) {return outNameMap[d.outcome]})
-          //    .attr('x', function(d){return 35*(d.index-4)+25})
-          //    .attr('y', height - 75)
-          //    .style('color', 'black')
-          //    .style('font-size', '18px')
-          //    .style('text-decoration', 'underline')
-          //    .style('font-weight', 'bold')
-          //    .style('text-anchor', 'middle')
-          //
-          //    fieldSVG.selectAll(".typeText")
-          //     .data(outMap.filter(function(d){ return ['GB', 'FB', 'LD'].indexOf(d.outcome) > -1}))
-          //     .enter()
-          //     .append("text")
-          //     .attr('class','typeText')
-          //     .text(function (d) {return d.num})
-          //     .attr('x', function(d){return 35*(d.index-4)+25})
-          //     .attr('y', height - 55)
-          //     .style('color', 'black')
-          //     .style('font-size', '18px')
-          //     .style('text-anchor', 'middle')
+          fieldSVG.selectAll(".hitHead")
+           .data(outMap.filter(function(d){ return ['1B', '2B', '3B', 'HR'].indexOf(d.outcome) > -1}))
+           .enter()
+           .append("text")
+           .attr('class','hitHead')
+           .text(function (d) {return outNameMap[d.outcome]})
+           .attr('x', function(d){return 35*(d.index)+25})
+           .attr('y', height - 30)
+           .style('color', 'black')
+           .style('font-size', '18px')
+           .style('text-decoration', 'underline')
+           .style('font-weight', 'bold')
+           .style('text-anchor', 'middle')
+
+           fieldSVG.selectAll(".hitText")
+            .data(outMap.filter(function(d){ return ['1B', '2B', '3B', 'HR'].indexOf(d.outcome) > -1}))
+            .enter()
+            .append("text")
+            .attr('class','hitText')
+            .text(function (d) {return d.num})
+            .attr('x', function(d){return 35*(d.index)+25})
+            .attr('y', height - 10)
+            .style('color', 'black')
+            .style('font-size', '18px')
+            .style('text-anchor', 'middle')
+
+
+            fieldSVG.selectAll(".typeHead")
+             .data(outMap.filter(function(d){ return ['GB', 'FB', 'LD'].indexOf(d.outcome) > -1}))
+             .enter()
+             .append("text")
+             .attr('class', 'typeHead')
+             .text(function (d) {return outNameMap[d.outcome]})
+             .attr('x', function(d){return 35*(d.index-4)+25})
+             .attr('y', height - 75)
+             .style('color', 'black')
+             .style('font-size', '18px')
+             .style('text-decoration', 'underline')
+             .style('font-weight', 'bold')
+             .style('text-anchor', 'middle')
+
+             fieldSVG.selectAll(".typeText")
+              .data(outMap.filter(function(d){ return ['GB', 'FB', 'LD'].indexOf(d.outcome) > -1}))
+              .enter()
+              .append("text")
+              .attr('class','typeText')
+              .text(function (d) {return d.num})
+              .attr('x', function(d){return 35*(d.index-4)+25})
+              .attr('y', height - 55)
+              .style('color', 'black')
+              .style('font-size', '18px')
+              .style('text-anchor', 'middle')
         })
         .style('fill', function(d){
           val = buckets[i].plays.length/infPlaysEx
@@ -1066,77 +827,66 @@ th.plays{
              .attr('class', 'playStr')
              .html(function(d){ return d.DESCRIPTION.length > 50 ? d.DESCRIPTION.split(';')[0].substring(0,50) + '...' : d.DESCRIPTION.split(';')[0]})
              .style('width', '70%')
-             // .on('mouseenter', function(d){
-             //   $('#textTip').css('left', d3.event.pageX-50)
-             //   $('#textTip').css('top', d3.event.pageY-50)
-             //   d3.select('#textTip').html(d.DESCRIPTION)
-             //   $('#textTip').show()
-             //
-             // })
-             // .on('mouseout', function(d){
-             //   $('#textTip').hide()
-             //   d3.select('#textTip').html('')
-             // })
           }
 
-          // $('.hitHead, .typeHead, .hitText, .typeText').remove()
-          // var outMap = []
-          // for(i = 0; i < outcomes.length; ++i){
-          //   outMap.push({'index': i, 'outcome': outcomes[i], 'num': wedgePlays.filter(function(d){ return d.OUTCOME == outcomes[i]}).length})
-          // }
-          //
-          // fieldSVG.selectAll(".hitHead")
-          //  .data(outMap.filter(function(d){ return ['1B', '2B', '3B', 'HR'].indexOf(d.outcome) > -1}))
-          //  .enter()
-          //  .append("text")
-          //  .attr('class','hitHead')
-          //  .text(function (d) {return outNameMap[d.outcome]})
-          //  .attr('x', function(d){return 35*(d.index)+25})
-          //  .attr('y', height - 30)
-          //  .style('color', 'black')
-          //  .style('font-size', '18px')
-          //  .style('text-decoration', 'underline')
-          //  .style('font-weight', 'bold')
-          //  .style('text-anchor', 'middle')
-          //
-          //  fieldSVG.selectAll(".hitText")
-          //   .data(outMap.filter(function(d){ return ['1B', '2B', '3B', 'HR'].indexOf(d.outcome) > -1}))
-          //   .enter()
-          //   .append("text")
-          //   .attr('class','hitText')
-          //   .text(function (d) {return d.num})
-          //   .attr('x', function(d){return 35*(d.index)+25})
-          //   .attr('y', height - 10)
-          //   .style('color', 'black')
-          //   .style('font-size', '18px')
-          //   .style('text-anchor', 'middle')
-          //
-          //
-          //   fieldSVG.selectAll(".typeHead")
-          //    .data(outMap.filter(function(d){ return ['GB', 'FB', 'LD'].indexOf(d.outcome) > -1}))
-          //    .enter()
-          //    .append("text")
-          //    .attr('class', 'typeHead')
-          //    .text(function (d) {return outNameMap[d.outcome]})
-          //    .attr('x', function(d){return 35*(d.index-4)+25})
-          //    .attr('y', height - 75)
-          //    .style('color', 'black')
-          //    .style('font-size', '18px')
-          //    .style('text-decoration', 'underline')
-          //    .style('font-weight', 'bold')
-          //    .style('text-anchor', 'middle')
-          //
-          //    fieldSVG.selectAll(".typeText")
-          //     .data(outMap.filter(function(d){ return ['GB', 'FB', 'LD'].indexOf(d.outcome) > -1}))
-          //     .enter()
-          //     .append("text")
-          //     .attr('class','typeText')
-          //     .text(function (d) {return d.num})
-          //     .attr('x', function(d){return 35*(d.index-4)+25})
-          //     .attr('y', height - 55)
-          //     .style('color', 'black')
-          //     .style('font-size', '18px')
-          //     .style('text-anchor', 'middle')
+          $('.hitHead, .typeHead, .hitText, .typeText').remove()
+          var outMap = []
+          for(i = 0; i < outcomes.length; ++i){
+            outMap.push({'index': i, 'outcome': outcomes[i], 'num': wedgePlays.filter(function(d){ return d.OUTCOME == outcomes[i]}).length})
+          }
+
+          fieldSVG.selectAll(".hitHead")
+           .data(outMap.filter(function(d){ return ['1B', '2B', '3B', 'HR'].indexOf(d.outcome) > -1}))
+           .enter()
+           .append("text")
+           .attr('class','hitHead')
+           .text(function (d) {return outNameMap[d.outcome]})
+           .attr('x', function(d){return 35*(d.index)+25})
+           .attr('y', height - 30)
+           .style('color', 'black')
+           .style('font-size', '18px')
+           .style('text-decoration', 'underline')
+           .style('font-weight', 'bold')
+           .style('text-anchor', 'middle')
+
+           fieldSVG.selectAll(".hitText")
+            .data(outMap.filter(function(d){ return ['1B', '2B', '3B', 'HR'].indexOf(d.outcome) > -1}))
+            .enter()
+            .append("text")
+            .attr('class','hitText')
+            .text(function (d) {return d.num})
+            .attr('x', function(d){return 35*(d.index)+25})
+            .attr('y', height - 10)
+            .style('color', 'black')
+            .style('font-size', '18px')
+            .style('text-anchor', 'middle')
+
+
+            fieldSVG.selectAll(".typeHead")
+             .data(outMap.filter(function(d){ return ['GB', 'FB', 'LD'].indexOf(d.outcome) > -1}))
+             .enter()
+             .append("text")
+             .attr('class', 'typeHead')
+             .text(function (d) {return outNameMap[d.outcome]})
+             .attr('x', function(d){return 35*(d.index-4)+25})
+             .attr('y', height - 75)
+             .style('color', 'black')
+             .style('font-size', '18px')
+             .style('text-decoration', 'underline')
+             .style('font-weight', 'bold')
+             .style('text-anchor', 'middle')
+
+             fieldSVG.selectAll(".typeText")
+              .data(outMap.filter(function(d){ return ['GB', 'FB', 'LD'].indexOf(d.outcome) > -1}))
+              .enter()
+              .append("text")
+              .attr('class','typeText')
+              .text(function (d) {return d.num})
+              .attr('x', function(d){return 35*(d.index-4)+25})
+              .attr('y', height - 55)
+              .style('color', 'black')
+              .style('font-size', '18px')
+              .style('text-anchor', 'middle')
 
         })
         .style('fill', function(d){
@@ -1189,14 +939,14 @@ th.plays{
       .style('font-size', '26px')
 
       fieldSVG.append('text')
-      .text(`Tot. INF BIP: ${infPlays}`)
-      .attr('x', width - margins.right).attr('y', margins.top*2.3)
+      .text(`Tot. IF BIP: ${infPlays}`)
+      .attr('x', width - margins.right).attr('y', margins.top*4.8)
       .style('font-size', '20px')
       .style('text-anchor', 'end')
 
       fieldSVG.append('text')
       .text(`Tot. OF BIP: ${ofPlays}`)
-      .attr('x', width - margins.right).attr('y', margins.top*4.8)
+      .attr('x', width - margins.right).attr('y', margins.top*2.3)
       .style('font-size', '20px')
       .style('text-anchor', 'end')
 
@@ -1368,14 +1118,8 @@ th.plays{
         var name = ui.item.value.name
         var key = ui.item.value.key
         $('#name').text(ui.item.value.name)
-        $.get("{{url_for('updateDB')}}?key="+key, function(d){
-          var status = JSON.parse(d)
-          $("#teamBody").empty()
-          addRows(status)
-          addData($('.selectedSpan').text().replace(/\s+/g,''), key, name)
-        })
-
-
+        addRows(key, name)
+        addData($('.selectedSpan').text().replace(/\s+/g,''), key, name)
 
         return false
       },

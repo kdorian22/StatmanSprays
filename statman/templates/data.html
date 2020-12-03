@@ -106,7 +106,8 @@ th.plays{
 }
 
 .upd{
-  font-size: 40px;
+  font-size: 30px;
+  padding: 5px;
   cursor: pointer;
   display: inline-block;
 }
@@ -118,14 +119,14 @@ th.plays{
 }
 
 
-.progress{
+/* .progress{
     animation: spin 2s linear infinite;
-}
+} */
 
-@keyframes spin {
+/* @keyframes spin {
   0% { transform: rotate(360deg); }
   100% { transform: rotate(0deg); }
-}
+} */
 
 
 #teamTable td, #teamTable th{
@@ -235,6 +236,13 @@ th.plays{
   const init = {{data|safe}}
   const teams = init.map(function(d){ return d.NAME})
   const years = {{years|safe}}
+
+  // https://stackoverflow.com/questions/2601097/how-to-get-the-mouse-position-without-events-without-moving-the-mouse
+  d3.select('#body').on('mousemove', function () {
+     xCur = d3.mouse(this)[0];
+     yCur = d3.mouse(this)[1]
+  })
+
   function addRows(data){
     d3.select('#teamBody')
     .selectAll('tr.row')
@@ -249,35 +257,35 @@ th.plays{
      d3.selectAll('tr.row')
      .append('td')
      .attr('class', function(d){ return d.ROS_0 == 0 ? '' : 'done'})
-     .html(function(d){ return '<div class = upd data-col = ros data-key ='+d.TEAM_KEY+' data-year = {{years[0]}}>&#8634; </div>'} )
+     .html(function(d){ return '<div class = upd data-col = ros data-key ='+d.TEAM_KEY+' data-year = {{years[0]}}><i class="fa fa-download"></i> </div>'} )
 
      d3.selectAll('tr.row')
      .append('td')
      .attr('class', function(d){ return d.PBP_0 == 0 ? '' : 'done'})
-     .html(function(d){return '<div class = upd data-col = pbpT data-key ='+d.TEAM_KEY+' data-year = {{years[0]}}>&#8634; </div>'})
+     .html(function(d){return '<div class = upd data-col = pbpT data-key ='+d.TEAM_KEY+' data-year = {{years[0]}}><i class="fa fa-download"></i> </div>'})
 
      d3.selectAll('tr.row')
      .append('td')
      .attr('class', function(d){ return d.ROS_1 == 0 ? '' : 'done'})
-     .html(function(d){ return '<div class = upd data-col = ros data-key ='+d.TEAM_KEY+' data-year = {{years[1]}}>&#8634; </div>'})
+     .html(function(d){ return '<div class = upd data-col = ros data-key ='+d.TEAM_KEY+' data-year = {{years[1]}}><i class="fa fa-download"></i> </div>'})
 
 
      d3.selectAll('tr.row')
      .append('td')
      .attr('class', function(d){ return d.PBP_1 == 0 ? '' : 'done'})
-     .html(function(d){return '<div class = upd data-col = pbpT data-key ='+d.TEAM_KEY+' data-year = {{years[1]}}>&#8634; </div>'})
+     .html(function(d){return '<div class = upd data-col = pbpT data-key ='+d.TEAM_KEY+' data-year = {{years[1]}}><i class="fa fa-download"></i> </div>'})
 
 
      d3.selectAll('tr.row')
      .append('td')
      .attr('class', function(d){ return d.ROS_2 == 0 ? '' : 'done'})
-     .html(function(d){ return '<div class = upd data-col = ros data-key ='+d.TEAM_KEY+' data-year = {{years[2]}}>&#8634; </div>'})
+     .html(function(d){ return '<div class = upd data-col = ros data-key ='+d.TEAM_KEY+' data-year = {{years[2]}}><i class="fa fa-download"></i> </div>'})
 
 
      d3.selectAll('tr.row')
      .append('td')
      .attr('class', function(d){ return d.PBP_2 == 0 ? '' : 'done'})
-     .html(function(d){return '<div class = upd data-col = pbpT data-key ='+d.TEAM_KEY+' data-year = {{years[2]}}>&#8634; </div>'})
+     .html(function(d){return '<div class = upd data-col = pbpT data-key ='+d.TEAM_KEY+' data-year = {{years[2]}}><i class="fa fa-download"></i> </div>'})
 
      function toolTip(el, ev){
        // clearTimeout()
@@ -288,17 +296,21 @@ th.plays{
        var key = child.data('key')
        var year = child.data('year')
        $.get(Flask.url_for('getData', {key: key, year: year, type: col}), function(data){
-         if(data.length > 0){
+         startX = ev.pageX
+         startY = ev.pageY
+         setTimeout(function(){
+           //your code to be executed after 1 second
+         if(data.length > 0 & Math.abs(startX - xCur) < 40 & Math.abs(startY - yCur - 70) < 40){
            if(col == 'ros'){
              $("#toolTip").empty()
              data = JSON.parse(data)
              $('#toolTip').show()
              if(window.innerWidth < 1200){
-               x = ev.clientX > 500 ? (ev.pageX - 450) : (ev.pageX + 30)
+               x = ev.clientX > 500 ? (ev.pageX - 480) : (ev.pageX + 30)
              }else{
-               x = ev.clientX > 750 ? (ev.pageX - 450) : (ev.pageX + 30)
+               x = ev.clientX > 750 ? (ev.pageX - 480) : (ev.pageX + 30)
              }
-             y = ev.clientY > 300 ? ev.clientY > 400 ? (ev.pageY - 400) : (ev.pageY - 200) : (ev.pageY)
+             y = ev.clientY > 300 ? ev.clientY > 400 ? (ev.pageY - 420) : (ev.pageY - 200) : (ev.pageY)
              $('#toolTip').css('left', x+'px').css('top', y+'px')
              let pitchers = data.filter(function(d){ return d.POSITION == 'P'})
              let pos = data.filter(function(d){ return d.POSITION != 'P'})
@@ -369,11 +381,8 @@ th.plays{
              .attr('class', 'dataDiv')
              .html(maxDate)
            }
-           // setTimeout(function(){
-           //   $("#toolTip").hide()
-           //   $("#toolTip").empty() }
-           //  , 20000)
          }
+       }, 500);
        })
      }
 
