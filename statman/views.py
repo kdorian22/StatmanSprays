@@ -15,6 +15,7 @@ import gc
 import time
 import itertools
 
+
 jsglue = JSGlue(app)
 app.config['PDF_FOLDER'] = 'static/pdf/'
 
@@ -102,15 +103,12 @@ def scrapeTeams():
 	teamList = rows[2:]
 	try:
 		for team in teamList:
-			ele = team_dim(str(team[1]), int(team[0]), 1)
+			ele = team_dim(int(team[0]), str(team[1]))
 			db.session.add(ele)
-			# db.engine.execute(f"""
-			#  INSERT INTO TEAM_DIM (NAME, TEAM_KEY)
-			# VALUES ("{team[1]}", {int(team[0])})""")
 	except:
 		return {'result': 'upload failed'}
 	db.session.commit()
-	return {'result': 'upload successful'}
+	return json.dumps([dict(r) for r in list(db.engine.execute('SELECT * FROM TEAM_DIM;'))])
 
 
 @app.route('/scrapeRoster', methods = ['GET'])
@@ -589,10 +587,9 @@ def data():
 	string = ''
 	if key != '' and len(key) < 7:
 		string = f'and t.TEAM_KEY = {key}'
-	status = list(db.engine.execute(f"""
+	query = f"""
 		With a as (
-		SELECT
-		TEAM_KEY,
+		SELECT TEAM_KEY,
 		SUM(CASE WHEN YEAR = {years[0]} THEN 1 ELSE 0 END) as ROS_0,
 		SUM(CASE WHEN YEAR = {years[1]} THEN 1 ELSE 0 END) as ROS_1,
 		SUM(CASE WHEN YEAR = {years[2]} THEN 1 ELSE 0 END) as ROS_2
@@ -619,8 +616,13 @@ def data():
 		LEFT JOIN a on a.TEAM_KEY = t.TEAM_KEY
 		LEFT JOIN b on b.BATTER_TEAM_KEY = t.TEAM_KEY
 		WHERE t.ACTIVE_RECORD = 1 {string}
-		ORDER BY NAME
-		"""))
+		ORDER BY NAME;
+		"""
+	quert = """SELECT
+	1"""
+	print(list(db.engine.execute(quert)))
+	return '1'
+	# status = list(db.engine.execute(query.replace("\n",'').replace("\t",'')))
 	if string != '':
 		return json.dumps([dict(s) for s in status])
 
@@ -630,12 +632,10 @@ def data():
 @app.route('/sprays', methods = ['POST', 'GET'])
 def sprays():
 	teams = []
-	data = db.engine.execute(f"""SELECT a.NAME, a.TEAM_KEY FROM TEAM_DIM a
-	WHERE ACTIVE_RECORD = 1
-	ORDER BY NAME"""
- 	)
+	data = db.engine.execute(f"""SELECT a.NAME, a.TEAM_KEY FROM TEAM_DIM a WHERE ACTIVE_RECORD = 1 ORDER BY NAME""")
 	for d in data:
 		teams.append({'NAME': d.NAME, 'TEAM_KEY': d.TEAM_KEY})
+	print(teams)
 	return render_template('sprays.html', data = json.dumps(teams), years = years)
 
 @app.route('/printSprays', methods = ['POST', 'GET'])
