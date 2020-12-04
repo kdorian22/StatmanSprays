@@ -147,36 +147,14 @@ def scrapeRoster():
 		if change is not None:
 			change.ACTIVE_RECORD = 0
 
-		now = datetime.now()
-		time_last = list(db.engine.execute(f"""
-		SELECT * from ALLOW_SCRAPE
-		"""))[0].TIME
-		db.session.commit()
-		allow = list(db.engine.execute(f"""
-		SELECT * from ALLOW_SCRAPE
-		"""))[0].ALLOW
-		time_now = int(str(now.year) + str(now.month) + str(now.day) + str(now.hour) + str(now.minute))
-		for w in range(50):
-			if allow == 1 or (time_now - time_last >= 1):
-				time_now = int(str(now.year) + str(now.month) + str(now.day) + str(now.hour) + str(now.minute))
-				db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 0")
-				db.engine.execute(f"UPDATE ALLOW_SCRAPE SET TIME = {time_now}")
-				for player in rosterToAdd:
-					db.session.add(player)
-					db.session.commit()
-				db.session.commit()
-				db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 1")
-				db.session.commit()
-				break
-			else:
-				time.sleep(0.25)
-				continue
+		for player in rosterToAdd:
+			db.session.add(player)
+			db.session.commit()
 
 		db.session.commit()
 		players = list(db.engine.execute(f"SELECT * FROM PLAYER_DIM WHERE YEAR = '{year}' and TEAM_KEY = {team}"))
 		db.session.commit()
-		db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 1")
-		db.session.commit()
+
 		return json.dumps([dict(e) for e in players])
 	except:
 		return 'no'
@@ -271,17 +249,9 @@ def scrapePlays():
 		direct.append(link.get('href'))
 
 	if len(direct) == 0:
-		# db.session.commit()
-		# db.engine.execute(f"""
-		# UPDATE TEAM_DIM SET ACTIVE_RECORD = 0 WHERE TEAM_KEY = {team}
-		# """)
-		# db.session.commit()
 		return 'no'
 
 	if len(direct) < 3:
-		# db.session.commit()
-		# db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 1")
-		# db.session.commit()
 		return 'no games'
 
 	## Get the link to the list of games. There are two similar links; we need the third one down
@@ -473,23 +443,10 @@ def scrapePlays():
 	allPlays = []
 	for game in games:
 		try:
-			print(game)
 			allPlays.append(gameScraper(game))
 		except:
-			print('Broke on', teamName)
 			continue
 	allPlays = list(itertools.chain.from_iterable(allPlays))
-
-	now = datetime.now()
-	time_last = list(db.engine.execute(f"""
-	SELECT * from ALLOW_SCRAPE
-	"""))[0].TIME
-	db.session.commit()
-	allow = list(db.engine.execute(f"""
-	SELECT * from ALLOW_SCRAPE
-	"""))[0].ALLOW
-	time_now = int(str(now.year) + str(now.month) + str(now.day) + str(now.hour) + str(now.minute))
-
 
 	url=f'https://stats.ncaa.org/team/{team}/stats/{yearCodes[year]}'
 	soup = BeautifulSoup(requests.get(url, headers = {"User-Agent": "Mozilla/5.0"}).content, 'html.parser')
@@ -502,43 +459,27 @@ def scrapePlays():
 				text = cell.text.replace("\n", '')
 				text = cell.text.replace('nbsp&', '')
 				cells.append(text)
-			rosterToAdd.append(hitter_stats(cells[1].replace('â€™',"'").replace("\n\n\n", '0'), cells[3].replace("\n\n\n", '0'), cells[0].replace("\n\n\n", '0'), cells[2].replace("\n\n\n", '0'), year, cells[4].replace("\n\n\n", '0'),
-			cells[5].replace("\n\n\n", '0'), cells[6].replace("\n\n\n", '0') if int(year) > 2019 else cells[7].replace("\n\n\n", '0'),
-			cells[8].replace("\n\n\n", '0'), cells[9].replace("\n\n\n", '0'),
-			cells[22].replace("\n\n\n", '0'), cells[18].replace("\n\n\n", '0'), cells[26].replace("\n\n\n", '0'), cells[24].replace('\n\n\n', '0'), team))
+			rosterToAdd.append(hitter_stats(cells[1].replace('â€™',"'").replace("\n", ''), cells[3].replace("\n", ''), cells[0].replace("\n", ''), cells[2].replace("\n", ''), year, cells[4].replace("\n", ''),
+			cells[5].replace("\n", ''), cells[6].replace("\n", '') if int(year) > 2019 else cells[7].replace("\n", ''),
+			cells[8].replace("\n", ''), cells[9].replace("\n", ''),
+			cells[22].replace("\n", ''), cells[18].replace("\n", ''), cells[26].replace("\n", ''), cells[24].replace('\n', ''), team))
 	try:
-		for w in range(100):
-			if allow == 1 or (time_now - time_last >= 1):
-				print(team, 'made it')
-				db.session.commit()
-				db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 0")
-				db.session.commit()
-				db.engine.execute(f"UPDATE ALLOW_SCRAPE SET TIME = {time_now}")
-				db.session.commit()
-				play_by_play.query.filter_by(YEAR=int(year)).filter_by(BATTER_TEAM_KEY=team).delete()
-				db.session.commit()
-				time_now = int(str(now.year) + str(now.month) + str(now.day) + str(now.hour) + str(now.minute))
-				for play in allPlays:
-					pbp = play_by_play(play['date'], play['batter'], play['btk'], play['ptk'], play['outcome'], play['location'], year, play['description'])
-					db.session.add(pbp)
-					db.session.commit()
-				db.session.commit()
-				hitter_stats.query.filter_by(YEAR=str(year)).filter_by(TEAM_KEY=team).delete()
-				db.session.commit()
-				for player in rosterToAdd:
-					db.session.add(player)
-					db.session.commit()
-				db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 1")
-				db.session.commit()
-				gc.collect()
-				return jsonify(allPlays)
-				break
-			else:
-				allow = list(db.engine.execute(f"""
-				SELECT * from ALLOW_SCRAPE
-				"""))[0].ALLOW
-				time.sleep(0.25)
-				continue
+		db.session.commit()
+		play_by_play.query.filter_by(YEAR=int(year)).filter_by(BATTER_TEAM_KEY=team).delete()
+		db.session.commit()
+		for play in allPlays:
+			pbp = play_by_play(play['date'], play['batter'], play['btk'], play['ptk'], play['outcome'], play['location'], year, play['description'])
+			db.session.add(pbp)
+			db.session.commit()
+		db.session.commit()
+		hitter_stats.query.filter_by(YEAR=str(year)).filter_by(TEAM_KEY=team).delete()
+		db.session.commit()
+		for player in rosterToAdd:
+			db.session.add(player)
+			db.session.commit()
+		db.session.commit()
+		gc.collect()
+		return jsonify(allPlays)
 	except:
 		return 'use'
 
@@ -587,44 +528,41 @@ def data():
 	string = ''
 	if key != '' and len(key) < 7:
 		string = f'and t.TEAM_KEY = {key}'
+
 	query = f"""
-		With a as (
-		SELECT TEAM_KEY,
-		SUM(CASE WHEN YEAR = {years[0]} THEN 1 ELSE 0 END) as ROS_0,
-		SUM(CASE WHEN YEAR = {years[1]} THEN 1 ELSE 0 END) as ROS_1,
-		SUM(CASE WHEN YEAR = {years[2]} THEN 1 ELSE 0 END) as ROS_2
-		 FROM PLAYER_DIM
-		 GROUP BY TEAM_KEY
-		 )
-		, b as (
-		SELECT
-		BATTER_TEAM_KEY,
-		MAX(CASE WHEN YEAR = {years[0]} THEN DATE_KEY ELSE 0 END) as PBP_0,
-		MAX(CASE WHEN YEAR = {years[1]} THEN DATE_KEY ELSE 0 END) as PBP_1,
-		MAX(CASE WHEN YEAR = {years[2]} THEN DATE_KEY ELSE 0 END) as PBP_2
-		 FROM PLAY_BY_PLAY
-		 GROUP BY BATTER_TEAM_KEY
-		)
-		SELECT t.NAME, t.TEAM_KEY, t.ACTIVE_RECORD,
-		IFNULL(ROS_0, 0) ROS_0,
-		IFNULL(ROS_1, 0) ROS_1,
-		IFNULL(ROS_2, 0) ROS_2,
-		IFNULL(PBP_0, 0) PBP_0,
-		IFNULL(PBP_1, 0) PBP_1,
-		IFNULL(PBP_2, 0) PBP_2
-		FROM TEAM_DIM t
-		LEFT JOIN a on a.TEAM_KEY = t.TEAM_KEY
-		LEFT JOIN b on b.BATTER_TEAM_KEY = t.TEAM_KEY
-		WHERE t.ACTIVE_RECORD = 1 {string}
-		ORDER BY NAME;
-		"""
-	quert = """SELECT
-	1"""
-	print(list(db.engine.execute(quert)))
-	return '1'
-	# status = list(db.engine.execute(query.replace("\n",'').replace("\t",'')))
+	SELECT t.NAME, t.TEAM_KEY, t.ACTIVE_RECORD,
+	CAST(IFNULL(ROS_0, 0) as signed) ROS_0,
+	CAST(IFNULL(ROS_1, 0) as signed) ROS_1,
+	CAST(IFNULL(ROS_2, 0) as signed) ROS_2,
+	CAST(IFNULL(PBP_0, 0) as signed) PBP_0,
+	CAST(IFNULL(PBP_1, 0) as signed) PBP_1,
+	CAST(IFNULL(PBP_2, 0) as signed) PBP_2
+	FROM TEAM_DIM t
+	LEFT JOIN (
+	SELECT TEAM_KEY,
+	SUM(CASE WHEN YEAR = {years[0]} THEN 1 ELSE 0 END) as ROS_0,
+	SUM(CASE WHEN YEAR = {years[1]} THEN 1 ELSE 0 END) as ROS_1,
+	SUM(CASE WHEN YEAR = {years[2]} THEN 1 ELSE 0 END) as ROS_2
+	 FROM PLAYER_DIM
+	 GROUP BY TEAM_KEY
+	 ) a on a.TEAM_KEY = t.TEAM_KEY
+	 LEFT JOIN
+	(
+	SELECT
+	BATTER_TEAM_KEY,
+	MAX(CASE WHEN YEAR = {years[0]} THEN DATE_KEY ELSE 0 END) as PBP_0,
+	MAX(CASE WHEN YEAR = {years[1]} THEN DATE_KEY ELSE 0 END) as PBP_1,
+	MAX(CASE WHEN YEAR = {years[2]} THEN DATE_KEY ELSE 0 END) as PBP_2
+	 FROM PLAY_BY_PLAY
+	 GROUP BY BATTER_TEAM_KEY
+	) b on b.BATTER_TEAM_KEY = t.TEAM_KEY
+	WHERE t.ACTIVE_RECORD = 1 {string}
+	ORDER BY NAME;
+	"""
+	status = list(db.engine.execute(query))
 	if string != '':
 		return json.dumps([dict(s) for s in status])
+
 
 	return render_template('data.html', status=status, data = json.dumps([dict(s) for s in status]), years=years)
 
@@ -635,7 +573,6 @@ def sprays():
 	data = db.engine.execute(f"""SELECT a.NAME, a.TEAM_KEY FROM TEAM_DIM a WHERE ACTIVE_RECORD = 1 ORDER BY NAME""")
 	for d in data:
 		teams.append({'NAME': d.NAME, 'TEAM_KEY': d.TEAM_KEY})
-	print(teams)
 	return render_template('sprays.html', data = json.dumps(teams), years = years)
 
 @app.route('/printSprays', methods = ['POST', 'GET'])
@@ -745,15 +682,12 @@ def backfillPlays():
 			team = teamRow.TEAM_KEY
 			teamName = team_dim.query.filter_by(TEAM_KEY=team).first().NAME
 			try:
-				print('Starting Scrape of ', teamName)
 				exists = play_by_play.query.filter_by(BATTER_TEAM_KEY=team).filter_by(YEAR=year).all()
 				if len(exists) > 100:
-					print('Already Scraped ', teamName)
 					continue
 				## Get team roster
 				roster = player_dim.query.filter_by(TEAM_KEY=team).filter_by(YEAR=year).filter_by(ACTIVE_RECORD=1).all()
 				if len(roster) == 0:
-					print('No Team ', teamName)
 					continue
 
 				players = {}
@@ -1011,7 +945,6 @@ def backfillPlays():
 					try:
 						allPlays.append(gameScraper(game))
 					except:
-						print('Broke on', teamName, game)
 						continue
 				allPlays = list(itertools.chain.from_iterable(allPlays))
 
@@ -1047,15 +980,42 @@ def backfillPlays():
 					for player in rosterToAdd:
 						db.session.add(player)
 						db.session.commit()
-					db.engine.execute("UPDATE ALLOW_SCRAPE SET ALLOW = 1")
-					db.session.commit()
 					gc.collect()
 					endTime = time.time()
-					print('Loaded in ', teamName, ': ', len(allPlays), ' plays', endTime-startTime)
 				except:
 					continue
 			except:
-				print('Broke on', teamName)
 				continue
 
 	return jsonify(True)
+
+
+@app.route('/backfillRoster', methods = ['GET'])
+def backfillRoster():
+	db.session.commit()
+	teams = team_dim.query.all()
+	player_dim.query.delete()
+	db.session.commit()
+	for year in ['2018','2019', '2020']:
+		for teamRow in teams:
+			team = teamRow.TEAM_KEY
+			try:
+				url=f'https://stats.ncaa.org/team/{team}/roster/{yearCodes[year]}'
+				soup = BeautifulSoup(requests.get(url, headers = {"User-Agent": "Mozilla/5.0"}).content, 'lxml')
+				table = soup.find('tbody')
+				if table is not None:
+					for row in table.findAll('tr'):
+						cells = []
+						for cell in row.findAll('td'):
+							text = cell.text.replace("\n", '')
+							text = cell.text.replace('nbsp&', '')
+							cells.append(text)
+						db.session.add(player_dim(cells[0].replace('â€™',"'"), cells[1], cells[2], cells[3], year, team))
+						db.session.commit()
+						gc.collect()
+			except:
+				continue
+	change = player_dim.query.filter_by(NUMBER=4).filter_by(TEAM_KEY=16).filter_by(CLASS='So').first()
+	if change is not None:
+		change.ACTIVE_RECORD = 0
+	return 'success'

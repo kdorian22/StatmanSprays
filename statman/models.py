@@ -48,10 +48,10 @@ class hitter_stats(db.Model):
     BA = db.Column(db.Float)
     OBP = db.Column(db.Float)
     SLG = db.Column(db.Float)
-    K = db.Column(db.Integer)
-    BB = db.Column(db.Integer)
-    SB = db.Column(db.Integer)
-    CS = db.Column(db.Integer)
+    K = db.Column(db.Float)
+    BB = db.Column(db.Float)
+    SB = db.Column(db.Float)
+    CS = db.Column(db.Float)
     TEAM_KEY = db.Column(db.Integer, primary_key=True)
     ACTIVE_RECORD = db.Column(db.Integer)
 
@@ -66,10 +66,10 @@ class hitter_stats(db.Model):
         self.BA = ba
         self.OBP = obp
         self.SLG = slg
-        self.K = k
-        self.BB = bb
-        self.SB = sb
-        self.CS = cs
+        self.K = 0 if k == '' else k
+        self.BB = 0 if bb == '' else bb
+        self.SB = 0 if sb == '' else sb
+        self.CS = 0 if cs == '' else cs
         self.TEAM_KEY = tk
         self.ACTIVE_RECORD = 1
 
