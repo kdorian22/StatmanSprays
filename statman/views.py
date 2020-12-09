@@ -83,6 +83,7 @@ def index():
 	return render_template('index.html')
 
 
+
 @app.route('/scrapeTeams', methods = ['GET'])
 def scrapeTeams():
 	team_dim.query.delete()
