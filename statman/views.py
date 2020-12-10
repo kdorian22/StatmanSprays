@@ -488,7 +488,7 @@ def scrapePlays():
 	return 'use'
 
 
-@app.route('/getData/<key>/<year>/<type>', methods = ['POST', 'GET'])
+@app.route('/getData/<key>/<year>/<type>/<csv>', methods = ['POST', 'GET'])
 def getData(key, year, type):
 	if key != '' and year != '' and type != '' and len(key) < 10 and len(year) < 5 and len(type) < 10:
 		if type == 'pbpT':
@@ -509,6 +509,9 @@ def getData(key, year, type):
 		))
 	else:
 		data = []
+	if csv = 'csv':
+		df = pd.DataFrame.from_records(data)
+		return df.to_csv(index=Falsec)
 	return json.dumps([dict(d) for d in data])
 
 
