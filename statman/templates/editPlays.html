@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+{% extends 'base.html' %}
+{% block title %} Edit Plays {% endblock %}
+
+{% block content %}
+<html>
+  <div hidden class="success banner">  </div>
+  <div hidden class="failure banner">  </div>
+  <div hidden class="wait banner">  </div>
+  <div hidden class="use banner">  </div>
+  <div id = body>
+  <span  data-key = '{{key}}' data-col = ros data-year = '{{year}}' class = upd id = updateRoster> Update Roster </span>
+    <span  data-key = '{{key}}' data-col = pbpT data-year = '{{year}}' class = upd id = updatePlays> Update Plays </span>
+  <table id = playTable>
+    <tr class = head>
+      <th class = 'head'> DATE </th>
+      <th class = 'head' > TEAM </th>
+      <th class = 'head'> BATTER </th>
+      <th class = 'head des'> DESCRIPTION </th>
+      <th class = 'head'> LOCATION </th>
+      <th class = 'head'> OUTCOME </th>
+    </tr>
+    <tbody>
+  </tbody>
+  </table>
+</div>
+
+</html>
+
+<style>
+.upd{
+  font-size: 30px;
+  margin-bottom: 5px;
+  cursor: pointer;
+  margin-right: 20px
+}
+.upd:hover{
+  text-decoration: underline;
+}
+#playTable th{
+  background-color: slategray;
+  color: rgb(254, 246, 235);
+  font-size: 30px;
+
+}
+
+#playTable td{
+  font-size: 12px;
+  padding: 4px
+}
+
+#playTable td, #playTable th{
+  text-align: center;
+  border: 1px solid slategray;
+}
+#playTable tr{
+  background-color: rgb(254, 246, 235);
+  cursor: pointer;
+}
+
+#playTable tr:hover{
+  border: 2px solid black
+}
+
+#playTable tr:nth-child(2n){
+  background-color: lightgray
+}
+
+#playTable{
+  clear: both;
+  border-collapse: collapse;
+  width: 100%;
+  box-shadow: 0px 0px 10px slategray;
+  display: table;
+
+}
+
+#body{
+  margin-top: 20px;
+  width: 96%;
+  margin-left: 2%;
+
+}
+
+.des{
+  width: 40%;
+}
+
+.inact{
+  background-color: rgba(255,0,0,.5) !important
+}
+
+textarea{
+  text-align: center;
+  vertical-align: middle;
+}
+
+.banner{
+  width: 100%;
+  position: fixed;
+  top: 0px;
+  height: 70px;
+  line-height: 70px;
+  text-align: left;
+  padding-left: 20px;
+  font-size: 30px;
+  background-color: yellow;
+
+}
+
+
+.success{
+  background-color: rgb(102, 204, 145);
+  color: black
+}
+
+.failure{
+  background-color: red;
+  color: black
+}
+
+.wait{
+  background-color: lightgray;
+  color: black
+}
+
+.use{
+  background-color: orange;
+  color: black
+}
+
+
+
+</style>
+
+
+<script>
+
+    const plays = {{playsJS|safe}}
+    console.log(plays)
+    const cols = ['DATE_KEY', 'TEAM_NAME', 'NAME', 'DESCRIPTION', 'LOCATION', 'OUTCOME']
+
+
+    table = d3.select('tbody')
+
+    rows = table.selectAll('.tr')
+    .data(plays)
+    .enter().append('tr')
+
+
+
+    rows.append('td')
+    .html(function(d){ return d.DATE_KEY})
+
+    rows.append('td')
+    .html(function(d){ return d.TEAM_NAME})
+
+    rows.append('td')
+    .html(function(d){ return d.NAME})
+
+    rows.append('td')
+    .html(function(d){ return d.DESCRIPTION})
+    .attr('data-id', function(d){ return d.PLAY_ID})
+    .attr('class', function(d){ return d.ACTIVE_RECORD == 1 ? 'act' : 'inact'})
+
+    rows.append('td')
+    .html(function(d){ return `<textarea data-id = ${d.PLAY_ID} class = 'loc'> ${d.LOCATION} </textarea>`})
+
+    rows.append('td')
+    .html(function(d){ return d.OUTCOME})
+
+
+
+
+
+    $('.act, .inact').click(function(){
+      if($(this).hasClass('act')){
+        $(this).addClass('inact')
+        $(this).removeClass('act')
+      }else{
+        $(this).addClass('act')
+        $(this).removeClass('inact')
+      }
+      $.get(`{{url_for('PBPWrite')}}?id=${$(this).data('id')}&col=ar`, function(d){
+          return d
+      })
+    })
+
+    $('.loc').on('keyup', function(){
+      $.get(`{{url_for('PBPWrite')}}?id=${$(this).data('id')}&col=loc&val=${$(this).val()}`, function(d){
+          return d
+      })
+    })
+
+    $('.upd').click(function(d){
+      $('#body').css("pointer-events", "none")
+      var loader = $(this)
+      var col = $(this).data('col')
+      var key = $(this).data('key')
+      var year = $(this).data('year')
+      if(col == 'pbpT'){
+        var str = `{{url_for('scrapePlays')}}?team=${key}&year=${year}`
+        $('.wait').text("Gathering data. This may take a few minutes. Don't refresh the page.")
+        $('.wait').slideDown()
+      }else{
+        var str = `{{url_for('scrapeRoster')}}?team=${key}&year=${year}`
+      }
+      loader.addClass('progress')
+      $.get(str, function(data){
+        $('.banner').hide()
+        loader.removeClass('progress')
+        $('#body').css("pointer-events", "auto")
+        if(data == 'no roster'){
+          $('.failure').text(`Load the ${year} roster before the play by play data`)
+          $('.failure').slideDown()
+        }else if(data == 'no'){
+          loader.parent('td').css('background-color', 'red')
+           $('.failure').text('No data found. Contact site administrator if this is an error.')
+           $('.failure').slideDown()
+        }else if(data == 'no games'){
+          loader.parent('td').css('background-color', 'red')
+           $('.failure').text('No games played this season')
+           $('.failure').slideDown()
+        }else if(data == 'use'){
+          loader.parent('td').css('background-color', 'orange')
+           $('.use').text('Other user updating DB currently. Try again in a minute.')
+           $('.use').slideDown()
+        }else{
+          let team = '{{org}}'
+          let type = col == 'pbpT' ? 'play by play data' : 'roster'
+          loader.parent('td').addClass('done')
+          loader.parent('td').css('background-color', 'rgb(102, 204, 145)').css('color', 'white')
+          $('.success').text(`${team + ' ' + year + ' ' + type} loaded successfully.` )
+          $('.success').slideDown()
+          $('.done .upd').on('mouseenter', function(e){toolTip(this, e)})
+
+          $('.done .upd').on('mouseout', function(d){
+            $("#toolTip").hide()
+            $("#toolTip").empty()
+          })
+        }
+        setTimeout(function(){ $('.banner').slideUp('slow') }, 2500)
+      })
+
+    })
+</script>
+
+<script >
+
+
+
+
+
+
+</script>
+
+{% endblock %}

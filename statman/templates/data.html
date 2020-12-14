@@ -409,7 +409,6 @@ th.plays{
        par = $(this).children()
        $.get(Flask.url_for('getData', {key: par.data('key'), year: par.data('year'), type: par.data('col'), csv: 'y'}), function(data){
          $('#body').css("pointer-events", "auto")
-
          // Export csv
          // https://www.developintelligence.com/blog/2017/04/use-javascript-to-export-your-data-as-csv/
           csv = 'data:text/csv;charset=utf-8,' + data;
