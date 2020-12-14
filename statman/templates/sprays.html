@@ -28,7 +28,7 @@
   <div id = container>
     <div id = rosterDiv>
       <span hidden id = printAll> Print All </span>
-      <span id = teamName> No Team Selected </span>
+      <span id = teamName> No Roster </span>
       <table id = roster>
       </table>
     </div>
@@ -437,6 +437,10 @@ th.plays{
   const years = {{years|safe}}
   const teams = init.map(function(d){ return {'label': d.NAME, 'value': {'key': d.TEAM_KEY, 'name': d.NAME}}})
   const teams2 = init.map(function(d){ return d.NAME})
+  const plays = {{plays|safe}}
+  const rosters = {{rosters|safe}}
+  const hitStats = {{stats|safe}}
+  const team = {{team}}
 
   $('#searchTeam').click(function(d){
       $("#searchTeam").val('')
@@ -465,11 +469,10 @@ th.plays{
   function addData(year, key, name){
     $("#playTable").empty()
     $('#field').empty()
-    $.get(Flask.url_for('getData', {key: key, year: year, type: 'ros'}), function(data){
+      data = rosters.filter(function(d){ return d.TEAM_KEY == key & d.YEAR == year})
+      $("#roster").empty()
       if(data.length > 0){
-        data = JSON.parse(data)
         $("#teamName").text(name + ' - ' + year)
-        $("#roster").empty()
         d3.select('#roster').append('tr')
         .html("<th>Name</th><th>Pos</th><th>Num</th><th>Year</th><th></th>")
 
@@ -484,8 +487,7 @@ th.plays{
           $('#playDiv').hide()
           $('.selected').removeClass('selected')
           $(this).addClass('selected')
-          $.get(Flask.url_for('getData', {key: d.PLAYER_KEY, year: d.YEAR, type: 'pbpP'}), function(data){
-            data = JSON.parse(data)
+            data = plays.filter(function(e){ return e.BATTER_PLAYER_KEY == d.PLAYER_KEY & e.YEAR == d.YEAR})
             FULL_NAME = d.FULL_NAME
             NUMBER = d.NUMBER
             POSITION = d.POSITION
@@ -493,7 +495,6 @@ th.plays{
             YEAR = d.YEAR
             TEAM_KEY = d.TEAM_KEY
             makeSpray(data, d.FULL_NAME, d.NUMBER, d.POSITION, d.CLASS, d.YEAR, d.TEAM_KEY)
-          })
         })
 
         d3.selectAll('tr.plRow')
@@ -529,8 +530,9 @@ th.plays{
 
 
 
+      }else{
+        $("#teamName").text('No Roster')
       }
-    })
   }
 
   function makeSpray(plays, name, num){
@@ -1032,7 +1034,7 @@ th.plays{
        .html(function(d){ return d.DESCRIPTION.length > 50 ? d.DESCRIPTION.split(';')[0].substring(0,50) + '...' : d.DESCRIPTION.split(';')[0]})
        .style('width', '70%')
 
-       $.get(Flask.url_for('getStats', {name: FULL_NAME, pos: POSITION, num: NUMBER, fresh: FRESH, year: YEAR, team: TEAM_KEY}), function(d){
+       soloStats = hitStats.filter(function(f){ return f.FULL_NAME == FULL_NAME & f.POSITION == POSITION & f.CLASS == FRESH & f.NUMBER == NUMBER & f.TEAM_KEY == TEAM_KEY})
 
 
          fieldSVG.selectAll(".statHead")
@@ -1067,8 +1069,8 @@ th.plays{
             .style('padding-left', '3px')
             .style('padding-right', '3px')
 
-            if(JSON.parse(d).length > 0){
-              statData = JSON.parse(d)[0]
+            if(soloStats.length > 0){
+              statData = soloStats[0]
 
               fieldSVG.selectAll(".stat")
                .data(stats.slice(0,3))
@@ -1100,7 +1102,6 @@ th.plays{
                .style('padding-left', '3px')
                .style('padding-right', '3px')
             }
-       })
   }
 
   $(function(){
@@ -1111,16 +1112,8 @@ th.plays{
       },
       minLength:2,
       select: function(event, ui){
-        $("#playTable").empty()
-        $('#playDiv').hide()
         $('#searchTeam').val(ui.item.label)
-        $('#field').empty()
-        var name = ui.item.value.name
-        var key = ui.item.value.key
-        $('#name').text(ui.item.value.name)
-        addRows(key, name)
-        addData($('.selectedSpan').text().replace(/\s+/g,''), key, name)
-
+        window.location.href = "{{url_for('sprays')}}?team="+ui.item.value.key
         return false
       },
       focus: function(event, ui) {
@@ -1129,6 +1122,14 @@ th.plays{
     }
     })
   })
+
+  if(team != ''){
+    teamName = init.filter(function(d){ return d.TEAM_KEY == team})[0].NAME
+    $('#name').text(teamName)
+    addRows(team, teamName)
+    addData($('.selectedSpan').text().replace(/\s+/g,''), team, teamName)
+  }
+
 </script>
 
 {% endblock %}

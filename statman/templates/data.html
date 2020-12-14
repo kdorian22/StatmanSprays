@@ -108,13 +108,13 @@ th.plays{
 .upd{
   font-size: 30px;
   padding: 5px;
-  cursor: pointer;
   display: inline-block;
 }
 
-.upd:hover{
+.has:hover{
   font-weight: bold;
   color: slategray;
+  cursor: pointer;
   text-decoration: underline
 }
 
@@ -164,7 +164,7 @@ th.plays{
 
 
 .done{
-  background-color: rgb(102, 204, 145);
+  background-color: rgb(209, 79, 79);
   color: rgb(254, 246, 235)
 }
 
@@ -228,7 +228,14 @@ th.plays{
   border-radius: 6px;
 }
 
+.progress{
+    animation: spin 2s linear infinite;
+}
 
+@keyframes spin {
+  0% { transform: rotate(360deg); }
+  100% { transform: rotate(0deg); }
+}
 </style>
 
 
@@ -244,6 +251,7 @@ th.plays{
   })
 
   function addRows(data){
+    data = data.filter(function(d){ return d.ROS_0 > 0 | d.ROS_1 > 0 | d.ROS_2 > 0 | d.PBP_0 > 0 | d.PBP_1 > 0 | d.PBP_2 })
     d3.select('#teamBody')
     .selectAll('tr.row')
     .data(data, function(d){ return d.TEAM_KEY})
@@ -256,194 +264,163 @@ th.plays{
 
      d3.selectAll('tr.row')
      .append('td')
-     .attr('class', function(d){ return d.ROS_0 == 0 ? '' : 'done'})
-     .html(function(d){ return '<div class = upd data-col = ros data-key ='+d.TEAM_KEY+' data-year = {{years[0]}}><i class="fa fa-download"></i> </div>'} )
+     .attr('class', function(d){ return d.ROS_0 > 0 ? 'has' : 'done'})
+     .html(function(d){ return '<div data-num = 1 class = upd data-name = "'+d.NAME+'" data-col = ros data-key ='+d.TEAM_KEY+' data-year = {{years[0]}}><i class="fa fa-download"></i> </div>'} )
 
      d3.selectAll('tr.row')
      .append('td')
-     .attr('class', function(d){ return d.PBP_0 == 0 ? '' : 'done'})
-     .html(function(d){return '<div class = upd data-col = pbpT data-key ='+d.TEAM_KEY+' data-year = {{years[0]}}><i class="fa fa-download"></i> </div>'})
+     .attr('class', function(d){ return d.PBP_0 > 0 ? 'has' : 'done'})
+     .html(function(d){return '<div data-num = 2 class = upd data-name = "'+d.NAME+'" data-col = pbpT data-key ='+d.TEAM_KEY+' data-year = {{years[0]}}><i class="fa fa-download"></i> </div>'})
 
      d3.selectAll('tr.row')
      .append('td')
-     .attr('class', function(d){ return d.ROS_1 == 0 ? '' : 'done'})
-     .html(function(d){ return '<div class = upd data-col = ros data-key ='+d.TEAM_KEY+' data-year = {{years[1]}}><i class="fa fa-download"></i> </div>'})
-
-
-     d3.selectAll('tr.row')
-     .append('td')
-     .attr('class', function(d){ return d.PBP_1 == 0 ? '' : 'done'})
-     .html(function(d){return '<div class = upd data-col = pbpT data-key ='+d.TEAM_KEY+' data-year = {{years[1]}}><i class="fa fa-download"></i> </div>'})
+     .attr('class', function(d){ return d.ROS_1 > 0 ? 'has' : 'done'})
+     .html(function(d){ return '<div data-num = 3 class = upd data-name = "'+d.NAME+'" data-col = ros data-key ='+d.TEAM_KEY+' data-year = {{years[1]}}><i class="fa fa-download"></i> </div>'})
 
 
      d3.selectAll('tr.row')
      .append('td')
-     .attr('class', function(d){ return d.ROS_2 == 0 ? '' : 'done'})
-     .html(function(d){ return '<div class = upd data-col = ros data-key ='+d.TEAM_KEY+' data-year = {{years[2]}}><i class="fa fa-download"></i> </div>'})
+     .attr('class', function(d){ return d.PBP_1 > 0 ? 'has' : 'done'})
+     .html(function(d){return '<div data-num = 4 class = upd data-name = "'+d.NAME+'" data-col = pbpT data-key ='+d.TEAM_KEY+' data-year = {{years[1]}}><i class="fa fa-download"></i> </div>'})
 
 
      d3.selectAll('tr.row')
      .append('td')
-     .attr('class', function(d){ return d.PBP_2 == 0 ? '' : 'done'})
-     .html(function(d){return '<div class = upd data-col = pbpT data-key ='+d.TEAM_KEY+' data-year = {{years[2]}}><i class="fa fa-download"></i> </div>'})
+     .attr('class', function(d){ return d.ROS_2 > 0 ? 'has' : 'done'})
+     .html(function(d){ return '<div data-num = 5 class = upd data-name = "'+d.NAME+'" data-col = ros data-key ='+d.TEAM_KEY+' data-year = {{years[2]}}><i class="fa fa-download"></i> </div>'})
+
+
+     d3.selectAll('tr.row')
+     .append('td')
+     .attr('class', function(d){ return d.PBP_2 > 0 ? 'has' : 'done'})
+     .html(function(d){return '<div data-num = 6 class = upd data-name = "'+d.NAME+'" data-col = pbpT data-key ='+d.TEAM_KEY+' data-year = {{years[2]}}><i class="fa fa-download"></i> </div>'})
 
      function toolTip(el, ev){
-       // clearTimeout()
-       $('#toolTip').css('top', 0).css('left', 0)
-       $("#toolTip").empty()
-       child = $(el)
-       var col = child.data('col')
-       var key = child.data('key')
-       var year = child.data('year')
-       $.get(Flask.url_for('getData', {key: key, year: year, type: col, csv: 'y'}), function(data){
-         startX = ev.pageX
-         startY = ev.pageY
-         setTimeout(function(){
-           //your code to be executed after 1 second
-         if(data.length > 0 & Math.abs(startX - xCur) < 40 & Math.abs(startY - yCur - 70) < 40){
-           if(col == 'ros'){
-             $("#toolTip").empty()
-             data = JSON.parse(data)
-             $('#toolTip').show()
-             if(window.innerWidth < 1200){
-               x = ev.clientX > 500 ? (ev.pageX - 480) : (ev.pageX + 30)
-             }else{
-               x = ev.clientX > 750 ? (ev.pageX - 480) : (ev.pageX + 30)
+       if(1 == 0){
+         $('#toolTip').css('top', 0).css('left', 0)
+         $("#toolTip").empty()
+         child = $(el)
+         var col = child.data('col')
+         var key = child.data('key')
+         var year = child.data('year')
+         $.get(Flask.url_for('getData', {key: key, year: year, type: col, csv: 'n'}), function(data){
+           startX = ev.pageX
+           startY = ev.pageY
+           setTimeout(function(){
+             //your code to be executed after 1 second
+           if(data.length > 0 & Math.abs(startX - xCur) < 40 & Math.abs(startY - yCur - 70) < 40){
+             if(col == 'ros'){
+               $("#toolTip").empty()
+               data = JSON.parse(data)
+               $('#toolTip').show()
+               if(window.innerWidth < 1200){
+                 x = ev.clientX > 500 ? (ev.pageX - 480) : (ev.pageX + 30)
+               }else{
+                 x = ev.clientX > 750 ? (ev.pageX - 480) : (ev.pageX + 30)
+               }
+               y = ev.clientY > 300 ? ev.clientY > 400 ? (ev.pageY - 420) : (ev.pageY - 200) : (ev.pageY)
+               $('#toolTip').css('left', x+'px').css('top', y+'px')
+               let pitchers = data.filter(function(d){ return d.POSITION == 'P'})
+               let pos = data.filter(function(d){ return d.POSITION != 'P'})
+
+               d3.select('#toolTip')
+               .append('table')
+               .attr('class', 'dataTab')
+               .selectAll('tr.pit')
+               .data(pitchers)
+               .enter()
+               .append('tr')
+               .attr('class', 'pit')
+
+               d3.selectAll('tr.pit')
+               .append('td').html(function(d){ return d.FULL_NAME })
+               .style('font-weight', 'bold')
+
+                d3.selectAll('tr.pit')
+                .append('td')
+                .html(function(d){ return d.POSITION} )
+
+                // d3.selectAll('tr.pit')
+                // .append('td')
+                // .html(function(d){ return d.NUMBER} )
+
+                d3.selectAll('tr.pit')
+                .append('td')
+                .html(function(d){ return d.CLASS} )
+
+                d3.select('#toolTip')
+                .append('table')
+                .attr('class', 'dataTab')
+                .selectAll('tr.pos')
+                .data(pos)
+                .enter()
+                .append('tr')
+                .attr('class', 'pos')
+
+                d3.selectAll('tr.pos')
+                .append('td').html(function(d){ return d.FULL_NAME })
+                .style('font-weight', 'bold')
+
+                 d3.selectAll('tr.pos')
+                 .append('td')
+                 .html(function(d){ return d.POSITION} )
+
+                 // d3.selectAll('tr.pos')
+                 // .append('td')
+                 // .html(function(d){ return d.NUMBER} )
+
+                 d3.selectAll('tr.pos')
+                 .append('td')
+                 .html(function(d){ return d.CLASS} )
+
+
+             }else if(col == 'pbpT'){
+               $("#toolTip").empty()
+               data = JSON.parse(data)
+               $('#toolTip').show()
+               x = ev.pageX - 50
+               y = ev.pageY + 30
+               $('#toolTip').css('left', x+'px').css('top', y+'px')
+               let date = d3.max(data.map(function(d){ return d.DATE_KEY }))
+               let maxDate = '<span style = "font-weight: bold"> Most Recent Game: </span><br>'+
+               String(date).substring(4,6)+'-'+String(date).substring(6,8)+'-'+String(date).substring(0,4)
+               d3.select('#toolTip')
+               .append('div')
+               .attr('class', 'dataDiv')
+               .html(maxDate)
              }
-             y = ev.clientY > 300 ? ev.clientY > 400 ? (ev.pageY - 420) : (ev.pageY - 200) : (ev.pageY)
-             $('#toolTip').css('left', x+'px').css('top', y+'px')
-             let pitchers = data.filter(function(d){ return d.POSITION == 'P'})
-             let pos = data.filter(function(d){ return d.POSITION != 'P'})
-
-             d3.select('#toolTip')
-             .append('table')
-             .attr('class', 'dataTab')
-             .selectAll('tr.pit')
-             .data(pitchers)
-             .enter()
-             .append('tr')
-             .attr('class', 'pit')
-
-             d3.selectAll('tr.pit')
-             .append('td').html(function(d){ return d.FULL_NAME })
-             .style('font-weight', 'bold')
-
-              d3.selectAll('tr.pit')
-              .append('td')
-              .html(function(d){ return d.POSITION} )
-
-              // d3.selectAll('tr.pit')
-              // .append('td')
-              // .html(function(d){ return d.NUMBER} )
-
-              d3.selectAll('tr.pit')
-              .append('td')
-              .html(function(d){ return d.CLASS} )
-
-              d3.select('#toolTip')
-              .append('table')
-              .attr('class', 'dataTab')
-              .selectAll('tr.pos')
-              .data(pos)
-              .enter()
-              .append('tr')
-              .attr('class', 'pos')
-
-              d3.selectAll('tr.pos')
-              .append('td').html(function(d){ return d.FULL_NAME })
-              .style('font-weight', 'bold')
-
-               d3.selectAll('tr.pos')
-               .append('td')
-               .html(function(d){ return d.POSITION} )
-
-               // d3.selectAll('tr.pos')
-               // .append('td')
-               // .html(function(d){ return d.NUMBER} )
-
-               d3.selectAll('tr.pos')
-               .append('td')
-               .html(function(d){ return d.CLASS} )
-
-
-           }else if(col == 'pbpT'){
-             $("#toolTip").empty()
-             data = JSON.parse(data)
-             $('#toolTip').show()
-             x = ev.pageX - 50
-             y = ev.pageY + 30
-             $('#toolTip').css('left', x+'px').css('top', y+'px')
-             let date = d3.max(data.map(function(d){ return d.DATE_KEY }))
-             let maxDate = '<span style = "font-weight: bold"> Most Recent Game: </span><br>'+
-             String(date).substring(4,6)+'-'+String(date).substring(6,8)+'-'+String(date).substring(0,4)
-             d3.select('#toolTip')
-             .append('div')
-             .attr('class', 'dataDiv')
-             .html(maxDate)
            }
-         }
-       }, 500);
-       })
+         }, 500);
+         })
+       }
      }
 
-     $('.done .upd').on('mouseenter', function(e){toolTip(this, e)})
+     $('.has .upd').on('mouseenter', function(e){toolTip(this, e)})
 
-     $('.done').on('mouseout', function(d){
+     $('.has').on('mouseout', function(d){
        $("#toolTip").hide()
        $("#toolTip").empty()
      })
 
-     // $('.upd').click(function(d){
-     //   $('#body').css("pointer-events", "none")
-     //   var loader = $(this)
-     //   var col = $(this).data('col')
-     //   var key = $(this).data('key')
-     //   var year = $(this).data('year')
-     //   if(col == 'pbpT'){
-     //     var str = `{{url_for('scrapePlays')}}?team=${key}&year=${year}`
-     //     $('.wait').text("Gathering data. This may take a few minutes. Don't refresh the page.")
-     //     $('.wait').slideDown()
-     //   }else{
-     //     var str = `{{url_for('scrapeRoster')}}?team=${key}&year=${year}`
-     //   }
-     //   loader.addClass('progress')
-     //   $.get(str, function(data){
-     //     $('.banner').hide()
-     //     loader.removeClass('progress')
-     //     $('#body').css("pointer-events", "auto")
-     //     if(data == 'no roster'){
-     //       $('.failure').text(`Load the ${year} roster before the play by play data`)
-     //       $('.failure').slideDown()
-     //     }else if(data == 'no'){
-     //       loader.parent('td').css('background-color', 'red')
-     //        $('.failure').text('No data found. Contact site administrator if this is an error.')
-     //        $('.failure').slideDown()
-     //     }else if(data == 'no games'){
-     //       loader.parent('td').css('background-color', 'red')
-     //        $('.failure').text('No games played this season')
-     //        $('.failure').slideDown()
-     //     }else if(data == 'use'){
-     //       loader.parent('td').css('background-color', 'orange')
-     //        $('.use').text('Other user updating DB currently. Try again in a minute.')
-     //        $('.use').slideDown()
-     //     }else{
-     //       let team = init.filter(function(d){ return d.TEAM_KEY == key})[0].NAME
-     //       let type = col == 'pbpT' ? 'play by play data' : 'roster'
-     //       loader.parent('td').addClass('done')
-     //       loader.parent('td').css('background-color', 'rgb(102, 204, 145)').css('color', 'white')
-     //       $('.success').text(`${team + ' ' + year + ' ' + type} loaded successfully.` )
-     //       $('.success').slideDown()
-     //       $('.done .upd').on('mouseenter', function(e){toolTip(this, e)})
-     //
-     //       $('.done .upd').on('mouseout', function(d){
-     //         $("#toolTip").hide()
-     //         $("#toolTip").empty()
-     //       })
-     //     }
-     //     setTimeout(function(){ $('.banner').slideUp('slow') }, 2500)
-     //   })
-     //
-     // })
+     $('.has').click(function(d){
+       $('#body').css("pointer-events", "none")
+       var loader = $(this)
+       loader.addClass('progress')
+       par = $(this).children()
+       $.get(Flask.url_for('getData', {key: par.data('key'), year: par.data('year'), type: par.data('col'), csv: 'y'}), function(data){
+         $('#body').css("pointer-events", "auto")
+
+         // Export csv
+         // https://www.developintelligence.com/blog/2017/04/use-javascript-to-export-your-data-as-csv/
+          csv = 'data:text/csv;charset=utf-8,' + data;
+          data = encodeURI(csv);
+          link = document.createElement('a');
+          link.setAttribute('href', data);
+          link.setAttribute('download', `${par.data('name')}-${par.data('year')} ${par.data('col').replace('T','')}.csv`);
+          link.click();
+          loader.removeClass('progress')
+       })
+    })
    }
   addRows(init)
 

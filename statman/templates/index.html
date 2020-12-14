@@ -3,22 +3,73 @@
 {% block title %}Statman Sprays{% endblock %}
 {% block content %}
 <script type="text/javascript" src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js" data-name="bmc-button" data-slug="StatmanSprays" data-color="slategray" data-emoji=""  data-font="Lato" data-text="Buy me a coffee" data-outline-color="#000000" data-font-color="#ffffff" data-coffee-color="#FFDD00" ></script>
-      <div>
+    <div id = search>
+      <div id = cont><h1 id = logo>Statman Sprays</h1>
+      <input id =  searchTeam type="text" placeholder=" Find Team..."></input>
+      </div>
+    </div>
+      <!-- <div>
         <a class = redirect href = "{{url_for('sprays')}}"> <div class = pageSelect> Spray Charts  </div> </a>
          <a class = redirect href = "{{url_for('data')}}"> <div class = pageSelect> Data Overview  </div> </a>
          <a id = about class = redirect hidden href = "{{url_for('about')}}"> <div class = pageSelect> About Us  </div> </a>
          <a id = faq class = redirect hidden href = "{{url_for('faq')}}"> <div class = pageSelect> FAQ  </div> </a>
-      </div>
+      </div> -->
 <style>
+#logo{
+  text-align: center ;
+  font-size: 75px ;
+  color: rgb(254, 246, 235);
+  margin: 15px;
+}
+
+#cont{
+  width: 60%;
+  text-align: center;
+  border: 6px solid rgb(254, 246, 235);
+  border-radius: 10px;
+  padding: 7px;
+  background-color: slategray;
+  padding: 15px
+}
+#search{
+  width: 100%;
+  height: 70vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+#searchTeam{
+  vertical-align: bottom;
+  font-size: 55px;
+  border-radius: 5px;
+  border: 1px solid black;
+  position: relative;
+  right: 3px;
+  margin-bottom: 3px;
+  width: 100%;
+  box-shadow: 0px 0px 5px slategray;
+  background-color: rgb(254, 246, 235)
+}
+
+.ui-menu-item{
+  font-size: 30px;
+  background-color: rgb(254, 246, 235)
+}
+
+@media only screen and (max-width: 1200px) {
+  #logo{
+    font-size: 65px
+  }
+}
 
 
-.redirect{
+/* .redirect{
   color: rgb(254, 246, 235);
   text-decoration: none;
   font-style: normal !important
-}
+} */
 
-@media only screen and (min-width: 1200px) {
+/* @media only screen and (min-width: 1200px) {
     .pageSelect{
       float: left;
       width: 40%;
@@ -78,7 +129,7 @@
     background-color:  rgb(254, 246, 235);
     color: slategray;
     border: 6px solid slategray
-  }
+  } */
 
   .bmc-btn{
     border: 2px solid rgb(254, 246, 235) !important;
@@ -101,17 +152,37 @@
 <script>
 
   $(".bmc-btn").text('Support the Statman')
-  const teamsObj = {{data|safe}}
-  console.log(teamsObj)
-  const teams = teamsObj.map(function(d){ return d.NAME})
-  let division = ''
-  $('.divSelect span').click(function(){
-    $('.divSelect span').each(function(){
-      $(this).removeClass('divSelected')
-    })
-    $(this).addClass('divSelected')
+  const init = {{teams|safe}}
+  const teams = init.map(function(d){ return {'label': d.NAME, 'value': {'key': d.TEAM_KEY, 'name': d.NAME}}})
+  const teams2 = init.map(function(d){ return d.NAME})
 
+  $(function(){
+      $("#searchTeam").autocomplete({
+      source: function(request, response){
+        results = $.ui.autocomplete.filter(teams, request.term);
+        response(results.slice(0,6))
+      },
+      minLength:2,
+      select: function(event, ui){
+        $('#searchTeam').val(ui.item.label)
+        window.location.href = "{{url_for('sprays')}}?team="+ui.item.value.key
+        return false
+      },
+      focus: function(event, ui) {
+        event.preventDefault();
+        $('#searchTeam').val(ui.item.label);
+    }
+    })
   })
+  // const teams = teamsObj.map(function(d){ return d.NAME})
+  // let division = ''
+  // $('.divSelect span').click(function(){
+  //   $('.divSelect span').each(function(){
+  //     $(this).removeClass('divSelected')
+  //   })
+  //   $(this).addClass('divSelected')
+  //
+  // })
 
 </script>
 {% endblock %}

@@ -78,11 +78,16 @@ def exists(text):
 	else:
 		return text
 
+def jsonDump(data):
+	return json.dumps([dict(d) for d in data])
+
 @app.route('/')
 def index():
-	return render_template('index.html')
-
-
+	data = db.engine.execute(f"""SELECT a.NAME, a.TEAM_KEY FROM TEAM_DIM a WHERE ACTIVE_RECORD = 1 ORDER BY NAME""")
+	teams = []
+	for d in data:
+		teams.append({'NAME': d.NAME, 'TEAM_KEY': d.TEAM_KEY})
+	return render_template('index.html', teams = teams)
 
 @app.route('/scrapeTeams', methods = ['GET'])
 def scrapeTeams():
@@ -156,7 +161,7 @@ def scrapeRoster():
 		players = list(db.engine.execute(f"SELECT * FROM PLAYER_DIM WHERE YEAR = '{year}' and TEAM_KEY = {team}"))
 		db.session.commit()
 
-		return json.dumps([dict(e) for e in players])
+		return jsonDump(players)
 	except:
 		return 'no'
 
@@ -489,7 +494,7 @@ def scrapePlays():
 
 
 @app.route('/getData/<key>/<year>/<type>/<csv>', methods = ['POST', 'GET'])
-def getData(key, year, type):
+def getData(key, year, type, csv):
 	if key != '' and year != '' and type != '' and len(key) < 10 and len(year) < 5 and len(type) < 10:
 		if type == 'pbpT':
 			tab = 'PLAY_BY_PLAY'
@@ -509,10 +514,16 @@ def getData(key, year, type):
 		))
 	else:
 		data = []
-	if csv = 'csv':
-		df = pd.DataFrame.from_records(data)
-		return df.to_csv(index=Falsec)
-	return json.dumps([dict(d) for d in data])
+
+	if csv == 'y':
+		if len(data) > 0:
+			df = pd.DataFrame(data, columns = dict(data[0]).keys())
+			csv = df.to_csv(index=False)
+			output = make_response(csv)
+			output.headers["Content-Disposition"] = "attachment; filename=export.csv"
+			output.headers["Content-type"] = "text/csv"
+			return output
+	return jsonDump(data)
 
 
 @app.route('/getStats/<name>/<num>/<pos>/<fresh>/<year>/<team>', methods = ['POST', 'GET'])
@@ -522,7 +533,7 @@ def getStats(name, num, pos, fresh, year, team):
 		data = list(db.engine.execute(string))
 	else:
 		data = []
-	return json.dumps([dict(d) for d in data])
+	return jsonDump(data)
 
 
 
@@ -565,19 +576,30 @@ def data():
 	"""
 	status = list(db.engine.execute(query))
 	if string != '':
-		return json.dumps([dict(s) for s in status])
+		return jsonDump(status)
 
 
-	return render_template('data.html', status=status, data = json.dumps([dict(s) for s in status]), years=years)
+	return render_template('data.html', status=status, data = jsonDump(status), years=years)
 
 
 @app.route('/sprays', methods = ['POST', 'GET'])
 def sprays():
-	teams = []
+	team = request.values.get('team', '')
 	data = db.engine.execute(f"""SELECT a.NAME, a.TEAM_KEY FROM TEAM_DIM a WHERE ACTIVE_RECORD = 1 ORDER BY NAME""")
+	teams = []
 	for d in data:
 		teams.append({'NAME': d.NAME, 'TEAM_KEY': d.TEAM_KEY})
-	return render_template('sprays.html', data = json.dumps(teams), years = years)
+	stats = []
+	plays = []
+	rosters = []
+
+	if team == '':
+		return render_template('sprays.html', team = team, stats = jsonDump(stats), plays = jsonDump(plays), rosters = jsonDump(rosters), data = json.dumps(teams), years = years)
+
+	plays = list(db.engine.execute(f"""SELECT * FROM PLAY_BY_PLAY WHERE BATTER_TEAM_KEY = {team}"""))
+	rosters = list(db.engine.execute(f"""SELECT * FROM PLAYER_DIM WHERE TEAM_KEY = {team}"""))
+	stats = list(db.engine.execute(f"""SELECT * FROM HITTER_STATS WHERE TEAM_KEY = {team}"""))
+	return render_template('sprays.html', team = team, stats = jsonDump(stats), plays = jsonDump(plays), rosters = jsonDump(rosters), data = json.dumps(teams), years = years)
 
 @app.route('/printSprays', methods = ['POST', 'GET'])
 def printSprays():
@@ -596,8 +618,8 @@ def printSprays():
 	and h.POSITION = p.POSITION and h.CLASS = p.CLASS and h.YEAR = p.YEAR
 	WHERE p.PLAYER_KEY in ({keys})
 	"""))
-	return render_template('printSprays.html', keys = keyList, plays = json.dumps([dict(s) for s in plays]),
-	stats = json.dumps([dict(s) for s in stats]), years = years)
+	return render_template('printSprays.html', keys = keyList, plays = jsonDump(plays),
+	stats = jsonDump(stats), years = years)
 
 
 @app.route('/about')
