@@ -88,7 +88,7 @@ def index():
 	JOIN TEAM_DIM t on t.TEAM_KEY = p.TEAM_KEY
 	WHERE p.ACTIVE_RECORD = 1 and t.ACTIVE_RECORD = 1
 	GROUP BY p.TEAM_KEY;""")
-	db.engine.execute('SELECT * FROM PLAY_BY_PLAY WHERE BATTER_TEAM_KEY= 2 AND ACTIVE_RECORD = 1 and YEAR = 2020 Limit 1000')
+	db.engine.execute('SELECT * FROM PLAY_BY_PLAY WHERE BATTER_TEAM_KEY= 2 AND ACTIVE_RECORD = 1 and YEAR = 2020 Limit 500')
 	teams = []
 	for d in data:
 		teams.append({'NAME': d.NAME, 'TEAM_KEY': d.TEAM_KEY})
