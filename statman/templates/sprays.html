@@ -711,7 +711,6 @@ th.plays{
         $('#printAll').show()
         $('#printAll').click(function(){
           keyString = data.map(function(d){ return d.PLAYER_KEY }).join(',')
-          console.log(keyString)
           setTimeout(function() {
             window.open("{{url_for('printSprays')}}?keys="+keyString)
           }, 500);
