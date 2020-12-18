@@ -644,7 +644,7 @@ def sprays():
 
 	plays = list(db.engine.execute(f"""SELECT p.*, FULL_NAME FROM PLAY_BY_PLAY p
 	 JOIN PLAYER_DIM d on d.PLAYER_KEY = p.BATTER_PLAYER_KEY
-	 WHERE BATTER_TEAM_KEY = {team} AND p.ACTIVE_RECORD = 1 and d.ACTIVE_RECORD = 1"""))
+	 WHERE d.ACTIVE_RECORD = 1 AND BATTER_TEAM_KEY = {team} and p.ACTIVE_RECORD = 1 """))
 	rosters = list(db.engine.execute(f"""SELECT * FROM PLAYER_DIM WHERE TEAM_KEY = {team} AND ACTIVE_RECORD = 1"""))
 	stats = list(db.engine.execute(f"""SELECT * FROM HITTER_STATS WHERE TEAM_KEY = {team} AND ACTIVE_RECORD = 1"""))
 	return render_template('sprays.html', team = team, stats = jsonDump(stats), plays = jsonDump(plays), rosters = jsonDump(rosters), data = json.dumps(teams), years = years)
