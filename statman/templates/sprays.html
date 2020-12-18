@@ -708,7 +708,7 @@ th.plays{
              window.open("{{url_for('printSprays')}}?keys="+d.PLAYER_KEY)
             }
           })
-        $('#printAll').show()
+        // $('#printAll').show()
         $('#printAll').click(function(){
           function calcKeys(_callback){
               keyString = data.map(function(d){ return d.PLAYER_KEY }).join(',')
