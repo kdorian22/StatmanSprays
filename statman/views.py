@@ -88,6 +88,7 @@ def index():
 	JOIN TEAM_DIM t on t.TEAM_KEY = p.TEAM_KEY
 	WHERE p.ACTIVE_RECORD = 1 and t.ACTIVE_RECORD = 1
 	GROUP BY p.TEAM_KEY;""")
+	db.engine.execute('SELECT * FROM PLAY_BY_PLAY WHERE BATTER_TEAM_KEY= 2 AND ACTIVE_RECORD = 1 and YEAR = 2020 Limit 1000')
 	teams = []
 	for d in data:
 		teams.append({'NAME': d.NAME, 'TEAM_KEY': d.TEAM_KEY})
@@ -639,7 +640,7 @@ def sprays():
 	rosters = []
 
 	if team == '':
-		return render_template('sprays.html', team = team, stats = jsonDump(stats), plays = jsonDump(plays), rosters = jsonDump(rosters), data = json.dumps(teams), years = years)
+		return render_template('sprays.html', team = team, stats = jsonDump(stats), plays = jsonDump(plays), rosters = jsonDump(rosters), data = jsonDump(teams), years = years)
 
 	plays = list(db.engine.execute(f"""SELECT p.*, FULL_NAME FROM PLAY_BY_PLAY p
 	 JOIN PLAYER_DIM d on d.PLAYER_KEY = p.BATTER_PLAYER_KEY
