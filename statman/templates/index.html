@@ -5,8 +5,17 @@
 <script type="text/javascript" src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js" data-name="bmc-button" data-slug="StatmanSprays" data-color="slategray" data-emoji=""  data-font="Lato" data-text="Buy me a coffee" data-outline-color="#000000" data-font-color="#ffffff" data-coffee-color="#FFDD00" ></script>
     <div id = search>
       <div id = cont><h1 id = logo>Statman Sprays</h1>
-      <input id =  searchTeam type="text" placeholder=" Find Team..."></input>
+      <input id =  searchTeam type="text" placeholder="Find Team..."></input>
       </div>
+    </div>
+
+    <div id = loaderCont>
+      <!-- https://loading.io/css/ -->
+      <div id = loader><div></div><div></div>
+      <div></div><div></div><div></div>
+      <div></div><div></div><div></div>
+      <div></div><div></div>
+        <div></div><div></div></div>
     </div>
       <!-- <div>
         <a class = redirect href = "{{url_for('sprays')}}"> <div class = pageSelect> Spray Charts  </div> </a>
@@ -15,21 +24,110 @@
          <a id = faq class = redirect hidden href = "{{url_for('faq')}}"> <div class = pageSelect> FAQ  </div> </a>
       </div> -->
 <style>
+
+/* https://loading.io/css/ */
+#loader{
+  visibility: hidden;
+  color: official;
+  display: inline-block;
+  position: absolute;
+  width: 180px;
+  height: 180px;
+}
+#loader div {
+  transform-origin: 90px 90px;
+  animation: lds-spinner 1.2s linear infinite;
+}
+
+#loader div:after {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 3px;
+  left: 84px;
+  width: 15px;
+  height: 50px;
+  border-radius: 20%;
+  background: #fff;
+}
+#loader div:nth-child(1) {
+  transform: rotate(0deg);
+  animation-delay: -1.1s;
+}
+#loader div:nth-child(2) {
+  transform: rotate(30deg);
+  animation-delay: -1s;
+}
+#loader div:nth-child(3) {
+  transform: rotate(60deg);
+  animation-delay: -0.9s;
+}
+#loader div:nth-child(4) {
+  transform: rotate(90deg);
+  animation-delay: -0.8s;
+}
+#loader div:nth-child(5) {
+  transform: rotate(120deg);
+  animation-delay: -0.7s;
+}
+#loader div:nth-child(6) {
+  transform: rotate(150deg);
+  animation-delay: -0.6s;
+}
+#loader div:nth-child(7) {
+  transform: rotate(180deg);
+  animation-delay: -0.5s;
+}
+#loader div:nth-child(8) {
+  transform: rotate(210deg);
+  animation-delay: -0.4s;
+}
+#loader div:nth-child(9) {
+  transform: rotate(240deg);
+  animation-delay: -0.3s;
+}
+#loader div:nth-child(10) {
+  transform: rotate(270deg);
+  animation-delay: -0.2s;
+}
+#loader div:nth-child(11) {
+  transform: rotate(300deg);
+  animation-delay: -0.1s;
+}
+#loader div:nth-child(12) {
+  transform: rotate(330deg);
+  animation-delay: 0s;
+}
+@keyframes lds-spinner {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+
+#loaderCont{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 #logo{
   text-align: center ;
   font-size: 75px ;
   color: rgb(254, 246, 235);
-  margin: 15px;
+  margin-bottom: 5px
 }
 
 #cont{
-  width: 60%;
+  width: 70%;
   text-align: center;
   border: 6px solid rgb(254, 246, 235);
   border-radius: 10px;
-  padding: 7px;
   background-color: slategray;
-  padding: 15px
+  padding: 25px;
 }
 #search{
   width: 100%;
@@ -44,11 +142,12 @@
   border-radius: 5px;
   border: 1px solid black;
   position: relative;
-  right: 3px;
+  right: 8px;
   margin-bottom: 3px;
   width: 100%;
   box-shadow: 0px 0px 5px slategray;
-  background-color: rgb(254, 246, 235)
+  background-color: rgb(254, 246, 235);
+  padding: 5px;
 }
 
 .ui-menu-item{
@@ -56,9 +155,17 @@
   background-color: rgb(254, 246, 235)
 }
 
-@media only screen and (max-width: 1200px) {
+@media only screen and (max-width: 1100px) {
   #logo{
-    font-size: 65px
+    font-size: 7vw
+  }
+
+  #searchTeam{
+    font-size: 5vw;
+  }
+
+  .ui-menu-item{
+    font-size: 3vw;
   }
 }
 
@@ -164,8 +271,12 @@
       },
       minLength:2,
       select: function(event, ui){
+
+        $('#loader').css('visibility', 'visible')
         $('#searchTeam').val(ui.item.label)
-        window.location.href = "{{url_for('sprays')}}?team="+ui.item.value.key
+        setTimeout(function() {
+          window.location.href = "{{url_for('sprays')}}?team="+ui.item.value.key
+        }, 250);
         return false
       },
       focus: function(event, ui) {

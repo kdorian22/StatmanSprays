@@ -4,6 +4,15 @@
 
 {% block content %}
 <html>
+    <!-- https://loading.io/css/ -->
+  <!-- <div  id = 'loaderCont'>  -->
+    <div id = loader>
+    <div></div><div></div><div>
+    </div><div></div><div></div>
+    <div></div><div></div><div>
+    </div><div></div><div></div>
+    <div></div><div></div></div>
+  <!-- </div> -->
   <div hidden class="success banner">  </div>
   <div hidden class="failure banner">  </div>
   <div hidden class="wait banner">  </div>
@@ -25,13 +34,14 @@
       </tr>
     </table>
   </div>
+  <div hidden id = career> Show Career Spray </div>
   <div id = container>
-    <div id = rosterDiv>
-      <span hidden id = printAll> Print All </span>
-      <span id = teamName> No Roster </span>
-      <table id = roster>
-      </table>
-    </div>
+      <div id = rosterDiv>
+        <span hidden id = printAll> Print All </span>
+        <span id = teamName> No Roster </span>
+        <table id = roster>
+        </table>
+      </div>
     <div id = fieldDiv>
       <svg id = field height=450 width=650> </svg>
       <div hidden id = playDiv>
@@ -48,6 +58,120 @@
 </html>
 
 <style>
+
+#career{
+  border: 1px solid black;
+  border-radius: 4px;
+  font-size: 15px;
+  background-color: white;
+  color: black;
+  padding: 5px;
+  cursor: pointer;
+  float: left;
+  margin-bottom: 5px;
+}
+
+.careerSelected{
+  background-color: black !important;
+  color: white !important;
+  border: 1px solid white !important
+}
+
+/* https://loading.io/css/ */
+#loader{
+  color: gray;
+  position: fixed;
+  width: 180px;
+  height: 180px;
+  /* margin-top: 250px; */
+  z-index: 1000;
+  display: none;
+  bottom:5px;
+  right:5px;
+}
+#loader div {
+  background-color: black !important;
+  transform-origin: 90px 90px;
+  animation: lds-spinner 1.2s linear infinite;
+}
+
+#loader div:after {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 3px;
+  left: 84px;
+  width: 15px;
+  height: 50px;
+  border-radius: 20%;
+  background: black;
+}
+#loader div:nth-child(1) {
+  transform: rotate(0deg);
+  animation-delay: -1.1s;
+}
+#loader div:nth-child(2) {
+  transform: rotate(30deg);
+  animation-delay: -1s;
+}
+#loader div:nth-child(3) {
+  transform: rotate(60deg);
+  animation-delay: -0.9s;
+}
+#loader div:nth-child(4) {
+  transform: rotate(90deg);
+  animation-delay: -0.8s;
+}
+#loader div:nth-child(5) {
+  transform: rotate(120deg);
+  animation-delay: -0.7s;
+}
+#loader div:nth-child(6) {
+  transform: rotate(150deg);
+  animation-delay: -0.6s;
+}
+#loader div:nth-child(7) {
+  transform: rotate(180deg);
+  animation-delay: -0.5s;
+}
+#loader div:nth-child(8) {
+  transform: rotate(210deg);
+  animation-delay: -0.4s;
+}
+#loader div:nth-child(9) {
+  transform: rotate(240deg);
+  animation-delay: -0.3s;
+}
+#loader div:nth-child(10) {
+  transform: rotate(270deg);
+  animation-delay: -0.2s;
+}
+#loader div:nth-child(11) {
+  transform: rotate(300deg);
+  animation-delay: -0.1s;
+}
+#loader div:nth-child(12) {
+  transform: rotate(330deg);
+  animation-delay: 0s;
+}
+@keyframes lds-spinner {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* #loaderCont{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  top: 80px;
+} */
+
+
+
 #selectText{
   text-anchor: middle;
   font-size: 40px;
@@ -120,10 +244,11 @@ th.plays{
 
 #teamTable td, #teamTable th{
   text-align: center;
-  border: 1px solid slategray;
+  border: 1px solid rgb(254, 246, 235);
   font-size: 20px;
 }
-#teamTable tr{
+
+/* #teamTable tr{
   background-color: rgb(254, 246, 235)
 }
 #teamTable tr:nth-child(2n){
@@ -132,13 +257,13 @@ th.plays{
 
 #teamTable tr:not(.scaf):not(.head):hover{
   border: 2px solid slategray !important
-}
+} */
 
 #teamTable{
   clear: both;
-  border-collapse: collapse;
+  border-collapse: separate;
   width: 100%;
-  box-shadow: 0px 0px 10px slategray;
+  /* box-shadow: 0px 0px 10px slategray; */
   margin-top: 10px;
 }
 
@@ -300,7 +425,7 @@ th.plays{
   color: rgb(254, 246, 235);
   /* border-radius: 5px; */
   box-shadow: 0px 0px 5px gray;
-  margin-bottom: 20px;
+  margin-bottom: 5px;
   max-height: 450px;
   overflow-y: scroll;
   width: 650px;
@@ -353,7 +478,7 @@ th.plays{
 #playTable{
   border-collapse: collapse;
   width: 96%;
-  margin-left: 2%;
+  margin-left: 2% !important;
   font-weight: normal;
   margin:2px;
 }
@@ -438,9 +563,11 @@ th.plays{
   const teams = init.map(function(d){ return {'label': d.NAME, 'value': {'key': d.TEAM_KEY, 'name': d.NAME}}})
   const teams2 = init.map(function(d){ return d.NAME})
   const plays = {{plays|safe}}
+  const teamPlays = plays
   const rosters = {{rosters|safe}}
   const hitStats = {{stats|safe}}
-  const team = {{team}}
+  const team = '{{team}}'
+  var rowNum = 0
 
   $('#searchTeam').click(function(d){
       $("#searchTeam").val('')
@@ -451,11 +578,37 @@ th.plays{
   });
 
   $('.seasonSpan').click(function(){
+    $('#career').hide()
+    $('#career').removeClass('careerSelected')
+    $('#career').text('Show Career Spray')
     $('.seasonSpan').each(function(){
       $(this).removeClass('selectedSpan')
     })
     $(this).addClass('selectedSpan')
     addData($(this).text().replace(/\s+/g,''), $(this).attr('data-key'), $(this).attr('data-name'))
+  })
+
+  $('#career').click(function(){
+
+    if($('.selected').length == 1){
+    cDatum = d3.selectAll('.selected').datum()
+    careerName = cDatum.FULL_NAME
+    playerID = cDatum.PLAYER_KEY
+    if($(this).hasClass('careerSelected')){
+      $(this).removeClass('careerSelected')
+      $(this).text('Show Career Spray')
+      thesePlays = teamPlays.filter(function(d){ return d.BATTER_PLAYER_KEY == playerID})
+      console.log(thesePlays.map(function(d){ return d.DESCRIPTION}))
+      c = 'y'
+    }else{
+      $(this).addClass('careerSelected')
+      $(this).text('Show '+$('.selectedSpan').text().replace(/\s+/g,'') + ' Spray')
+      thesePlays = teamPlays.filter(function(d){ return d.FULL_NAME == careerName})
+      console.log(thesePlays.map(function(d){ return d.DESCRIPTION}))
+      c = 'c'
+    }
+      makeSpray(thesePlays, cDatum.FULL_NAME, cDatum.NUMBER, cDatum.POSITION, cDatum.CLASS, cDatum.YEAR, cDatum.TEAM_KEY, c)
+    }
   })
 
   function addRows(key, name){
@@ -470,8 +623,43 @@ th.plays{
     $("#playTable").empty()
     $('#field').empty()
       data = rosters.filter(function(d){ return d.TEAM_KEY == key & d.YEAR == year})
+
+
       $("#roster").empty()
       if(data.length > 0){
+        data1 = data
+        // Change player with arrows -- currently not in effect
+        $(document).keydown(function(e){
+            if($('.selected').length > 0 & 1 == 0){
+
+            if(e.which == 40 | e.which == 38){
+                rowNum = parseFloat($('.selected').attr('data-index'))
+                $('.selected').removeClass('selected')
+                $("#playTable").empty()
+                $('#playDiv').hide()
+                if(e.which == 40){
+                  if(rowNum == data1.length - 1){
+                    data1.length - 1
+                  }else{
+                    rowNum = rowNum + 1
+                  }
+                }
+                if(e.which == 38){
+                  if(rowNum == 0){
+                    rowNum = 0
+                  }else{
+                    rowNum = rowNum - 1
+                  }
+                }
+                newRow = d3.select('#row'+rowNum)
+                newRow.classed('selected', true)
+                tum = newRow.datum()
+                data = plays.filter(function(v){ return v.BATTER_PLAYER_KEY == tum.PLAYER_KEY})
+                makeSpray(data, tum.FULL_NAME, tum.NUMBER, tum.POSITION, tum.CLASS, tum.YEAR, tum.TEAM_KEY, 'y')
+              }
+            }
+        });
+
         $("#teamName").text(name + ' - ' + year)
         d3.select('#roster').append('tr')
         .html("<th>Name</th><th>Pos</th><th>Num</th><th>Year</th><th></th>")
@@ -482,19 +670,18 @@ th.plays{
         .enter()
         .append('tr')
         .attr('class', 'plRow')
+        .attr('id', function(d,i){return 'row'+i})
+        .attr('data-index', function(d,i){ return i})
         .on('click', function(d){
           $("#playTable").empty()
           $('#playDiv').hide()
           $('.selected').removeClass('selected')
+          $('#career').show()
+          $('#career').removeClass('careerSelected')
+          $('#career').text('Show Career Spray')
           $(this).addClass('selected')
-            data = plays.filter(function(e){ return e.BATTER_PLAYER_KEY == d.PLAYER_KEY & e.YEAR == d.YEAR})
-            FULL_NAME = d.FULL_NAME
-            NUMBER = d.NUMBER
-            POSITION = d.POSITION
-            FRESH = d.CLASS
-            YEAR = d.YEAR
-            TEAM_KEY = d.TEAM_KEY
-            makeSpray(data, d.FULL_NAME, d.NUMBER, d.POSITION, d.CLASS, d.YEAR, d.TEAM_KEY)
+          data = plays.filter(function(e){ return e.BATTER_PLAYER_KEY == d.PLAYER_KEY})
+          makeSpray(data, d.FULL_NAME, d.NUMBER, d.POSITION, d.CLASS, d.YEAR, d.TEAM_KEY, 'y')
         })
 
         d3.selectAll('tr.plRow')
@@ -535,8 +722,7 @@ th.plays{
       }
   }
 
-  function makeSpray(plays, name, num){
-
+  function makeSpray(plays, name, num, position, fresh, year, team_key, c){
     $("#playTable").empty()
     $('#field').empty()
     d3.selection.prototype.moveToFront = function() {
@@ -558,8 +744,8 @@ th.plays{
 
     plays = infPlays.concat(ofPlays)
 
-    infPlaysEx = infPlays.filter(function(d){ return d.LOCATION != 'p' & d.LOCATION != 'c' }).length
-
+    // infPlaysEx = infPlays.filter(function(d){ return d.LOCATION != 'p' & d.LOCATION != 'c' }).length
+    infPlaysEx = infPlays.length
     infPlays = infPlays.length
     ofPlays = ofPlays.length
 
@@ -567,28 +753,29 @@ th.plays{
     const locDict = {
       '1': ['3b', 'third base'],
       '2': ['ss', 'shortstop', 'through the left side'],
-      '3': ['2b', 'second base', 'through the right side'],
-      '4': ['1b', 'first base'],
-      '5': ['lf', 'left', 'lf line', 'left center'],
-      '6': ['cf', 'center'],
-      '7': ['rf', 'right', 'rf line', 'right center'],
-      '8': ['up the middle']
+      '3': ['up the middle','p', 'c'],
+      '4': ['2b', 'second base', 'through the right side'],
+      '5': ['1b', 'first base'],
+      '6': ['lf', 'left', 'lf line', 'left center'],
+      '7': ['cf', 'center'],
+      '8': ['rf', 'right', 'rf line', 'right center'],
     }
 
     const plotDict = {
-      '0': [240,320],
-      '1': [295,300],
-      '2': [355,300],
-      '3': [410,320],
-      '4': [165, 200],
-      '5': [325, 150],
-      '6': [485, 200]
+      '0': [235,320],
+      '1': [277,300],
+      '2': [325,290],
+      '3': [373,300],
+      '4': [415,320],
+      '5': [165, 200],
+      '6': [325, 150],
+      '7': [485, 200]
     }
 
     const hrDict = {
-      '4': [125, 80],
-      '5': [325, 30],
-      '6': [525, 80]
+      '5': [125, 80],
+      '6': [325, 30],
+      '7': [525, 80]
     }
 
     const outcomes = ['1B', '2B', '3B', 'HR', 'LD','FB', 'GB']
@@ -606,7 +793,7 @@ th.plays{
     }
 
     for(loc in locDict){
-      if(loc < 8){
+      if(loc < 9){
         buckets.push({
          'loc': loc,
          'plays': plays.filter(function(d){return locDict[loc].indexOf(d.LOCATION.replace(';','')) > -1})
@@ -633,7 +820,7 @@ th.plays{
     var height = d3.select('#field').attr('height')
     var width = d3.select('#field').attr('width')
     var field = d3.select('#field').append('g').attr('transform', `translate(${width}, ${height-margins.bottom})`)
-    var fieldSVG = d3.select('#field').on('click', function(d){ makeSpray(plays, FULL_NAME, NUMBER)})
+    var fieldSVG = d3.select('#field').on('click', function(d){ makeSpray(plays, name, num, position, fresh, year, team_key, c)})
 
     var lfLine = -Math.PI/4
     var fieldWidth = Math.PI/2
@@ -760,8 +947,8 @@ th.plays{
           }
         })
 
-        if(infPlays > 0){
-          str = (Math.round(buckets[i].plays.length/infPlaysEx*100))+"%"
+        if(infPlaysEx > 0){
+          str = (Math.round(buckets[i].plays.length/(infPlaysEx)*100))+"%"
         }else{
           str = ''
         }
@@ -904,7 +1091,7 @@ th.plays{
 
 
         if(ofPlays > 0){
-          str = (Math.round(buckets[i].plays.length/ofPlays*100))+"%"
+          str = (Math.round(buckets[i].plays.length/(ofPlays)*100))+"%"
           strHR = hrBuckets[i].plays.length
         }else{
           str = ''
@@ -931,7 +1118,7 @@ th.plays{
       }
 
       fieldSVG.append('text')
-      .text(name)
+      .text(name + (c == 'c' ? '' : ' - ' + String(year)))
       .attr('x', margins.left).attr('y', margins.top*2.5)
       .style('font-size', '26px')
 
@@ -941,7 +1128,7 @@ th.plays{
       .style('font-size', '26px')
 
       fieldSVG.append('text')
-      .text(`Tot. IF BIP: ${infPlays}`)
+      .text(`Tot. IF BIP: ${infPlaysEx}`)
       .attr('x', width - margins.right).attr('y', margins.top*4.8)
       .style('font-size', '20px')
       .style('text-anchor', 'end')
@@ -1034,8 +1221,10 @@ th.plays{
        .html(function(d){ return d.DESCRIPTION.length > 50 ? d.DESCRIPTION.split(';')[0].substring(0,50) + '...' : d.DESCRIPTION.split(';')[0]})
        .style('width', '70%')
 
-       soloStats = hitStats.filter(function(f){ return f.FULL_NAME == FULL_NAME & f.POSITION == POSITION & f.CLASS == FRESH & f.NUMBER == NUMBER & f.TEAM_KEY == TEAM_KEY})
-
+       soloStats = []
+       if(c == 'y'){
+         soloStats = hitStats.filter(function(f){ return f.FULL_NAME == name & f.POSITION == position & f.CLASS == fresh & f.NUMBER == num & f.TEAM_KEY == team_key & f.YEAR == year})
+       }
 
          fieldSVG.selectAll(".statHead")
           .data(stats.slice(0,3))
@@ -1112,8 +1301,11 @@ th.plays{
       },
       minLength:2,
       select: function(event, ui){
+        $('#loader').css('display', 'block')
         $('#searchTeam').val(ui.item.label)
-        window.location.href = "{{url_for('sprays')}}?team="+ui.item.value.key
+        setTimeout(function() {
+          window.location.href = "{{url_for('sprays')}}?team="+ui.item.value.key
+        }, 250);
         return false
       },
       focus: function(event, ui) {
@@ -1123,7 +1315,7 @@ th.plays{
     })
   })
 
-  if(team != ''){
+  if(team != '' & plays.length > 0){
     teamName = init.filter(function(d){ return d.TEAM_KEY == team})[0].NAME
     $('#name').text(teamName)
     addRows(team, teamName)

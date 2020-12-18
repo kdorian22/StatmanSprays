@@ -33,7 +33,7 @@ statCodes = {
 		 'pitch':'14761',
 		 'field':'14762'}
 
-locations = ['1b', '2b', '3b', 'ss', ' p ', ' p.', ' p,',' p;', ' c ', ' c.', ' c,', 'catcher', 'pitcher',
+locations = ['1b', '2b', '3b', ' ss', ' p ', ' p.', ' p,',' p;', ' c ', ' c.', ' c,', 'catcher', 'pitcher',
 ' lf', ' rf', ' cf', 'shortstop', 'center',
 'lcf', 'rcf',
 '1b line', '3b line', 'left', 'right',
@@ -44,6 +44,7 @@ locMult = ['through the left side', 'through the right side', 'up the middle', '
 'rf line', 'lf line']
 
 outcomes = ['grounded','muffed','error','line','lined','flied','fly','force','pop','single','double','triple','home','choice','foul','bunt', 'out at']
+outcomes2 = [' singled',' doubled',' tripled',' homer',' homered', ' reached', ' grounded',' muffed',' error',' line',' lined',' flied',' fly',' force',' pop',' single',' double',' triple',' home',' choice',' foul',' bunt',' bunted', ' out', ' out at']
 
 outDict = {
  'grounded': 'GB',
@@ -83,7 +84,10 @@ def jsonDump(data):
 
 @app.route('/')
 def index():
-	data = db.engine.execute(f"""SELECT a.NAME, a.TEAM_KEY FROM TEAM_DIM a WHERE ACTIVE_RECORD = 1 ORDER BY NAME""")
+	data = db.engine.execute(f"""SELECT p.TEAM_KEY, NAME, COUNT(*) FROM PLAYER_DIM p
+	JOIN TEAM_DIM t on t.TEAM_KEY = p.TEAM_KEY
+	WHERE p.ACTIVE_RECORD = 1 and t.ACTIVE_RECORD = 1
+	GROUP BY p.TEAM_KEY;""")
 	teams = []
 	for d in data:
 		teams.append({'NAME': d.NAME, 'TEAM_KEY': d.TEAM_KEY})
@@ -179,7 +183,14 @@ def dist(a, b):
 
 def calcDist(a, b):
 	if len(a) > 3 and len(b) > 3:
-		dist = max([fuzz.ratio(a.lower(),b.lower())/100, fuzz.partial_ratio(a.lower(),b.lower())])
+		dist = fuzz.ratio(a.lower(),b.lower())/100
+	else:
+		dist = 0
+	return dist
+
+def partialDist(a, b):
+	if len(a) > 3 and len(b) > 3:
+		dist = fuzz.partial_ratio(a.lower(),b.lower())
 	else:
 		dist = 0
 	return dist
@@ -192,11 +203,13 @@ def scrapePlays():
 	team = request.values.get('team', '755')
 	year = request.values.get('year', years[0])
 
-
-
 	## Get team name
 	teamName = team_dim.query.filter_by(TEAM_KEY=team).first().NAME
+	teamNameList = [teamName]
 
+	## Hard Code in Alternate Names
+	if int(team) == 27:
+		teamNameList.append('Appalachian St.')
 	## Get team roster
 	roster = player_dim.query.filter_by(TEAM_KEY=team).filter_by(YEAR=year).filter_by(ACTIVE_RECORD=1).all()
 
@@ -243,7 +256,7 @@ def scrapePlays():
 			namesNotLast = []
 		players[r.PLAYER_KEY] = names
 		playersNotLast[r.PLAYER_KEY] = namesNotLast
-	unwanted = ['picked off', 'caught stealing', 'struck', 'walked', 'stole', 'for']
+	unwanted = ['wild pitch', 'passed ball', ' balk ','picked off', 'caught stealing', ' struck ', ' walked ', ' walked.', ' stole ']
 	## start on the team-year roster page
 	start = f'https://stats.ncaa.org/team/{team}/roster/{yearCodes[year]}'
 	soup = BeautifulSoup(requests.get(start, headers = {"User-Agent": "Mozilla/5.0"}).content, 'lxml')
@@ -304,9 +317,9 @@ def scrapePlays():
 			## Plays are stored in a 3-column table. This is how we identify which column we want
 			index = 10
 			for i, td in enumerate(soup.find('table', {'class': 'mytable', 'width': '1000px'}).find('tr', {'class': 'grey_heading'}).findAll('td')):
-				if td.text != teamName and td.text != 'Score':
+				if td.text not in teamNameList and td.text != 'Score':
 					oppTeamName = td.text
-				if td.text == teamName or (td.text in teamName.split()):
+				if td.text in teamNameList or bool([x for x in teamNameList if td.text in x.split()]):
 					index = i
 
 			if index < 10:
@@ -323,7 +336,6 @@ def scrapePlays():
 						string = play.select_one(f"tr td:nth-of-type({index+1})").text.replace("\n", '')
 						if len(string) > 5 and len([pl for pl in unwanted if(pl in string)]) == 0:
 							plays.append(string)
-
 				for play in plays:
 					play = play.replace('3a', ';').replace('unassisted', '')
 					play_details = {}
@@ -333,22 +345,73 @@ def scrapePlays():
 					play_details['description'] = play
 					## get the first 3 words -- contains the batters names
 					start = ' '.join(play.split(' ')[0:3])
+					start = re.compile('|'.join(map(re.escape, outcomes2))).sub('', start)
+					start = start.split(';')[0]
 
 
 					## store all potential batters in the subject list
+					## if multiple perfect matches, take the longer one to avoid subsets i.e Brown vs Browning or A. Smith vs B. Smith
 					subject = []
-
+					matchLen = 0
 					for p in roster:
-						if bool([pl for pl in players[p.PLAYER_KEY] if(pl in start)]):
-							subject.append(p.PLAYER_KEY)
-
-
-					## if more than 1 potential subject, check again, but don't look for last names
-					if len(subject) > 1:
-						subject = []
-						for p in roster:
-							if bool([pl for pl in playersNotLast[p.PLAYER_KEY] if(pl in start)]):
+						for pl in players[p.PLAYER_KEY]:
+							if pl in start and len(pl) >= matchLen and p.PLAYER_KEY not in subject:
+								if len(pl) > matchLen:
+									subject = []
+								matchLen = len(pl)
 								subject.append(p.PLAYER_KEY)
+
+
+					# If there are none, check if there's a slight misspell in the first word
+					if len(subject) == 0:
+						for p in roster:
+							if bool([pl for pl in players[p.PLAYER_KEY] if(dist(pl,start.split(' ')[0]))]):
+								subject.append(p.PLAYER_KEY)
+
+					# Or check if there's a slight misspell in the first 2 words
+					if len(subject) == 0:
+						for p in roster:
+							if bool([pl for pl in players[p.PLAYER_KEY] if(dist(pl,' '.join(start.split(' ')[0:2])))]):
+								subject.append(p.PLAYER_KEY)
+
+					# Or check if there's a slight misspell in the first 3 words
+					if len(subject) == 0:
+						for p in roster:
+							if bool([pl for pl in players[p.PLAYER_KEY] if(dist(pl,' '.join(start.split(' ')[0:3])))]):
+								subject.append(p.PLAYER_KEY)
+
+
+					# if there are still 2 check which one has the closest spelling
+					if len(subject) > 1:
+						cor = []
+						distance = 0
+						for s in subject:
+							for p in players[s]:
+								distNew = calcDist(p, ' '.join(start.split(' ')[0:3]))
+								if distNew >= distance:
+									if distNew > distance:
+										cor = []
+									distance = distNew
+									act = p
+									if s not in cor:
+										cor.append(s)
+						subject = cor
+
+
+					# if there are still 2, check partial distances
+					if len(subject) > 1:
+						cor = []
+						distance = 0
+						for s in subject:
+							for p in players[s]:
+								distNew = partialDist(p, ' '.join(start.split(' ')[0:3]))
+								if distNew >= distance:
+									if distNew > distance:
+										cor = []
+									distance = distNew
+									if s not in cor:
+										cor.append(s)
+						subject = cor
 
 					## if still more than 1, check if one is a pitcher
 					if len(subject) > 1:
@@ -356,37 +419,6 @@ def scrapePlays():
 						if len(ros) == 1:
 							subject = []
 							subject.append(ros[0])
-
-					# Or check if theres a slight misspell in the first word
-					if len(subject) == 0:
-						for p in roster:
-							if bool([pl for pl in players[p.PLAYER_KEY] if(dist(pl,start.split(' ')[0]))]):
-								subject.append(p.PLAYER_KEY)
-
-					# Or check if theres a slight misspell in the first 2 words
-					if len(subject) == 0:
-						for p in roster:
-							if bool([pl for pl in players[p.PLAYER_KEY] if(dist(pl,' '.join(start.split(' ')[0:2])))]):
-								subject.append(p.PLAYER_KEY)
-
-					# Or check if theres a slight misspell in the first 3 words
-					if len(subject) == 0:
-						for p in roster:
-							if bool([pl for pl in players[p.PLAYER_KEY] if(dist(pl,' '.join(start.split(' ')[0:3])))]):
-								subject.append(p.PLAYER_KEY)
-
-					# if there are still 2 check to see which one comes first and which one is closest if they start at the same spot
-					if len(subject) > 1:
-						cor = []
-						distance = 0
-						for s in subject:
-							for p in players[s]:
-								distNew = calcDist(p, ' '.join(start.split(' ')[0:3]))
-								if distNew > distance:
-									distance = distNew
-									cor = []
-									cor.append(s)
-						subject = cor
 
 					subject = subject[0] if len(subject) > 0 else None
 
@@ -441,17 +473,18 @@ def scrapePlays():
 					else:
 						play_details['outcome'] = None
 
-					if play_details['outcome'] == None and 'to' in start:
-						play_details['batter'] = None
 					allPlays.append(play_details)
 			return allPlays
 
 	allPlays = []
 	for game in games:
 		try:
-			allPlays.append(gameScraper(game))
+			thesePlays = gameScraper(game)
+			if len(thesePlays) > 0:
+				allPlays.append(thesePlays)
 		except:
 			continue
+		print(len(allPlays))
 	allPlays = list(itertools.chain.from_iterable(allPlays))
 
 	url=f'https://stats.ncaa.org/team/{team}/stats/{yearCodes[year]}'
@@ -468,7 +501,7 @@ def scrapePlays():
 			rosterToAdd.append(hitter_stats(cells[1].replace('â€™',"'").replace("\n", ''), cells[3].replace("\n", ''), cells[0].replace("\n", ''), cells[2].replace("\n", ''), year, cells[4].replace("\n", ''),
 			cells[5].replace("\n", ''), cells[6].replace("\n", '') if int(year) > 2019 else cells[7].replace("\n", ''),
 			cells[8].replace("\n", ''), cells[9].replace("\n", ''),
-			cells[22].replace("\n", ''), cells[18].replace("\n", ''), cells[26].replace("\n", ''), cells[24].replace('\n', ''), team))
+			cells[22].replace("\n", ''), cells[18].replace("\n", ''), cells[26].replace("\n", ''), cells[24].replace("\n", ''), team))
 	try:
 		db.session.commit()
 		play_by_play.query.filter_by(YEAR=int(year)).filter_by(BATTER_TEAM_KEY=team).delete()
@@ -477,7 +510,7 @@ def scrapePlays():
 			pbp = play_by_play(play['date'], play['batter'], play['btk'], play['ptk'], play['outcome'], play['location'], year, play['description'])
 			db.session.add(pbp)
 		db.session.commit()
-		hitter_stats.query.filter_by(YEAR=str(year)).filter_by(TEAM_KEY=team).delete()
+		# hitter_stats.query.filter_by(YEAR=str(year)).filter_by(TEAM_KEY=team).delete()
 		db.session.commit()
 		lastName = ''
 		lastNum = ''
@@ -488,8 +521,6 @@ def scrapePlays():
 			try:
 				if name != lastName and num != lastNum:
 					db.session.merge(player)
-				else:
-					print('skipped', name)
 			except:
 				continue
 			lastName = player.FULL_NAME
@@ -498,10 +529,10 @@ def scrapePlays():
 		gc.collect()
 		return jsonify(allPlays)
 	except:
-		return 'use'
+		return 'no'
 
 	gc.collect()
-	return 'use'
+	return 'no'
 
 
 @app.route('/getData/<key>/<year>/<type>/<csv>', methods = ['POST', 'GET'])
@@ -596,7 +627,10 @@ def data():
 @app.route('/sprays', methods = ['POST', 'GET'])
 def sprays():
 	team = request.values.get('team', '')
-	data = db.engine.execute(f"""SELECT a.NAME, a.TEAM_KEY FROM TEAM_DIM a WHERE ACTIVE_RECORD = 1 ORDER BY NAME""")
+	data = db.engine.execute(f"""SELECT p.TEAM_KEY, NAME, COUNT(*) FROM PLAYER_DIM p
+	JOIN TEAM_DIM t on t.TEAM_KEY = p.TEAM_KEY
+	WHERE p.ACTIVE_RECORD = 1 and t.ACTIVE_RECORD = 1
+	GROUP BY p.TEAM_KEY;""")
 	teams = []
 	for d in data:
 		teams.append({'NAME': d.NAME, 'TEAM_KEY': d.TEAM_KEY})
@@ -607,9 +641,11 @@ def sprays():
 	if team == '':
 		return render_template('sprays.html', team = team, stats = jsonDump(stats), plays = jsonDump(plays), rosters = jsonDump(rosters), data = json.dumps(teams), years = years)
 
-	plays = list(db.engine.execute(f"""SELECT * FROM PLAY_BY_PLAY WHERE BATTER_TEAM_KEY = {team}"""))
-	rosters = list(db.engine.execute(f"""SELECT * FROM PLAYER_DIM WHERE TEAM_KEY = {team}"""))
-	stats = list(db.engine.execute(f"""SELECT * FROM HITTER_STATS WHERE TEAM_KEY = {team}"""))
+	plays = list(db.engine.execute(f"""SELECT p.*, FULL_NAME FROM PLAY_BY_PLAY p
+	 JOIN PLAYER_DIM d on d.PLAYER_KEY = p.BATTER_PLAYER_KEY
+	 WHERE BATTER_TEAM_KEY = {team} AND p.ACTIVE_RECORD = 1 and d.ACTIVE_RECORD = 1"""))
+	rosters = list(db.engine.execute(f"""SELECT * FROM PLAYER_DIM WHERE TEAM_KEY = {team} AND ACTIVE_RECORD = 1"""))
+	stats = list(db.engine.execute(f"""SELECT * FROM HITTER_STATS WHERE TEAM_KEY = {team} AND ACTIVE_RECORD = 1"""))
 	return render_template('sprays.html', team = team, stats = jsonDump(stats), plays = jsonDump(plays), rosters = jsonDump(rosters), data = json.dumps(teams), years = years)
 
 @app.route('/printSprays', methods = ['POST', 'GET'])
@@ -643,8 +679,8 @@ def faq():
 
 
 @app.route('/editPlays')
-def allPlays():
-	org = request.values.get('org', 'WashU')
+def editPlays():
+	team_key = request.values.get('team', '755')
 	year = request.values.get('year', years[0])
 	# plays = list(db.engine.execute("""SELECT p.FULL_NAME NAME, t.NAME TEAM_NAME, pbp.* FROM PLAY_BY_PLAY pbp
 	# JOIN PLAYER_DIM p on p.PLAYER_KEY = pbp.BATTER_PLAYER_KEY
@@ -655,29 +691,14 @@ def allPlays():
 	playsORG = list(db.engine.execute(f"""SELECT p.FULL_NAME NAME, t.NAME TEAM_NAME, pbp.* FROM PLAY_BY_PLAY pbp
  	JOIN PLAYER_DIM p on p.PLAYER_KEY = pbp.BATTER_PLAYER_KEY
  	JOIN TEAM_DIM t on t.TEAM_KEY = pbp.BATTER_TEAM_KEY
-	WHERE t.NAME = '{org}' and pbp.YEAR = {year}
- 	ORDER BY t.NAME
+	WHERE t.TEAM_KEY = '{team_key}' and pbp.YEAR = {year}
+ 	ORDER BY p.PLAYER_KEY
  	 """))
-	key = 0
+	name = ''
 	if len(playsORG) > 0:
-		key = int(playsORG[0].BATTER_TEAM_KEY)
+		name = str(playsORG[0].TEAM_NAME)
 
-	# data = []
-	# for d in plays:
-	# 	play = {}
-	# 	play['date'] = d.DATE_KEY
-	# 	play['batter'] = d.NAME
-	# 	play['team'] = d.TEAM_NAME
-	# 	play['play'] = d.DESCRIPTION
-	# 	play['location'] = d.LOCATION
-	# 	play['outcome'] = d.OUTCOME
-	# 	play['active_record'] = d.ACTIVE_RECORD
-	# 	data.append(play)
-
-	# if p == 'p':
-	# 	return jsonify(data)
-
-	return render_template('editPlays.html', org = org, key = key, year = year,playsJS = json.dumps([dict(r) for r in playsORG]))
+	return render_template('editPlays.html', org = name, key = team_key, year = year,playsJS = json.dumps([dict(r) for r in playsORG]))
 
 
 @app.route('/PBPWrite')

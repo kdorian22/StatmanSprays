@@ -95,28 +95,29 @@ function makeSpray(plays, name, num, fieldSVG,id){
     const locDict = {
       '1': ['3b', 'third base'],
       '2': ['ss', 'shortstop', 'through the left side'],
-      '3': ['2b', 'second base', 'through the right side'],
-      '4': ['1b', 'first base'],
-      '5': ['lf', 'left', 'lf line', 'left center'],
-      '6': ['cf', 'center'],
-      '7': ['rf', 'right', 'rf line', 'right center'],
-      '8': ['up the middle']
+      '3': ['up the middle'],
+      '4': ['2b', 'second base', 'through the right side'],
+      '5': ['1b', 'first base'],
+      '6': ['lf', 'left', 'lf line', 'left center'],
+      '7': ['cf', 'center'],
+      '8': ['rf', 'right', 'rf line', 'right center'],
     }
-
+    
     const plotDict = {
-      '0': [240,290],
-      '1': [295,270],
-      '2': [355,270],
-      '3': [410,290],
-      '4': [165, 170],
-      '5': [325, 120],
-      '6': [485, 170]
+      '0': [235,300],
+      '1': [277,280],
+      '2': [325,270],
+      '3': [373,280],
+      '4': [415,300],
+      '5': [165, 170],
+      '6': [325, 120],
+      '7': [485, 170]
     }
 
     const hrDict = {
-      '4': [125, 70],
-      '5': [325, 20],
-      '6': [525, 70]
+      '5': [125, 70],
+      '6': [325, 20],
+      '7': [525, 70]
     }
 
     const outcomes = ['1B', '2B', '3B', 'HR', 'LD','FB', 'GB']
@@ -134,7 +135,7 @@ function makeSpray(plays, name, num, fieldSVG,id){
     }
 
     for(loc in locDict){
-      if(loc < 8){
+      if(loc < 9){
         buckets.push({
          'loc': loc,
          'plays': plays.filter(function(d){return locDict[loc].indexOf(d.LOCATION.replace(';','')) > -1})
