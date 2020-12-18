@@ -53,7 +53,7 @@ if(plays.length > 0){
       return d.PLAYER_KEY == key
     })
 
-    if(player.length > 5){
+    if(player.length > 0){
       var svg = '#field'+key
       name = player[0].FULL_NAME
       num = player[0].NUMBER
@@ -66,8 +66,8 @@ if(plays.length > 0){
   }
   setTimeout(function(){ print(); }, 1000)
 }else{
-  $('#body').html("<span style = 'font-size: 30px; margin-top: 30px;'>No Plays Found. Contact site administrator is this is in error</span>")
-  $('body').css('background-color', 'lightgray')
+  $('#body').html("<span style = 'font-size: 30px; margin-top: 30px;'>No Plays Found. Contact site administrator is this is an error.</span>")
+  $('body').css('background-color', 'white')
 }
 
 
@@ -275,7 +275,7 @@ function makeSpray(plays, name, num, fieldSVG,id){
       .style('font-size', '22px')
 
       fieldSVG.append('text')
-      .text(`#${num}` + ' - ' + String(plays[0].YEAR))
+      .text(`#${num}` + ' - ' + (plays.length > 0 ? String(plays[0].YEAR) : ''))
       .attr('x', margins.left).attr('y', margins.top*9.5)
       .style('font-size', '22px')
 

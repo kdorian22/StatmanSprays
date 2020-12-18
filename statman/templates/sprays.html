@@ -710,10 +710,19 @@ th.plays{
           })
         $('#printAll').show()
         $('#printAll').click(function(){
-          keyString = data.map(function(d){ return d.PLAYER_KEY }).join(',')
-          setTimeout(function() {
-            window.open("{{url_for('printSprays')}}?keys="+keyString)
-          }, 500);
+          function calcKeys(_callback){
+              keyString = data.map(function(d){ return d.PLAYER_KEY }).join(',')
+              _callback();
+          }
+
+          function printJob(){
+              calcKeys(function() {
+                setTimeout(function() {
+                  window.open("{{url_for('printSprays')}}?keys="+keyString)
+                }, 1000);
+              });
+          }
+          printJob()
         })
       }else{
         $("#teamName").text('No Roster')

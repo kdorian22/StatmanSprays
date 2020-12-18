@@ -656,7 +656,7 @@ def printSprays():
 	plays = list(db.engine.execute(f"""
 	SELECT d.FULL_NAME, d.NUMBER, p.* FROM PLAY_BY_PLAY p
 	JOIN PLAYER_DIM d on d.PLAYER_KEY = p.BATTER_PLAYER_KEY
-	WHERE BATTER_PLAYER_KEY in ({keys})
+	WHERE BATTER_PLAYER_KEY in ({keys}) and p.ACTIVE_RECORD = 1
 	"""))
 
 	stats = list(db.engine.execute(f"""

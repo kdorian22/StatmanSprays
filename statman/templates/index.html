@@ -8,6 +8,7 @@
       <input id =  searchTeam type="text" placeholder="Find Team..."></input>
       </div>
     </div>
+    <div hidden class="wait banner">  </div>
 
     <div id = loaderCont>
       <!-- https://loading.io/css/ -->
@@ -169,6 +170,25 @@
   }
 }
 
+.wait{
+  background-color: lightgray !important;
+  color: black;
+  z-index: 1;
+}
+
+.banner{
+  width: 100%;
+  position: fixed;
+  top: 0px;
+  height: 70px;
+  line-height: 70px;
+  text-align: left;
+  padding-left: 20px;
+  font-size: 30px;
+  background-color: yellow;
+
+}
+
 
 /* .redirect{
   color: rgb(254, 246, 235);
@@ -274,9 +294,11 @@
 
         $('#loader').css('visibility', 'visible')
         $('#searchTeam').val(ui.item.label)
+        $('.wait').text("Gathering data. This may take a few seconds. Don't refresh the page.")
+        $('.wait').slideDown()
         setTimeout(function() {
           window.location.href = "{{url_for('sprays')}}?team="+ui.item.value.key
-        }, 250);
+        }, 500);
         return false
       },
       focus: function(event, ui) {
