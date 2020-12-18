@@ -1125,12 +1125,12 @@ th.plays{
       }
 
       fieldSVG.append('text')
-      .text(name + (c == 'c' ? '' : ' - ' + String(year)))
+      .text(name)
       .attr('x', margins.left).attr('y', margins.top*2.5)
       .style('font-size', '26px')
 
       fieldSVG.append('text')
-      .text(`#${num}`)
+      .text(`#${num}` + (c == 'c' ? ' - Career' : ' - ' + String(year)))
       .attr('x', margins.left).attr('y', margins.top*5.5)
       .style('font-size', '26px')
 
