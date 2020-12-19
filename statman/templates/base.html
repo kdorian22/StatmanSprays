@@ -1,22 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
-    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
-    <script src="https://d3js.org/d3.v5.min.js"></script>
-    <script src="https://d3js.org/d3-array.v2.min.js"></script>
-    <script src="https://d3js.org/d3-shape.v2.min.js"></script>
-    <!-- Load React. -->
-    <!-- Note: when deploying, replace "development.js" with "production.min.js". -->
-    <script src="https://unpkg.com/react@16/umd/react.development.js" crossorigin></script>
-    <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js" crossorigin></script>
-    {{ JSGlue.include() }}
-    <!-- JSX -->
-    <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
-    <!-- font awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <script src="{{url_for('static', filename='jquery.js')}}"></script>
+    <link rel="stylesheet" href="{{url_for('static', filename='jquery-ui.css')}}">
+    <script src="{{url_for('static', filename='jquery-ui.js')}}"></script>
+    <script src="{{url_for('static', filename='d3.js')}}"></script>
+    <script src="{{url_for('static', filename='d3-array.js')}}"></script>
+    <script src="{{url_for('static', filename='d3-shape.js')}}"></script>
+    <script defer src="{{url_for('static', filename='fonts.js')}}"> </script>
     <title>{% block title %}{% endblock %}</title>
+    <meta name="description" content="Free College Baseball Spray Charts">
+    <meta name="keywords" content="College, Spray, Chart, NCAA, Baseball">
+    {{ JSGlue.include() }}
   </head>
 
    <body>
@@ -28,7 +23,6 @@
           <a class = headAnchor href = "{{url_for('about')}}">ABOUT</a> |
           <a class = headAnchor href = "{{url_for('faq')}}">FAQ</a>
         </div>
-        <!--<img id = icon src = 'static/field.png'> -->
         <div id = title > <a id = titleAnchor href = "{{url_for('index')}}">STATMAN SPRAYS </a> </div>
       </div>
       <div id = content> {% block content %}{% endblock %}  </div>

@@ -598,13 +598,11 @@ th.plays{
       $(this).removeClass('careerSelected')
       $(this).text('Show Career Spray')
       thesePlays = teamPlays.filter(function(d){ return d.BATTER_PLAYER_KEY == playerID})
-      console.log(thesePlays.map(function(d){ return d.DESCRIPTION}))
       c = 'y'
     }else{
       $(this).addClass('careerSelected')
       $(this).text('Show '+$('.selectedSpan').text().replace(/\s+/g,'') + ' Spray')
       thesePlays = teamPlays.filter(function(d){ return d.FULL_NAME == careerName})
-      console.log(thesePlays.map(function(d){ return d.DESCRIPTION}))
       c = 'c'
     }
       makeSpray(thesePlays, cDatum.FULL_NAME, cDatum.NUMBER, cDatum.POSITION, cDatum.CLASS, cDatum.YEAR, cDatum.TEAM_KEY, c)
@@ -623,7 +621,6 @@ th.plays{
     $("#playTable").empty()
     $('#field').empty()
       data = rosters.filter(function(d){ return d.TEAM_KEY == key & d.YEAR == year})
-
 
       $("#roster").empty()
       if(data.length > 0){
@@ -702,32 +699,18 @@ th.plays{
          d3.selectAll('tr.plRow')
          .append('td')
          .attr('class', 'print')
-         .html(function(d){ return "<i class='fa'>&#xf02f</i>"})
+         .html(function(d){ return "<i class='fa fa-print'></i>"})
          .on('click', function(d){
            if(d3.select(this.parentNode).classed('selected')){
              window.open("{{url_for('printSprays')}}?keys="+d.PLAYER_KEY)
             }
           })
-        // $('#printAll').show()
+        $('#printAll').show()
         $('#printAll').click(function(){
-          function calcKeys(_callback){
-              keyString = data.map(function(d){ return d.PLAYER_KEY }).join(',')
-              _callback();
-          }
-
-          function printJob(){
-              calcKeys(function() {
-                setTimeout(function() {
-                  window.open("{{url_for('printSprays')}}?keys="+keyString)
-                }, 1000);
-              });
-          }
-          printJob()
+          window.open("{{url_for('printSprays')}}?team="+key+"&year="+year)
         })
-      }else{
-        $("#teamName").text('No Roster')
       }
-  }
+    }
 
   function makeSpray(plays, name, num, position, fresh, year, team_key, c){
     $("#playTable").empty()

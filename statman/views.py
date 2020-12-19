@@ -651,8 +651,19 @@ def sprays():
 
 @app.route('/printSprays', methods = ['POST', 'GET'])
 def printSprays():
-	keys = request.values.get('keys', '144')
-	keyList = list(keys.split(','))
+	keys = request.values.get('keys', '')
+	team = request.values.get('team', '')
+	year = request.values.get('year', '')
+	if keys != '' and team == '' and year == '':
+		keyList = list(keys.split(','))
+
+	if team != '' and keys == '':
+		keys = list(db.engine.execute(f"""SELECT * FROM PLAYER_DIM
+		WHERE TEAM_KEY = {team} and YEAR = {year} and ACTIVE_RECORD = 1"""))
+		keyList = [str(x.PLAYER_KEY) for x in keys]
+		print(keyList)
+		keys = ', '.join(keyList)
+
 	plays = list(db.engine.execute(f"""
 	SELECT d.FULL_NAME, d.NUMBER, p.* FROM PLAY_BY_PLAY p
 	JOIN PLAYER_DIM d on d.PLAYER_KEY = p.BATTER_PLAYER_KEY
