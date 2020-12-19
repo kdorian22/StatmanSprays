@@ -654,15 +654,26 @@ def printSprays():
 	keys = request.values.get('keys', '')
 	team = request.values.get('team', '')
 	year = request.values.get('year', '')
-	if keys != '' and team == '' and year == '':
+	name = request.values.get('name', '')
+	if keys != '' and team == '' and year == '' and name == '':
+		print('a')
 		keyList = list(keys.split(','))
 
-	if team != '' and keys == '':
+	if team != '' and year != '' and keys == '' and name == '':
+		print('b')
 		keys = list(db.engine.execute(f"""SELECT * FROM PLAYER_DIM
 		WHERE TEAM_KEY = {team} and YEAR = {year} and ACTIVE_RECORD = 1"""))
 		keyList = [str(x.PLAYER_KEY) for x in keys]
-		print(keyList)
 		keys = ', '.join(keyList)
+
+	if team != '' and name != '' and year == '' and keys == '':
+		print('c')
+		plays = list(db.engine.execute(f"""
+		SELECT d.FULL_NAME, d.NUMBER, p.* FROM PLAY_BY_PLAY p
+		JOIN PLAYER_DIM d on d.PLAYER_KEY = p.BATTER_PLAYER_KEY
+		WHERE FULL_NAME = '{name}' and d.TEAM_KEY = {team} and p.ACTIVE_RECORD = 1
+		"""))
+		return render_template('printSprays.html', name = name, plays = jsonDump(plays))
 
 	plays = list(db.engine.execute(f"""
 	SELECT d.FULL_NAME, d.NUMBER, p.* FROM PLAY_BY_PLAY p
@@ -677,8 +688,9 @@ def printSprays():
 	and h.POSITION = p.POSITION and h.CLASS = p.CLASS and h.YEAR = p.YEAR
 	WHERE p.PLAYER_KEY in ({keys})
 	"""))
+	
 	return render_template('printSprays.html', keys = keyList, plays = jsonDump(plays),
-	stats = jsonDump(stats), years = years)
+	stats = jsonDump(stats))
 
 
 @app.route('/about')

@@ -705,6 +705,7 @@ th.plays{
              window.open("{{url_for('printSprays')}}?keys="+d.PLAYER_KEY)
             }
           })
+        $("#printAll").unbind()
         $('#printAll').show()
         $('#printAll').click(function(){
           window.open("{{url_for('printSprays')}}?team="+key+"&year="+year)
@@ -845,6 +846,8 @@ th.plays{
           wedgePlays = buckets[$(this).attr('index')].plays.sort(function(a, b){
             return d3.ascending(a.DATE_KEY, b.DATE_KEY)
           })
+          console.log('inf')
+          console.log(wedgePlays)
           $("#playTable").empty()
           $('#playDiv').hide()
           if(wedgePlays.length > 0){
@@ -983,8 +986,10 @@ th.plays{
           $('.selectedWedge').removeClass('selectedWedge')
           $(this).addClass('selectedWedge')
           wedgePlays = buckets[$(this).attr('index')].plays.sort(function(a, b){
-            return d3.ascending(a.date, b.date)
+            return d3.ascending(a.DATE_KEY, b.DATE_KEY)
           })
+          console.log('of')
+          console.log(wedgePlays)
           $("#playTable").empty()
           $('#playDiv').hide()
           if(wedgePlays.length > 0){
@@ -1130,10 +1135,11 @@ th.plays{
       .style('text-anchor', 'end')
 
       $('#playDiv').show()
+      console.log('here')
       d3.select('#playTable')
       .selectAll('tr.play')
       .data(plays.sort(function(a, b){
-        return d3.ascending(a.date, b.date)
+        return d3.ascending(a.DATE_KEY, b.DATE_KEY)
       }))
       .enter()
       .append('tr')
@@ -1214,7 +1220,6 @@ th.plays{
        soloStats = []
        if(c == 'y'){
          soloStats = hitStats.filter(function(f){ return f.FULL_NAME == name & f.POSITION == position & f.CLASS == fresh & f.NUMBER == num & f.TEAM_KEY == team_key & f.YEAR == year})
-       }
 
          fieldSVG.selectAll(".statHead")
           .data(stats.slice(0,3))
@@ -1247,6 +1252,8 @@ th.plays{
             .style('text-anchor', 'middle')
             .style('padding-left', '3px')
             .style('padding-right', '3px')
+       }
+
 
             if(soloStats.length > 0){
               statData = soloStats[0]
