@@ -39,19 +39,20 @@
 
 <script>
 var player = {{plays|safe}}
+var stats = {{stats|safe}}
+console.log(stats)
 if(player.length > 0){
-    var svg = '#field'+key
+    var svg = '#field'
     name = player[0].FULL_NAME
     num = player[0].NUMBER
-    makeSpray(player, name, num, svg, key, statPlayer)
-  }
-}else{
+    makeSpray(player, name, num, svg, stats)
+  }else{
   $('#body').html("<span style = 'font-size: 30px; margin-top: 30px;'>No Plays Found. Contact site administrator is this is an error.</span>")
   $('body').css('background-color', 'white')
 }
 
 
-function makeSpray(plays, name, num, fieldSVG,id){
+function makeSpray(plays, name, num, fieldSVG, statPlayer){
 
     var colScale = d3.scaleLinear().domain([0,1]).range(['white', 'red'])
 
@@ -255,7 +256,7 @@ function makeSpray(plays, name, num, fieldSVG,id){
       .style('font-size', '22px')
 
       fieldSVG.append('text')
-      .text(`#${num}` + ' - ' + (plays.length > 0 ? String(plays[0].YEAR) : ''))
+      .text(`#${num}` + ' - Career')
       .attr('x', margins.left).attr('y', margins.top*9.5)
       .style('font-size', '22px')
 
@@ -374,7 +375,53 @@ function makeSpray(plays, name, num, fieldSVG,id){
           .style('padding-left', '3px')
           .style('padding-right', '3px')
 
-          setTimeout(function(){ print(); }, 1000)
+          if(statPlayer.length > 0){
+            soloStats = d3.nest()
+               .rollup(function(leaves) {
+                 pa = d3.sum(leaves, function(d){ return d.SF + d.SH + d.AB + d.BB + d.HBP + d.IBB});
+                 return { 'K': d3.sum(leaves, function(d){ return d.K}),
+                     'BB': d3.sum(leaves, function(d){ return d.BB}),
+                     'SB': d3.sum(leaves, function(d){ return d.SB}),
+                     'CS': d3.sum(leaves, function(d){ return d.CS}),
+                     'BA': d3.sum(leaves, function(d){ return d.BA*d.AB})/d3.sum(leaves, function(d){ return d.AB}),
+                     'OBP': d3.sum(leaves, function(d){ return d.OBP*(d.SF + d.SH + d.AB + d.BB + d.HBP + d.IBB)})/pa,
+                     'SLG': d3.sum(leaves, function(d){ return d.SLG*d.AB})/d3.sum(leaves, function(d){ return d.AB})
+                 }
+               })
+               .entries(statPlayer)
+               // soloStats = [statNest]
+            fieldSVG.selectAll(".stat")
+             .data(stats.slice(0,3))
+             .enter()
+             .append("text")
+             .attr('class','stat')
+             .text(function (e) {return String(d3.format('.3f')(parseFloat(soloStats[e]))).replace('0.', '.')})
+             .attr('x', function(e, i){return 45*i+(width-110)})
+             .attr('y', height - 55)
+             .style('color', 'black')
+             .style('font-size', '16px')
+             .style('font-weight', 'bold')
+             .style('text-anchor', 'middle')
+             .style('padding-left', '3px')
+             .style('padding-right', '3px')
+
+            fieldSVG.selectAll(".stat2")
+             .data(stats.slice(3,7))
+             .enter()
+             .append("text")
+             .attr('class','stat2')
+             .text(function (e) {return String(parseFloat(soloStats[e]))})
+             .attr('x', function(e, i){return 35*i+(width-123)})
+             .attr('y', height - 10)
+             .style('color', 'black')
+             .style('font-size', '16px')
+             .style('font-weight', 'bold')
+             .style('text-anchor', 'middle')
+             .style('padding-left', '3px')
+             .style('padding-right', '3px')
+          }
+
+          // setTimeout(function(){ print(); }, 1000)
 
 }
 

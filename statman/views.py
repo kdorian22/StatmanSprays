@@ -88,7 +88,7 @@ def index():
 	JOIN TEAM_DIM t on t.TEAM_KEY = p.TEAM_KEY
 	WHERE p.ACTIVE_RECORD = 1 and t.ACTIVE_RECORD = 1
 	GROUP BY p.TEAM_KEY;""")
-	# db.engine.execute('SELECT * FROM PLAY_BY_PLAY WHERE BATTER_TEAM_KEY= 2 AND ACTIVE_RECORD = 1 and YEAR = 2020 Limit 500')
+	db.engine.execute('SELECT * FROM PLAY_BY_PLAY WHERE BATTER_TEAM_KEY= 2 AND ACTIVE_RECORD = 1 and YEAR = 2020 Limit 200')
 	teams = []
 	for d in data:
 		teams.append({'NAME': d.NAME, 'TEAM_KEY': d.TEAM_KEY})
@@ -654,26 +654,28 @@ def printSprays():
 	keys = request.values.get('keys', '')
 	team = request.values.get('team', '')
 	year = request.values.get('year', '')
-	name = request.values.get('name', '')
-	if keys != '' and team == '' and year == '' and name == '':
-		print('a')
-		keyList = list(keys.split(','))
-
-	if team != '' and year != '' and keys == '' and name == '':
-		print('b')
-		keys = list(db.engine.execute(f"""SELECT * FROM PLAYER_DIM
-		WHERE TEAM_KEY = {team} and YEAR = {year} and ACTIVE_RECORD = 1"""))
-		keyList = [str(x.PLAYER_KEY) for x in keys]
-		keys = ', '.join(keyList)
-
-	if team != '' and name != '' and year == '' and keys == '':
-		print('c')
+	c = request.values.get('c','')
+	if c == 'c':
+		name = player_dim.query.filter_by(PLAYER_KEY=keys).first().FULL_NAME
 		plays = list(db.engine.execute(f"""
 		SELECT d.FULL_NAME, d.NUMBER, p.* FROM PLAY_BY_PLAY p
 		JOIN PLAYER_DIM d on d.PLAYER_KEY = p.BATTER_PLAYER_KEY
 		WHERE FULL_NAME = '{name}' and d.TEAM_KEY = {team} and p.ACTIVE_RECORD = 1
 		"""))
-		return render_template('printSprays.html', name = name, plays = jsonDump(plays))
+		stats = list(db.engine.execute(f"""
+		SELECT * FROM HITTER_STATS
+		WHERE ACTIVE_RECORD = 1 and FULL_NAME = '{name}' and TEAM_KEY = {team}"""))
+		return render_template('printSpraysC.html', name = name, stats = jsonDump(stats), plays = jsonDump(plays))
+
+	if keys != '':
+		keyList = list(keys.split(','))
+
+	if keys == '':
+		keys = list(db.engine.execute(f"""SELECT * FROM PLAYER_DIM
+		WHERE TEAM_KEY = {team} and YEAR = {year} and ACTIVE_RECORD = 1"""))
+		keyList = [str(x.PLAYER_KEY) for x in keys]
+		keys = ', '.join(keyList)
+
 
 	plays = list(db.engine.execute(f"""
 	SELECT d.FULL_NAME, d.NUMBER, p.* FROM PLAY_BY_PLAY p
@@ -688,7 +690,7 @@ def printSprays():
 	and h.POSITION = p.POSITION and h.CLASS = p.CLASS and h.YEAR = p.YEAR
 	WHERE p.PLAYER_KEY in ({keys})
 	"""))
-	
+
 	return render_template('printSprays.html', keys = keyList, plays = jsonDump(plays),
 	stats = jsonDump(stats))
 

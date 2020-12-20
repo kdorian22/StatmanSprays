@@ -589,7 +589,7 @@ th.plays{
   })
 
   $('#career').click(function(){
-
+    $(".print").unbind()
     if($('.selected').length == 1){
     cDatum = d3.selectAll('.selected').datum()
     careerName = cDatum.FULL_NAME
@@ -702,7 +702,11 @@ th.plays{
          .html(function(d){ return "<i class='fa fa-print'></i>"})
          .on('click', function(d){
            if(d3.select(this.parentNode).classed('selected')){
-             window.open("{{url_for('printSprays')}}?keys="+d.PLAYER_KEY)
+             if($('#career').hasClass('careerSelected')){
+               window.open("{{url_for('printSprays')}}?keys="+d.PLAYER_KEY+'&team='+key+'&c=c')
+             }else{
+               window.open("{{url_for('printSprays')}}?team="+key+"&year="+year+"&keys="+d.PLAYER_KEY)
+             }
             }
           })
         $("#printAll").unbind()
@@ -1135,7 +1139,6 @@ th.plays{
       .style('text-anchor', 'end')
 
       $('#playDiv').show()
-      console.log('here')
       d3.select('#playTable')
       .selectAll('tr.play')
       .data(plays.sort(function(a, b){
@@ -1220,15 +1223,48 @@ th.plays{
        soloStats = []
        if(c == 'y'){
          soloStats = hitStats.filter(function(f){ return f.FULL_NAME == name & f.POSITION == position & f.CLASS == fresh & f.NUMBER == num & f.TEAM_KEY == team_key & f.YEAR == year})
+       }else{
+         careerStats = hitStats.filter(function(f){ return f.FULL_NAME == name & f.TEAM_KEY == team_key})
+         statNest = d3.nest()
+            .rollup(function(leaves) {
+              pa = d3.sum(leaves, function(d){ return d.SF + d.SH + d.AB + d.BB + d.HBP + d.IBB});
+              return { 'K': d3.sum(leaves, function(d){ return d.K}),
+                  'BB': d3.sum(leaves, function(d){ return d.BB}),
+                  'SB': d3.sum(leaves, function(d){ return d.SB}),
+                  'CS': d3.sum(leaves, function(d){ return d.CS}),
+                  'BA': d3.sum(leaves, function(d){ return d.BA*d.AB})/d3.sum(leaves, function(d){ return d.AB}),
+                  'OBP': d3.sum(leaves, function(d){ return d.OBP*(d.SF + d.SH + d.AB + d.BB + d.HBP + d.IBB)})/pa,
+                  'SLG': d3.sum(leaves, function(d){ return d.SLG*d.AB})/d3.sum(leaves, function(d){ return d.AB})
+              }
+            })
+            .entries(careerStats)
+            soloStats = [statNest]
+       }
 
-         fieldSVG.selectAll(".statHead")
-          .data(stats.slice(0,3))
+       fieldSVG.selectAll(".statHead")
+        .data(stats.slice(0,3))
+        .enter()
+        .append("text")
+        .attr('class','statHead')
+        .text(function (e) {return e})
+        .attr('x', function(e, i){return 45*i+(width-110)})
+        .attr('y', height - 75)
+        .style('color', 'black')
+        .style('font-size', '18px')
+        .style('text-decoration', 'underline')
+        .style('font-weight', 'bold')
+        .style('text-anchor', 'middle')
+        .style('padding-left', '3px')
+        .style('padding-right', '3px')
+
+         fieldSVG.selectAll(".statHead2")
+          .data(stats.slice(3,7))
           .enter()
           .append("text")
-          .attr('class','statHead')
+          .attr('class','statHead2')
           .text(function (e) {return e})
-          .attr('x', function(e, i){return 45*i+(width-110)})
-          .attr('y', height - 75)
+          .attr('x', function(e, i){return 35*i+(width-123)})
+          .attr('y', height - 30)
           .style('color', 'black')
           .style('font-size', '18px')
           .style('text-decoration', 'underline')
@@ -1236,23 +1272,6 @@ th.plays{
           .style('text-anchor', 'middle')
           .style('padding-left', '3px')
           .style('padding-right', '3px')
-
-           fieldSVG.selectAll(".statHead2")
-            .data(stats.slice(3,7))
-            .enter()
-            .append("text")
-            .attr('class','statHead2')
-            .text(function (e) {return e})
-            .attr('x', function(e, i){return 35*i+(width-123)})
-            .attr('y', height - 30)
-            .style('color', 'black')
-            .style('font-size', '18px')
-            .style('text-decoration', 'underline')
-            .style('font-weight', 'bold')
-            .style('text-anchor', 'middle')
-            .style('padding-left', '3px')
-            .style('padding-right', '3px')
-       }
 
 
             if(soloStats.length > 0){
