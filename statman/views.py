@@ -473,7 +473,6 @@ def scrapePlays():
 							play_details['outcome'] = outDict[out]
 					else:
 						play_details['outcome'] = None
-
 					allPlays.append(play_details)
 			return allPlays
 
@@ -485,7 +484,7 @@ def scrapePlays():
 				allPlays.append(thesePlays)
 		except:
 			continue
-		print(len(allPlays))
+		# print(len(allPlays))
 	allPlays = list(itertools.chain.from_iterable(allPlays))
 
 	url=f'https://stats.ncaa.org/team/{team}/stats/{yearCodes[year]}'
@@ -715,8 +714,8 @@ def editPlays():
 	#  """))
 
 	playsORG = list(db.engine.execute(f"""SELECT p.FULL_NAME NAME, t.NAME TEAM_NAME, pbp.* FROM PLAY_BY_PLAY pbp
- 	JOIN PLAYER_DIM p on p.PLAYER_KEY = pbp.BATTER_PLAYER_KEY
- 	JOIN TEAM_DIM t on t.TEAM_KEY = pbp.BATTER_TEAM_KEY
+ 	LEFT JOIN PLAYER_DIM p on p.PLAYER_KEY = pbp.BATTER_PLAYER_KEY
+ 	LEFT JOIN TEAM_DIM t on t.TEAM_KEY = pbp.BATTER_TEAM_KEY
 	WHERE t.TEAM_KEY = '{team_key}' and pbp.YEAR = {year}
  	ORDER BY p.PLAYER_KEY
  	 """))

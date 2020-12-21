@@ -36,42 +36,56 @@ class player_dim(db.Model):
 
 
 class hitter_stats(db.Model):
-    __tablename__ = 'HITTER_STATS'
+	__tablename__ = 'HITTER_STATS'
 
-    FULL_NAME = db.Column(db.String(50), primary_key=True)
-    POSITION = db.Column(db.String(5), primary_key=True)
-    NUMBER = db.Column(db.String(5), primary_key=True)
-    CLASS = db.Column(db.String(5), primary_key=True)
-    YEAR = db.Column(db.Integer, primary_key=True)
-    G = db.Column(db.Integer)
-    GS = db.Column(db.Integer)
-    BA = db.Column(db.Float)
-    OBP = db.Column(db.Float)
-    SLG = db.Column(db.Float)
-    K = db.Column(db.Float)
-    BB = db.Column(db.Float)
-    SB = db.Column(db.Float)
-    CS = db.Column(db.Float)
-    TEAM_KEY = db.Column(db.Integer, primary_key=True)
-    ACTIVE_RECORD = db.Column(db.Integer)
+	FULL_NAME = db.Column(db.String(50), primary_key=True)
+	POSITION = db.Column(db.String(5), primary_key=True)
+	NUMBER = db.Column(db.String(5), primary_key=True)
+	CLASS = db.Column(db.String(5), primary_key=True)
+	YEAR = db.Column(db.Integer, primary_key=True)
+	G = db.Column(db.Integer)
+	GS = db.Column(db.Integer)
+	AB = db.Column(db.Integer)
+	BA = db.Column(db.Float)
+	OBP = db.Column(db.Float)
+	SLG = db.Column(db.Float)
+	K = db.Column(db.Float)
+	BB = db.Column(db.Float)
+	SB = db.Column(db.Float)
+	CS = db.Column(db.Float)
+	IBB = db.Column(db.Float)
+	HBP = db.Column(db.Float)
+	SF = db.Column(db.Float)
+	SH = db.Column(db.Float)
+	R = db.Column(db.Float)
+	RBI = db.Column(db.Float)
+	TEAM_KEY = db.Column(db.Integer, primary_key=True)
+	ACTIVE_RECORD = db.Column(db.Integer)
 
-    def __init__(self, name, pos, num, cl, y, g, gs, ba, obp, slg, k, bb, sb, cs, tk):
-        self.FULL_NAME = name
-        self.POSITION = pos
-        self.NUMBER = num
-        self.CLASS = cl
-        self.YEAR = y
-        self.G = g
-        self.GS = gs
-        self.BA = ba
-        self.OBP = obp
-        self.SLG = slg
-        self.K = 0 if k == '' else k
-        self.BB = 0 if bb == '' else bb
-        self.SB = 0 if sb == '' else sb
-        self.CS = 0 if cs == '' else cs
-        self.TEAM_KEY = tk
-        self.ACTIVE_RECORD = 1
+	def __init__(self, name, pos, num, cl, y, g, gs, ab, ba, obp, slg, k, bb, sb, cs, ibb, hbp, sf, sh, r, rbi, tk):
+		self.FULL_NAME = name
+		self.POSITION = pos
+		self.NUMBER = num
+		self.CLASS = cl
+		self.YEAR = y
+		self.G = g
+		self.GS = gs
+		self.AB = 0 if ab == '' else ab
+		self.BA = ba
+		self.OBP = obp
+		self.SLG = slg
+		self.K = 0 if k == '' else k
+		self.BB = 0 if bb == '' else bb
+		self.SB = 0 if sb == '' else sb
+		self.CS = 0 if cs == '' else cs
+		self.IBB = 0 if ibb == '' else ibb
+		self.HBP = 0 if hbp == '' else hbp
+		self.SF = 0 if sf == '' else sf
+		self.SH = 0 if sh == '' else sh
+		self.R = 0 if r == '' else r
+		self.RBI = 0 if rbi == '' else rbi
+		self.TEAM_KEY = tk
+		self.ACTIVE_RECORD = 1
 
 class play_by_play(db.Model):
     __tablename__ = 'PLAY_BY_PLAY'
