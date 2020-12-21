@@ -33,7 +33,7 @@ statCodes = {
 		 'pitch':'14761',
 		 'field':'14762'}
 
-locations = ['1b', '2b', '3b', ' ss', ' p ', ' p.', ' p,',' p;', ' c ', ' c.', ' c,', 'catcher', 'pitcher',
+locations = ['1b', '2b', '3b', ' ss', ' p ', ' p.', ' p,',' p;', ' c ', ' c.', ' c,', ' c;', 'catcher', 'pitcher',
 ' lf', ' rf', ' cf', 'shortstop', 'center',
 'lcf', 'rcf',
 '1b line', '3b line', 'left', 'right',
@@ -445,7 +445,7 @@ def scrapePlays():
 							if indexLoc < indLoc:
 								indLoc = indexLoc
 								loc = [l]
-					loc = loc[0].replace('.','').replace(',','').strip() if len(loc) > 0 else None
+					loc = loc[0].replace('.','').replace(',','').replace(';','').strip() if len(loc) > 0 else None
 					loc = None if loc == 'ss' and 'passed ball' in play else loc
 					play_details['location'] = loc
 
