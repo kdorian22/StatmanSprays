@@ -230,6 +230,7 @@ def scrapePlays():
 			names.append(full[1] + ' ' + full[0])
 			names.append(full[1][0] + '. ' + full[0])
 			names.append(full[1][0] + '.' + full[0])
+			names.append(full[1][0] + ' ' + full[0])
 			names.append(full[1][0] + full[0])
 			names.append(full[0] + ', ' + full[1][0]+'.')
 			names.append(full[0] + ', ' + full[1][0])
