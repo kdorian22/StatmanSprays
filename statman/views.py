@@ -223,7 +223,7 @@ def scrapePlays():
 	for r in roster:
 		names = []
 		full = r.FULL_NAME.split(', ')
-		if len(full) > 0:
+		if len(full) > 1 and '' not in full:
 			fullNS = full
 			full = [f.replace(' ','') for f in full]
 			last = fullNS[0].split(' ')
@@ -490,6 +490,19 @@ def scrapePlays():
 	url=f'https://stats.ncaa.org/team/{team}/stats/{yearCodes[year]}'
 	soup = BeautifulSoup(requests.get(url, headers = {"User-Agent": "Mozilla/5.0"}).content, 'html.parser')
 	table = soup.find('tbody')
+	head = soup.find('thead').findAll('th')
+	index = 6
+	for i, d in enumerate(head):
+		if d.text == 'BA':
+			index = i
+			break
+
+	ibb = 0 if int(year) < 2019 else 1
+	for i, d in enumerate(head):
+		if d.text == 'IBB':
+			ibb = 1
+			break
+
 	rosterToAdd = []
 	if table is not None:
 		for row in table.findAll('tr'):
@@ -498,10 +511,49 @@ def scrapePlays():
 				text = cell.text.replace("\n", '')
 				text = cell.text.replace('nbsp&', '')
 				cells.append(text)
-			rosterToAdd.append(hitter_stats(cells[1].replace('â€™',"'").replace("\n", ''), cells[3].replace("\n", ''), cells[0].replace("\n", ''), cells[2].replace("\n", ''), year, cells[4].replace("\n", ''),
-			cells[5].replace("\n", ''), cells[6].replace("\n", '') if int(year) > 2019 else cells[7].replace("\n", ''),
-			cells[8].replace("\n", ''), cells[9].replace("\n", ''),
-			cells[22].replace("\n", ''), cells[18].replace("\n", ''), cells[26].replace("\n", ''), cells[24].replace("\n", ''), team))
+				# name
+			rosterToAdd.append(hitter_stats(cells[1].replace('â€™',"'").replace("\n", ''),
+			# position
+			cells[3].replace("\n", ''),
+			# jersey
+			cells[0].replace("\n", ''),
+			# class
+			cells[2].replace("\n", ''),
+			year,
+			# games
+			cells[4].replace("\n", ''),
+			# games started
+			cells[5].replace("\n", ''),
+			# AB
+			cells[11].replace("\n", ''),
+			# BA
+			cells[index].replace("\n", ''),
+			# OBP
+			cells[8].replace("\n", ''),
+			#SLG
+			cells[9].replace("\n", ''),
+			#K
+			cells[22].replace("\n", ''),
+			#BB
+			cells[18].replace("\n", ''),
+			#SB
+			cells[26].replace("\n", ''),
+			#CS
+			cells[24].replace('\n', ''),
+			# IBB
+			0 if ibb == 0 else cells[27].replace("\n", ''),
+			# HBP
+			cells[19].replace("\n", ''),
+			#SF
+			cells[20].replace("\n", ''),
+			#SH
+			cells[21].replace("\n", ''),
+			#R
+			cells[10].replace("\n", ''),
+			#RBI
+			cells[17].replace("\n", ''),
+			team))
+
 	try:
 		db.session.commit()
 		play_by_play.query.filter_by(YEAR=int(year)).filter_by(BATTER_TEAM_KEY=team).delete()
