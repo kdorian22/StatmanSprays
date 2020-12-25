@@ -125,8 +125,8 @@ def scrapeTeams():
 @app.route('/scrapeRoster', methods = ['GET'])
 def scrapeRoster():
 	db.session.commit()
-	year = request.values.get('year', years[0])
-	team = request.values.get('team','')
+	year = int(request.values.get('year', years[0]))
+	team = int(request.values.get('team','755'))
 	r = request.values.get('r', '')
 
 	rosterToAdd = []
@@ -201,8 +201,8 @@ def partialDist(a, b):
 @app.route('/scrapePlays', methods = ['POST', 'GET'])
 def scrapePlays():
 
-	team = request.values.get('team', '755')
-	year = request.values.get('year', years[0])
+	team = int(request.values.get('team', '755'))
+	year = int(request.values.get('year', years[0]))
 
 	## Get team name
 	teamName = team_dim.query.filter_by(TEAM_KEY=team).first().NAME
@@ -590,6 +590,8 @@ def scrapePlays():
 
 @app.route('/getData/<key>/<year>/<type>/<csv>', methods = ['POST', 'GET'])
 def getData(key, year, type, csv):
+	# currently unused
+	return '1'
 	if key != '' and year != '' and type != '' and len(key) < 10 and len(year) < 5 and len(type) < 10:
 		if type == 'pbpT':
 			tab = 'PLAY_BY_PLAY'
@@ -603,10 +605,11 @@ def getData(key, year, type, csv):
 			tab = 'PLAYER_DIM'
 			keyCol = 'TEAM_KEY'
 			order = 'FULL_NAME'
-
-		data = list(db.engine.execute(
-			f"""SELECT * FROM {tab} WHERE {keyCol} = {key} and YEAR = {year} and ACTIVE_RECORD = 1 ORDER BY {order}"""
-		))
+		query = f"""SELECT * FROM {tab} WHERE {keyCol} = {key} and YEAR = {year} and ACTIVE_RECORD = 1 ORDER BY {order}"""
+		if ';' not in query:
+			data = list(db.engine.execute(query))
+		else:
+			data = []
 	else:
 		data = []
 
@@ -623,6 +626,8 @@ def getData(key, year, type, csv):
 
 @app.route('/getStats/<name>/<num>/<pos>/<fresh>/<year>/<team>', methods = ['POST', 'GET'])
 def getStats(name, num, pos, fresh, year, team):
+	## currently unused
+	return '1'
 	string = f"""SELECT * FROM HITTER_STATS WHERE FULL_NAME = '{name}' and NUMBER = '{num}' and POSITION = '{pos}' and YEAR = '{year}' and CLASS = '{fresh}' and TEAM_KEY = '{team}'"""
 	if ';' not in string:
 		data = list(db.engine.execute(string))
@@ -634,10 +639,11 @@ def getStats(name, num, pos, fresh, year, team):
 
 @app.route('/data', methods = ['POST', 'GET'])
 def data():
-	key = request.values.get('key', '')
-	string = ''
-	if key != '' and len(key) < 7:
-		string = f'and t.TEAM_KEY = {key}'
+	# key = request.values.get('key', '')
+	# key = key.replace(';', '')
+	# string = ''
+	# if key != '' and len(key) < 7:
+	# 	string = f'and t.TEAM_KEY = {key}'
 
 	query = f"""
 	SELECT t.NAME, t.TEAM_KEY, t.ACTIVE_RECORD,
@@ -670,9 +676,8 @@ def data():
 	ORDER BY NAME;
 	"""
 	status = list(db.engine.execute(query))
-	if string != '':
-		return jsonDump(status)
-
+	# if string != '':
+	# 	return jsonDump(status)
 
 	return render_template('data.html', status=status, data = jsonDump(status), years=years)
 
@@ -680,6 +685,8 @@ def data():
 @app.route('/sprays', methods = ['POST', 'GET'])
 def sprays():
 	team = request.values.get('team', '')
+	if team != '':
+		team = int(team)
 	data = db.engine.execute(f"""SELECT p.TEAM_KEY, NAME, COUNT(*) FROM PLAYER_DIM p
 	JOIN TEAM_DIM t on t.TEAM_KEY = p.TEAM_KEY
 	WHERE p.ACTIVE_RECORD = 1 and t.ACTIVE_RECORD = 1
@@ -690,9 +697,13 @@ def sprays():
 	stats = []
 	plays = []
 	rosters = []
-
-	if team == '':
+	row = team_dim.query.filter_by(TEAM_KEY=team).first()
+	if team == '' or row is None:
 		return render_template('sprays.html', team = team, stats = jsonDump(stats), plays = jsonDump(plays), rosters = jsonDump(rosters), data = jsonDump(teams), years = years)
+
+	num = row.VISITS
+	db.engine.execute(f"""UPDATE TEAM_DIM SET VISITS = {num+1} WHERE TEAM_KEY = {team}""")
+	db.session.commit()
 
 	plays = list(db.engine.execute(f"""SELECT p.*, FULL_NAME FROM PLAY_BY_PLAY p
 	 JOIN PLAYER_DIM d on d.PLAYER_KEY = p.BATTER_PLAYER_KEY
@@ -703,12 +714,16 @@ def sprays():
 
 @app.route('/printSprays', methods = ['POST', 'GET'])
 def printSprays():
-	keys = request.values.get('keys', '')
+	key = request.values.get('keys', '')
 	team = request.values.get('team', '')
+	if team != '':
+		team = int(team)
 	year = request.values.get('year', '')
+	if year != '':
+		year = int(year)
 	c = request.values.get('c','')
 	if c == 'c':
-		name = player_dim.query.filter_by(PLAYER_KEY=keys).first().FULL_NAME
+		name = player_dim.query.filter_by(PLAYER_KEY=key).first().FULL_NAME
 		plays = list(db.engine.execute(f"""
 		SELECT d.FULL_NAME, d.NUMBER, p.* FROM PLAY_BY_PLAY p
 		JOIN PLAYER_DIM d on d.PLAYER_KEY = p.BATTER_PLAYER_KEY
@@ -719,15 +734,15 @@ def printSprays():
 		WHERE ACTIVE_RECORD = 1 and FULL_NAME = '{name}' and TEAM_KEY = {team}"""))
 		return render_template('printSpraysC.html', name = name, stats = jsonDump(stats), plays = jsonDump(plays))
 
-	if keys != '':
-		keyList = list(keys.split(','))
+	if key != '':
+		keys = int(key)
+		keyList = [keys]
 
-	if keys == '':
+	if key == '':
 		keys = list(db.engine.execute(f"""SELECT * FROM PLAYER_DIM
 		WHERE TEAM_KEY = {team} and YEAR = {year} and ACTIVE_RECORD = 1"""))
 		keyList = [str(x.PLAYER_KEY) for x in keys]
 		keys = ', '.join(keyList)
-
 
 	plays = list(db.engine.execute(f"""
 	SELECT d.FULL_NAME, d.NUMBER, p.* FROM PLAY_BY_PLAY p
@@ -758,8 +773,8 @@ def faq():
 
 @app.route('/editPlays')
 def editPlays():
-	team_key = request.values.get('team', '755')
-	year = request.values.get('year', years[0])
+	team_key = int(equest.values.get('team', '755'))
+	year = int(request.values.get('year', years[0]))
 	# plays = list(db.engine.execute("""SELECT p.FULL_NAME NAME, t.NAME TEAM_NAME, pbp.* FROM PLAY_BY_PLAY pbp
 	# JOIN PLAYER_DIM p on p.PLAYER_KEY = pbp.BATTER_PLAYER_KEY
 	# JOIN TEAM_DIM t on t.TEAM_KEY = pbp.BATTER_TEAM_KEY
@@ -769,7 +784,7 @@ def editPlays():
 	playsORG = list(db.engine.execute(f"""SELECT p.FULL_NAME NAME, t.NAME TEAM_NAME, pbp.* FROM PLAY_BY_PLAY pbp
  	LEFT JOIN PLAYER_DIM p on p.PLAYER_KEY = pbp.BATTER_PLAYER_KEY
  	LEFT JOIN TEAM_DIM t on t.TEAM_KEY = pbp.BATTER_TEAM_KEY
-	WHERE t.TEAM_KEY = '{team_key}' and pbp.YEAR = {year}
+	WHERE t.TEAM_KEY = {team_key} and pbp.YEAR = {year}
  	ORDER BY p.PLAYER_KEY
  	 """))
 	name = ''

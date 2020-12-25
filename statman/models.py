@@ -6,11 +6,13 @@ class team_dim(db.Model):
 
     TEAM_KEY = db.Column(db.Integer, primary_key=True)
     NAME = db.Column(db.String(50))
+    VISITS = db.Column(db.Integer)
     ACTIVE_RECORD = db.Column(db.Integer)
 
     def __init__(self, key, name):
         self.TEAM_KEY = key
         self.NAME = name
+        self.VISITS = 0
         self.ACTIVE_RECORD = 1
 
 class player_dim(db.Model):
