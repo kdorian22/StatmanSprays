@@ -38,19 +38,15 @@
       <div id = support>While we don't charge for our product, there are some costs associated with running the site.
         Help us out at the link below.
          <br><br>
-         <script type="text/javascript" src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js" data-name="bmc-button" data-slug="StatmanSprays" data-color="slategray" data-emoji=""
-         data-font="Lato" data-text="Buy me a coffee" data-outline-color="#000000" data-font-color="#ffffff" data-coffee-color="#FFDD00" ></script>
+         <div id = 'btn'> Support Statman Sprays </div>
        </div>
     </div>
 
   </div>
-
-
-
 </html>
 
 <style>
-  .bmc-btn{
+  #btn{
     border: 2px solid black !important;
     color: black;
     background-color: rgb(254, 246, 235) !important;
@@ -64,14 +60,15 @@
     text-align: center !important;
     height: inherit !important;
     box-shadow: 0px 0px 5px black;
+    cursor: pointer
   }
 
-  .bmc-btn:active {
+  #btn:active {
     box-shadow: 0 0 5px -1px rgba(0,0,0,0.6);
     background-color: gray
 }
 
-.bmc-btn:hover {
+#btn:hover {
   background-color: black !important;
   color: white !important;
   border: 2px solid white !important;
@@ -99,6 +96,7 @@
     justify-content: center;
     flex-wrap: wrap;
   }
+
   .section{
     border: 2px solid rgb(254, 246, 235);
     background-color: slategray;
@@ -129,13 +127,12 @@
 </style>
 
 
-<script>
-
-</script>
 
 <script >
 
-$(".bmc-btn").text('Support Statman Sprays')
+$("#btn").click(function(){
+  window.open('https://www.buymeacoffee.com/StatmanSprays')
+})
 
 
 </script>
