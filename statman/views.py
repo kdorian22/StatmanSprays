@@ -88,7 +88,11 @@ def index():
 	JOIN TEAM_DIM t on t.TEAM_KEY = p.TEAM_KEY
 	WHERE p.ACTIVE_RECORD = 1 and t.ACTIVE_RECORD = 1
 	GROUP BY p.TEAM_KEY;""")
-	db.engine.execute('SELECT * FROM PLAY_BY_PLAY WHERE BATTER_TEAM_KEY= 2 AND ACTIVE_RECORD = 1 and YEAR = 2020 Limit 200')
+
+	db.engine.execute("""SELECT p.*, FULL_NAME FROM PLAY_BY_PLAY p
+	 JOIN PLAYER_DIM d on d.PLAYER_KEY = p.BATTER_PLAYER_KEY
+	 WHERE d.ACTIVE_RECORD = 1 AND BATTER_TEAM_KEY = 2 and p.ACTIVE_RECORD = 1 Limit 200""")
+	 
 	teams = []
 	for d in data:
 		teams.append({'NAME': d.NAME, 'TEAM_KEY': d.TEAM_KEY})
@@ -124,14 +128,12 @@ def scrapeTeams():
 
 @app.route('/scrapeRoster', methods = ['GET'])
 def scrapeRoster():
-	db.session.commit()
 	year = int(request.values.get('year', years[0]))
 	team = int(request.values.get('team','755'))
 	r = request.values.get('r', '')
 
 	rosterToAdd = []
 	try:
-		db.session.commit()
 		exists = player_dim.query.filter_by(YEAR=str(year)).filter_by(TEAM_KEY=team).all()
 		if len(exists) > 0 and r == '':
 			return 'Already Scraped'
@@ -162,7 +164,6 @@ def scrapeRoster():
 			db.session.add(player)
 			db.session.commit()
 
-		db.session.commit()
 		players = list(db.engine.execute(f"SELECT * FROM PLAYER_DIM WHERE YEAR = '{year}' and TEAM_KEY = {team}"))
 		db.session.commit()
 
@@ -556,15 +557,12 @@ def scrapePlays():
 			team))
 
 	try:
-		db.session.commit()
 		play_by_play.query.filter_by(YEAR=int(year)).filter_by(BATTER_TEAM_KEY=team).delete()
-		db.session.commit()
 		for play in allPlays:
 			pbp = play_by_play(play['date'], play['batter'], play['btk'], play['ptk'], play['outcome'], play['location'], year, play['description'])
 			db.session.add(pbp)
 		db.session.commit()
 		# hitter_stats.query.filter_by(YEAR=str(year)).filter_by(TEAM_KEY=team).delete()
-		db.session.commit()
 		lastName = ''
 		lastNum = ''
 		for player in rosterToAdd:
@@ -578,7 +576,6 @@ def scrapePlays():
 				continue
 			lastName = player.FULL_NAME
 			lastNum = player.NUMBER
-		db.session.commit()
 		gc.collect()
 		return jsonify(allPlays)
 	except:
@@ -703,7 +700,6 @@ def sprays():
 
 	num = row.VISITS
 	db.engine.execute(f"""UPDATE TEAM_DIM SET VISITS = {num+1} WHERE TEAM_KEY = {team}""")
-	db.session.commit()
 
 	plays = list(db.engine.execute(f"""SELECT p.*, FULL_NAME FROM PLAY_BY_PLAY p
 	 JOIN PLAYER_DIM d on d.PLAYER_KEY = p.BATTER_PLAYER_KEY
