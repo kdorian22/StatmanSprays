@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 import numpy as np
 import re
 from datetime import datetime
-from statman import app, db
+from statman import app
 from statman.models import *
 from fuzzywuzzy import fuzz
 import Levenshtein as lev
@@ -92,7 +92,7 @@ def index():
 	db.engine.execute("""SELECT p.*, FULL_NAME FROM PLAY_BY_PLAY p
 	 JOIN PLAYER_DIM d on d.PLAYER_KEY = p.BATTER_PLAYER_KEY
 	 WHERE d.ACTIVE_RECORD = 1 AND BATTER_TEAM_KEY = 2 and p.ACTIVE_RECORD = 1 Limit 200""")
-	 
+
 	teams = []
 	for d in data:
 		teams.append({'NAME': d.NAME, 'TEAM_KEY': d.TEAM_KEY})
@@ -154,11 +154,6 @@ def scrapeRoster():
 					rosterToAdd.append(player_dim(cells[0].replace('â€™',"'"), cells[1], cells[2], cells[3], year, team))
 			else:
 				return 'no'
-
-
-		change = player_dim.query.filter_by(NUMBER=4).filter_by(TEAM_KEY=16).filter_by(CLASS='So').first()
-		if change is not None:
-			change.ACTIVE_RECORD = 0
 
 		for player in rosterToAdd:
 			db.session.add(player)
@@ -486,7 +481,6 @@ def scrapePlays():
 				allPlays.append(thesePlays)
 		except:
 			continue
-		# print(len(allPlays))
 	allPlays = list(itertools.chain.from_iterable(allPlays))
 
 	url=f'https://stats.ncaa.org/team/{team}/stats/{yearCodes[year]}'
@@ -562,7 +556,6 @@ def scrapePlays():
 			pbp = play_by_play(play['date'], play['batter'], play['btk'], play['ptk'], play['outcome'], play['location'], year, play['description'])
 			db.session.add(pbp)
 		db.session.commit()
-		# hitter_stats.query.filter_by(YEAR=str(year)).filter_by(TEAM_KEY=team).delete()
 		lastName = ''
 		lastNum = ''
 		for player in rosterToAdd:
@@ -636,12 +629,6 @@ def getStats(name, num, pos, fresh, year, team):
 
 @app.route('/data', methods = ['POST', 'GET'])
 def data():
-	# key = request.values.get('key', '')
-	# key = key.replace(';', '')
-	# string = ''
-	# if key != '' and len(key) < 7:
-	# 	string = f'and t.TEAM_KEY = {key}'
-
 	query = f"""
 	SELECT t.NAME, t.TEAM_KEY, t.ACTIVE_RECORD,
 	CAST(IFNULL(ROS_0, 0) as signed) ROS_0,
@@ -673,8 +660,6 @@ def data():
 	ORDER BY NAME;
 	"""
 	status = list(db.engine.execute(query))
-	# if string != '':
-	# 	return jsonDump(status)
 
 	return render_template('data.html', status=status, data = jsonDump(status), years=years)
 
@@ -771,11 +756,6 @@ def faq():
 def editPlays():
 	team_key = int(equest.values.get('team', '755'))
 	year = int(request.values.get('year', years[0]))
-	# plays = list(db.engine.execute("""SELECT p.FULL_NAME NAME, t.NAME TEAM_NAME, pbp.* FROM PLAY_BY_PLAY pbp
-	# JOIN PLAYER_DIM p on p.PLAYER_KEY = pbp.BATTER_PLAYER_KEY
-	# JOIN TEAM_DIM t on t.TEAM_KEY = pbp.BATTER_TEAM_KEY
-	# ORDER BY t.NAME
-	#  """))
 
 	playsORG = list(db.engine.execute(f"""SELECT p.FULL_NAME NAME, t.NAME TEAM_NAME, pbp.* FROM PLAY_BY_PLAY pbp
  	LEFT JOIN PLAYER_DIM p on p.PLAYER_KEY = pbp.BATTER_PLAYER_KEY

@@ -668,17 +668,6 @@ th.plays{
         .attr('class', 'plRow')
         .attr('id', function(d,i){return 'row'+i})
         .attr('data-index', function(d,i){ return i})
-        .on('click', function(d){
-          $("#playTable").empty()
-          $('#playDiv').hide()
-          $('.selected').removeClass('selected')
-          $('#career').show()
-          $('#career').removeClass('careerSelected')
-          $('#career').text('Show Career Spray')
-          $(this).addClass('selected')
-          data = plays.filter(function(e){ return e.BATTER_PLAYER_KEY == d.PLAYER_KEY})
-          makeSpray(data, d.FULL_NAME, d.NUMBER, d.POSITION, d.CLASS, d.YEAR, d.TEAM_KEY, 'y')
-        })
 
         d3.selectAll('tr.plRow')
         .append('td').html(function(d){ return d.FULL_NAME })
@@ -708,11 +697,28 @@ th.plays{
              }
             }
           })
+
+        d3.selectAll('tr.plRow td:not(.print)').on('click', function(d){
+          $('#career').removeClass('careerSelected')
+          $('#career').text('Show Career Spray')
+          $("#playTable").empty()
+          $('#playDiv').hide()
+          $('.selected').removeClass('selected')
+          $('#career').show()
+          $(this).parent().addClass('selected')
+          data = plays.filter(function(e){ return e.BATTER_PLAYER_KEY == d.PLAYER_KEY})
+          makeSpray(data, d.FULL_NAME, d.NUMBER, d.POSITION, d.CLASS, d.YEAR, d.TEAM_KEY, 'y')
+        })
+
+
         $("#printAll").unbind()
         $('#printAll').show()
         $('#printAll').click(function(){
           window.open("{{url_for('printSprays')}}?team="+key+"&year="+year)
         })
+
+
+
       }
     }
 
