@@ -20,18 +20,21 @@ jsglue = JSGlue(app)
 app.config['PDF_FOLDER'] = 'static/pdf/'
 
 yearCodes = {
+		 '2021': '15580',
 		 '2020': '15204',
-		 '2019':'14781',
-		 '2018':'12973',
-		 '2017':'12560',
-		 '2016':'12360'}
+		 '2019': '14781',
+		 '2018': '12973',
+		 '2017': '12560',
+		 '2016': '12360'
+		}
 
-years = ['2020', '2019', '2018']
+years = ['2021', '2020', '2019', '2018']
 
 statCodes = {
 		 'hit': '14760',
 		 'pitch':'14761',
-		 'field':'14762'}
+		 'field':'14762'
+		 }
 
 locations = ['1b', '2b', '3b', ' ss', ' p ', ' p.', ' p,',' p;', ' c ', ' c.', ' c,', ' c;', 'catcher', 'pitcher',
 ' lf', ' rf', ' cf', 'shortstop', 'center',
@@ -132,16 +135,18 @@ def scrapeRoster():
 	team = int(request.values.get('team','755'))
 	r = request.values.get('r', '')
 
+
 	rosterToAdd = []
 	try:
 		exists = player_dim.query.filter_by(YEAR=str(year)).filter_by(TEAM_KEY=team).all()
-		if len(exists) > 0 and r == '':
+		if len(exists) > 0 and r != 'r':
 			return 'Already Scraped'
 		else:
 			if r == 'r':
 				player_dim.query.filter_by(YEAR=str(year)).filter_by(TEAM_KEY=team).delete()
 				db.session.commit()
-			url=f'https://stats.ncaa.org/team/{team}/roster/{yearCodes[year]}'
+			url=f'https://stats.ncaa.org/team/{team}/roster/{yearCodes[str(year)]}'
+			print(url)
 			soup = BeautifulSoup(requests.get(url, headers = {"User-Agent": "Mozilla/5.0"}).content, 'lxml')
 			table = soup.find('tbody')
 			if table is not None:
@@ -151,7 +156,7 @@ def scrapeRoster():
 						text = cell.text.replace("\n", '')
 						text = cell.text.replace('nbsp&', '')
 						cells.append(text)
-					rosterToAdd.append(player_dim(cells[0].replace('â€™',"'"), cells[1], cells[2], cells[3], year, team))
+					rosterToAdd.append(player_dim(cells[0], cells[1].replace('â€™',"'"), cells[2], cells[3], year, team))
 			else:
 				return 'no'
 
