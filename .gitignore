@@ -103,3 +103,6 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+statman/db.py
+statman/scrapeRoster.py
+statman/scrapeRosters.py
