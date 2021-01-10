@@ -68,6 +68,14 @@ outDict = {
  'foul': 'FB'
  }
 
+
+teamNameDict = {
+	'Appalachian St.': 'App State',
+	'CWRU': 'Case Western',
+	'IIT': 'Illinois State'
+}
+
+
 @app.template_filter()
 def date(text):
 	text = str(text)
@@ -146,7 +154,6 @@ def scrapeRoster():
 				player_dim.query.filter_by(YEAR=str(year)).filter_by(TEAM_KEY=team).delete()
 				db.session.commit()
 			url=f'https://stats.ncaa.org/team/{team}/roster/{yearCodes[str(year)]}'
-			print(url)
 			soup = BeautifulSoup(requests.get(url, headers = {"User-Agent": "Mozilla/5.0"}).content, 'lxml')
 			table = soup.find('tbody')
 			if table is not None:
@@ -212,6 +219,12 @@ def scrapePlays():
 	## Hard Code in Alternate Names
 	if int(team) == 27:
 		teamNameList.append('Appalachian St.')
+	if int(team) == 122:
+		teamNameList.append('CWRU')
+	if int(team) == 30172:
+		teamNameList.appen('IIT')
+
+
 	## Get team roster
 	roster = player_dim.query.filter_by(TEAM_KEY=team).filter_by(YEAR=year).filter_by(ACTIVE_RECORD=1).all()
 
@@ -261,7 +274,7 @@ def scrapePlays():
 		playersNotLast[r.PLAYER_KEY] = namesNotLast
 	unwanted = ['wild pitch', 'passed ball', ' balk ','picked off', 'caught stealing', ' struck ', ' walked ', ' walked.', ' stole ']
 	## start on the team-year roster page
-	start = f'https://stats.ncaa.org/team/{team}/roster/{yearCodes[year]}'
+	start = f'https://stats.ncaa.org/team/{team}/roster/{yearCodes[str(year)]}'
 	soup = BeautifulSoup(requests.get(start, headers = {"User-Agent": "Mozilla/5.0"}).content, 'lxml')
 
 	## Get possible links to list of games
@@ -322,6 +335,8 @@ def scrapePlays():
 			for i, td in enumerate(soup.find('table', {'class': 'mytable', 'width': '1000px'}).find('tr', {'class': 'grey_heading'}).findAll('td')):
 				if td.text not in teamNameList and td.text != 'Score':
 					oppTeamName = td.text
+					if oppTeamName in teamNameDict:
+						oppTeamName = teamNameDict[oppTeamName]
 				if td.text in teamNameList or bool([x for x in teamNameList if td.text in x.split()]):
 					index = i
 
@@ -488,7 +503,7 @@ def scrapePlays():
 			continue
 	allPlays = list(itertools.chain.from_iterable(allPlays))
 
-	url=f'https://stats.ncaa.org/team/{team}/stats/{yearCodes[year]}'
+	url=f'https://stats.ncaa.org/team/{team}/stats/{yearCodes[str(year)]}'
 	soup = BeautifulSoup(requests.get(url, headers = {"User-Agent": "Mozilla/5.0"}).content, 'html.parser')
 	table = soup.find('tbody')
 	head = soup.find('thead').findAll('th')
@@ -553,83 +568,36 @@ def scrapePlays():
 			cells[10].replace("\n", ''),
 			#RBI
 			cells[17].replace("\n", ''),
+
 			team))
 
-	try:
-		play_by_play.query.filter_by(YEAR=int(year)).filter_by(BATTER_TEAM_KEY=team).delete()
-		for play in allPlays:
+	play_by_play.query.filter_by(YEAR=int(year)).filter_by(BATTER_TEAM_KEY=team).delete()
+	for play in allPlays:
+		try:
 			pbp = play_by_play(play['date'], play['batter'], play['btk'], play['ptk'], play['outcome'], play['location'], year, play['description'])
 			db.session.add(pbp)
-		db.session.commit()
-		lastName = ''
-		lastNum = ''
-		for player in rosterToAdd:
-			## handle duplicate roster entries
-			name = player.FULL_NAME
-			num = player.NUMBER
-			try:
-				if name != lastName and num != lastNum:
-					db.session.merge(player)
-			except:
-				continue
-			lastName = player.FULL_NAME
-			lastNum = player.NUMBER
-		gc.collect()
-		return jsonify(allPlays)
-	except:
-		return 'no'
+		except:
+			continue
+	db.session.commit()
+	lastName = ''
+	lastNum = ''
+	for player in rosterToAdd:
+		## handle duplicate roster entries
+		name = player.FULL_NAME
+		num = player.NUMBER
+		try:
+			if name != lastName and num != lastNum:
+				db.session.merge(player)
+		except:
+			continue
+		lastName = player.FULL_NAME
+		lastNum = player.NUMBER
+	gc.collect()
+	return jsonify(allPlays)
+
 
 	gc.collect()
 	return 'no'
-
-
-@app.route('/getData/<key>/<year>/<type>/<csv>', methods = ['POST', 'GET'])
-def getData(key, year, type, csv):
-	# currently unused
-	return '1'
-	if key != '' and year != '' and type != '' and len(key) < 10 and len(year) < 5 and len(type) < 10:
-		if type == 'pbpT':
-			tab = 'PLAY_BY_PLAY'
-			keyCol = 'BATTER_TEAM_KEY'
-			order = 'DATE_KEY'
-		elif type == 'pbpP':
-			tab = 'PLAY_BY_PLAY'
-			keyCol = 'BATTER_PLAYER_KEY'
-			order = 'DATE_KEY'
-		elif type == 'ros':
-			tab = 'PLAYER_DIM'
-			keyCol = 'TEAM_KEY'
-			order = 'FULL_NAME'
-		query = f"""SELECT * FROM {tab} WHERE {keyCol} = {key} and YEAR = {year} and ACTIVE_RECORD = 1 ORDER BY {order}"""
-		if ';' not in query:
-			data = list(db.engine.execute(query))
-		else:
-			data = []
-	else:
-		data = []
-
-	if csv == 'y':
-		if len(data) > 0:
-			df = pd.DataFrame(data, columns = dict(data[0]).keys())
-			csv = df.to_csv(index=False)
-			output = make_response(csv)
-			output.headers["Content-Disposition"] = "attachment; filename=export.csv"
-			output.headers["Content-type"] = "text/csv"
-			return output
-	return jsonDump(data)
-
-
-@app.route('/getStats/<name>/<num>/<pos>/<fresh>/<year>/<team>', methods = ['POST', 'GET'])
-def getStats(name, num, pos, fresh, year, team):
-	## currently unused
-	return '1'
-	string = f"""SELECT * FROM HITTER_STATS WHERE FULL_NAME = '{name}' and NUMBER = '{num}' and POSITION = '{pos}' and YEAR = '{year}' and CLASS = '{fresh}' and TEAM_KEY = '{team}'"""
-	if ';' not in string:
-		data = list(db.engine.execute(string))
-	else:
-		data = []
-	return jsonDump(data)
-
 
 
 @app.route('/data', methods = ['POST', 'GET'])
@@ -757,6 +725,7 @@ def faq():
 	return render_template('faq.html')
 
 
+
 @app.route('/editPlays')
 def editPlays():
 	team_key = int(equest.values.get('team', '755'))
@@ -791,3 +760,53 @@ def PBPWrite():
 		return 'yes'
 	else:
 		return 'no'
+
+
+
+
+@app.route('/getData/<key>/<year>/<type>/<csv>', methods = ['POST', 'GET'])
+def getData(key, year, type, csv):
+	# currently unused
+	return '1'
+	if key != '' and year != '' and type != '' and len(key) < 10 and len(year) < 5 and len(type) < 10:
+		if type == 'pbpT':
+			tab = 'PLAY_BY_PLAY'
+			keyCol = 'BATTER_TEAM_KEY'
+			order = 'DATE_KEY'
+		elif type == 'pbpP':
+			tab = 'PLAY_BY_PLAY'
+			keyCol = 'BATTER_PLAYER_KEY'
+			order = 'DATE_KEY'
+		elif type == 'ros':
+			tab = 'PLAYER_DIM'
+			keyCol = 'TEAM_KEY'
+			order = 'FULL_NAME'
+		query = f"""SELECT * FROM {tab} WHERE {keyCol} = {key} and YEAR = {year} and ACTIVE_RECORD = 1 ORDER BY {order}"""
+		if ';' not in query:
+			data = list(db.engine.execute(query))
+		else:
+			data = []
+	else:
+		data = []
+
+	if csv == 'y':
+		if len(data) > 0:
+			df = pd.DataFrame(data, columns = dict(data[0]).keys())
+			csv = df.to_csv(index=False)
+			output = make_response(csv)
+			output.headers["Content-Disposition"] = "attachment; filename=export.csv"
+			output.headers["Content-type"] = "text/csv"
+			return output
+	return jsonDump(data)
+
+
+@app.route('/getStats/<name>/<num>/<pos>/<fresh>/<year>/<team>', methods = ['POST', 'GET'])
+def getStats(name, num, pos, fresh, year, team):
+	## currently unused
+	return '1'
+	string = f"""SELECT * FROM HITTER_STATS WHERE FULL_NAME = '{name}' and NUMBER = '{num}' and POSITION = '{pos}' and YEAR = '{year}' and CLASS = '{fresh}' and TEAM_KEY = '{team}'"""
+	if ';' not in string:
+		data = list(db.engine.execute(string))
+	else:
+		data = []
+	return jsonDump(data)
