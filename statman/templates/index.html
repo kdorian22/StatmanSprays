@@ -5,6 +5,10 @@
     <div id = search>
       <div id = cont><h1 id = logo>Statman Sprays</h1>
       <input id =  searchTeam type="text" placeholder="Find Team..."></input>
+      <div id = reCont>
+        <div class = reDiv> <a id = about class = redirect target='_blank' href = "{{url_for('about')}}"> <div class = pageSelect> About Us  </div> </a> </div>
+        <div class = reDiv> <a id = faq class = redirect  target='_blank'  href = "{{url_for('faq')}}"> <div class = pageSelect> FAQ  </div> </a> </div>
+      </div>
       </div>
     </div>
     <div hidden class="wait banner">  </div>
@@ -17,15 +21,11 @@
       <div></div><div></div>
         <div></div><div></div></div>
     </div>
-      <!-- <div>
-        <a class = redirect href = "{{url_for('sprays')}}"> <div class = pageSelect> Spray Charts  </div> </a>
-         <a class = redirect href = "{{url_for('data')}}"> <div class = pageSelect> Data Overview  </div> </a>
-         <a id = about class = redirect hidden href = "{{url_for('about')}}"> <div class = pageSelect> About Us  </div> </a>
-         <a id = faq class = redirect hidden href = "{{url_for('faq')}}"> <div class = pageSelect> FAQ  </div> </a>
-      </div> -->
 <style>
 
+
 /* https://loading.io/css/ */
+
 #loader{
   visibility: hidden;
   color: official;
@@ -154,7 +154,9 @@
   font-size: 30px;
   background-color: rgb(254, 246, 235)
 }
-
+#reCont{
+  display: none;
+}
 @media only screen and (max-width: 1100px) {
   #logo{
     font-size: 7vw
@@ -167,6 +169,30 @@
   .ui-menu-item{
     font-size: 3vw;
   }
+
+  #reCont{
+    width: 100%;
+    margin-top: 20px;
+    display: block;
+  }
+
+  .reDiv{
+    display: inline-block;
+    width: 40%;
+    margin-left:4%;
+    margin-right: 4%;
+    font-size: 25px;
+    border-radius: 2px;
+    border: 2px solid black;
+    background-color: lightgray;
+    box-shadow: 0px 0px 2px black;
+  }
+
+  .reDiv a{
+    color: black;
+    text-decoration: none;
+  }
+
 }
 
 .wait{
@@ -188,74 +214,6 @@
 
 }
 
-
-/* .redirect{
-  color: rgb(254, 246, 235);
-  text-decoration: none;
-  font-style: normal !important
-} */
-
-/* @media only screen and (min-width: 1200px) {
-    .pageSelect{
-      float: left;
-      width: 40%;
-      height: 50vh;
-      line-height: 50vh;
-      margin: 4.5%;
-      text-align: center;
-      margin-top: 10%;
-      font-weight: bold;
-      background-color: rgb(254, 246, 235);
-      border: 6px solid rgb(254, 246, 235);
-      font-size: 4.7vw;
-      border-radius: 10px;
-      background-color: slategray;
-      color: rgb(254, 246, 235);
-      box-shadow: 0px 0px 10px gray;
-      font-style: normal;
-    }
-
-    #faq, #about{
-      display: none
-    }
-  }
-
-@media only screen and (max-width: 1200px) {
-  .pageSelect{
-    width: 80%;
-    height: 33vh;
-    line-height: 33vh;
-    margin-left: 10%;
-    margin-top: 7%;
-    text-align: center;
-    font-weight: bold;
-    background-color: rgb(254, 246, 235);
-    border: 6px solid rgb(254, 246, 235);
-    font-size: 6.5vw;
-    border-radius: 10px;
-    background-color: slategray;
-    color: rgb(254, 246, 235);
-    box-shadow: 0px 0px 10px gray;
-    font-style: normal;
-  }
-
-  #faq, #about{
-    display: block
-  }
-
-  .bmc-btn{
-    display: none !important
-  }
-}
-
-
-
-  .pageSelect:hover{
-    cursor: pointer;
-    background-color:  rgb(254, 246, 235);
-    color: slategray;
-    border: 6px solid slategray
-  } */
 
   .bmc-btn{
     border: 2px solid rgb(254, 246, 235) !important;

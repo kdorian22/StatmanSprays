@@ -25,9 +25,16 @@
           <a class = headAnchor href = "{{url_for('faq')}}">FAQ</a>
         </div>
         <div id = title > <a id = titleAnchor href = "{{url_for('index')}}">STATMAN SPRAYS </a> </div>
+        <div id = horiz> &#9776; </div>
       </div>
       <div id = content> {% block content %}{% endblock %}  </div>
-
+      <div id = side>
+          <div id = close> &#10005; </div>
+          <div class = li> <a class = headAnchor href = "{{url_for('index')}}">HOME</a> </div>
+          <div class = li> <a class = headAnchor href = "{{url_for('sprays')}}">SPRAYS</a> </div>
+          <div class = li> <a class = headAnchor href = "{{url_for('about')}}">ABOUT</a> </div>
+          <div class = li> <a class = headAnchor href = "{{url_for('faq')}}">FAQ</a> </div>
+      </div>
       <div id = footer>
         <a class = footAnchor href = "{{url_for('index')}}">Home</a> |
         <a class = footAnchor href = "{{url_for('sprays')}}">Sprays</a> |
@@ -38,6 +45,17 @@
    </body>
 </html>
 <style>
+
+#close{
+  font-size: 30px;
+  z-index: 1000;
+  color: black;
+  text-align: right;
+  margin-right: 5px;
+  cursor: pointer;
+  color: rgb(254, 246, 235);
+}
+
 #footer{
   color: slategray !important;
   font-size: 12px;
@@ -45,6 +63,51 @@
   bottom: 5px;
   left: 15px
 }
+
+#horiz{
+  display: none;
+  font-size: 50px;
+  position: absolute;
+  top:2px;
+  right:5px;
+  cursor: pointer;
+  color: rgb(254, 246, 235)
+}
+
+#side{
+  width: 0px;
+  font-size: 15px;
+  position: fixed;
+  right: 0px;
+  top:0px;
+  height: 100vh;
+  background-color: slategray;
+  color: slategray;
+  box-shadow: 0px 5px 5px gray;
+  transition: 0.5s;
+}
+
+
+.li{
+  clear: both;
+  margin-top: 20px;
+  font-size: 40px;
+  margin-left: 10px
+}
+
+.headAnchor{
+  color: rgb(254, 246, 235);
+  text-decoration: none;
+  cursor: pointer;
+  font-style: normal;
+}
+
+
+.headAnchor:hover{
+  color: black;
+  transition: .3s;
+}
+
 
 .footAnchor{
   color: slategray;
@@ -70,8 +133,11 @@
 }
 
 @media only screen and (max-width: 1100px) {
+  #horiz{
+    display: block;
+  }
   #links{
-    display: none !important
+    display: none !important;
   }
 
   #header{
@@ -119,18 +185,6 @@
 
 
 
-.headAnchor{
-  color: rgb(254, 246, 235) !important;
-  text-decoration: none;
-  cursor: pointer;
-  font-style: normal;
-}
-
-
-.headAnchor:hover{
-  color: black !important;
-  /* text-decoration: underline; */
-}
 
 #icon{
   height: 80px;
@@ -178,3 +232,18 @@ hr{
 }
 
 </style>
+
+<script>
+$('#horiz').click(function(){
+  $('#side').css('width', '300px').css('border-left', '2px solid rgb(254, 246, 235)')
+})
+
+// $('#side').mouseout(function(){
+//   $(this).css('width', '0px').css('border-left', '0px solid rgb(254, 246, 235)')
+// })
+
+$('#close').click(function(){
+  $('#side').css('width', '0px').css('border-left', '0px solid rgb(254, 246, 235)')
+})
+
+</script>
