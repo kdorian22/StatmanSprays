@@ -47,11 +47,13 @@
 <style>
 
 #close{
-  font-size: 30px;
+  font-size: 40px;
   z-index: 1000;
   color: black;
   text-align: right;
-  margin-right: 5px;
+  font-weight: bold;
+  margin-top: 10px;
+  margin-right: 10px;
   cursor: pointer;
   color: rgb(254, 246, 235);
 }
@@ -80,17 +82,17 @@
   position: fixed;
   right: 0px;
   top:0px;
-  height: 100vh;
+  height: 50vh;
   background-color: slategray;
   color: slategray;
-  box-shadow: 0px 5px 5px gray;
+  box-shadow: 0px 0px 5px black;
   transition: 0.5s;
 }
 
 
 .li{
   clear: both;
-  margin-top: 20px;
+  margin-bottom: 20px;
   font-size: 40px;
   margin-left: 10px
 }
@@ -244,7 +246,7 @@ hr{
 
 <script>
 $('#horiz').click(function(){
-  $('#side').css('width', '300px').css('border-left', '2px solid rgb(254, 246, 235)')
+  $('#side').css('width', '180px').css('border-left', '2px solid rgb(254, 246, 235)').css('border-bottom', '2px solid rgb(254, 246, 235)')
 })
 
 // $('#side').mouseout(function(){
@@ -252,7 +254,12 @@ $('#horiz').click(function(){
 // })
 
 $('#close').click(function(){
-  $('#side').css('width', '0px').css('border-left', '0px solid rgb(254, 246, 235)')
+  $('#side').css('width', '0px').css('border-left', '0px solid rgb(254, 246, 235)').css('border-left', '0px solid rgb(254, 246, 235)')
+})
+
+
+$('#content').click(function(){
+  $('#side').css('width', '0px').css('border-left', '0px solid rgb(254, 246, 235)').css('border-left', '0px solid rgb(254, 246, 235)')
 })
 
 </script>
