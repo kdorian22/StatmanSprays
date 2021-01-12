@@ -132,56 +132,65 @@
   font-style: normal;
 }
 
-@media only screen and (max-width: 1100px) {
-  #horiz{
-    display: block;
+  @media only screen and (max-width: 500px) {
+    #title{
+      font-size: 35px !important;
+      transition: .3s
+    }
   }
+
+
+  @media only screen and (max-width: 1100px) {
+    #horiz{
+      display: block;
+    }
+    #links{
+      display: none !important;
+    }
+
+    #header{
+      text-align: center;
+      justify-content: center !important;
+      width: 650px;
+    }
+
+    #title{
+      margin-right: 5px;
+      height: 70px;
+      font-size: 50px;
+      line-height: 70px;
+      letter-spacing: 6px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    #icon{
+      display: none
+    }
+  }
+
+  @media only screen and (min-width: 1100px) {
+    #title{
+      margin-right: 5px;
+      height: 70px;
+      font-size: 50px;
+      line-height: 70px;
+      letter-spacing: 6px;
+      float:right;
+      color: rgb(254, 246, 235);
+      font-weight: bold;
+      cursor: pointer;
+    }
+  }
+
   #links{
-    display: none !important;
-  }
-
-  #header{
-    text-align: center;
-    justify-content: center !important;
-    width: 650px;
-  }
-
-  #title{
-    margin-right: 5px;
-    height: 80px;
-    font-size: 50px;
-    line-height: 80px;
-    letter-spacing: 6px;
-    font-weight: bold;
-    cursor: pointer;
-  }
-
-  #icon{
-    display: none
-  }
-}
-
-@media only screen and (min-width: 1100px) {
-  #title{
-    margin-right: 5px;
     height: 70px;
-    font-size: 50px;
     line-height: 70px;
-    letter-spacing: 6px;
-    float:right;
-    color: rgb(254, 246, 235);
-    font-weight: bold;
-    cursor: pointer
+    font-size: 30px;
+    display: inline-block;
+    margin-left: 20px;
+    letter-spacing: 2px;
   }
-}
-#links{
-  height: 70px;
-  line-height: 70px;
-  font-size: 30px;
-  display: inline-block;
-  margin-left: 20px;
-  letter-spacing: 2px;
-}
 
 
 
