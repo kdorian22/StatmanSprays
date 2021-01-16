@@ -540,12 +540,14 @@ th.plays{
 
   {% if request.MOBILE  %}
     width = $('#body').width()
+    height = width*(450/650)
   {% else %}
     width = 638
+    height = 450
   {% endif %}
 
   d3.select('#field').attr('width', width+12)
-  d3.select('#field').attr('height', (width*(450/650)))
+  d3.select('#field').attr('height', height)
 
 
   $('.seasonSpan').click(function(){
