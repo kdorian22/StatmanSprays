@@ -234,7 +234,7 @@ th.plays{
 }
 
 
-{% if request.MOBILE %}
+{% if request.MOBILE  %}
 
 #name{
   font-size: 5vw
@@ -276,17 +276,12 @@ th.plays{
 }
 
 #search{
-  position: relative;
-  width: 40%;
   margin-top: 1%;
-  margin-right: 1%;
-  text-align: right;
 }
 
 #searchTeam{
   vertical-align: bottom;
   font-size: 4vw;
-  width: 100%
 }
 
 #career{
@@ -304,7 +299,7 @@ th.plays{
 
 {% endif %}
 
-{% if not request.MOBILE %}
+{% if not request.MOBILE  %}
 #teamTable td, #teamTable th{
   font-size: 20px;
 }
@@ -543,7 +538,7 @@ th.plays{
   });
 
 
-  {% if request.MOBILE %}
+  {% if request.MOBILE  %}
     width = $('#body').width()
   {% else %}
     width = 650
