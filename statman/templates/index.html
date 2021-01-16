@@ -23,6 +23,10 @@
     </div>
 <style>
 
+.ui-menu-item{
+  font-size: 30px;
+  background-color: rgb(254, 246, 235)
+}
 
 /* https://loading.io/css/ */
 
@@ -34,6 +38,7 @@
   width: 180px;
   height: 180px;
 }
+
 #loader div {
   transform-origin: 90px 90px;
   animation: lds-spinner 1.2s linear infinite;
@@ -98,6 +103,7 @@
   transform: rotate(330deg);
   animation-delay: 0s;
 }
+
 @keyframes lds-spinner {
   0% {
     opacity: 1;
@@ -106,7 +112,6 @@
     opacity: 0;
   }
 }
-
 
 #loaderCont{
   display: flex;
@@ -127,8 +132,9 @@
   border: 6px solid rgb(254, 246, 235);
   border-radius: 10px;
   background-color: slategray;
-  padding: 25px;
+  padding: 3%;
 }
+
 #search{
   width: 100%;
   height: 70vh;
@@ -136,6 +142,7 @@
   justify-content: center;
   align-items: center;
 }
+
 #searchTeam{
   vertical-align: bottom;
   font-size: 55px;
@@ -147,16 +154,13 @@
   width: 100%;
   box-shadow: 0px 0px 5px slategray;
   background-color: rgb(254, 246, 235);
-  padding: 5px;
+  padding: 1%;
 }
 
-.ui-menu-item{
-  font-size: 30px;
-  background-color: rgb(254, 246, 235)
-}
 #reCont{
   display: none;
 }
+
 @media only screen and (max-width: 1100px) {
   #logo{
     font-size: 7vw
@@ -172,16 +176,17 @@
 
   #reCont{
     width: 100%;
-    margin-top: 20px;
+    margin-top: 2%;
     display: block;
   }
 
   .reDiv{
-    display: inline-block;
-    width: 40%;
-    margin-left:4%;
-    margin-right: 4%;
-    font-size: 25px;
+    /* display: inline-block; */
+    display: none;
+    width: 42%;
+    margin-left:2%;
+    margin-right: 2%;
+    font-size: 20px;
     border-radius: 2px;
     border: 2px solid black;
     background-color: lightgray;
@@ -195,47 +200,11 @@
 
 }
 
-.wait{
-  background-color: lightgray !important;
-  color: black;
-  z-index: 1;
-}
-
-.banner{
-  width: 100%;
-  position: fixed;
-  top: 0px;
-  height: 70px;
-  line-height: 70px;
-  text-align: left;
-  padding-left: 20px;
-  font-size: 30px;
-  background-color: yellow;
-
-}
-
-
-  .bmc-btn{
-    border: 2px solid rgb(254, 246, 235) !important;
-    color: 2px solid rgb(254, 246, 235);
-    position: absolute;
-    margin-top: 5px !important;
-    right: 5px !important;
-    padding: 2px !important;
-    border-radius: 0px !important;
-    font-size: 14px !important;
-    display: inline-block !important;
-    min-width: 0px !important;
-    height: inherit !important;
-    display: none !important;
-  }
-
 </style>
 
 
 <script>
 
-  $(".bmc-btn").text('Support the Statman')
   const init = {{teams|safe}}
   const teams = init.map(function(d){ return {'label': d.NAME, 'value': {'key': d.TEAM_KEY, 'name': d.NAME}}})
   const teams2 = init.map(function(d){ return d.NAME})

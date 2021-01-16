@@ -1,6 +1,8 @@
 from flask import *
 from flask_jsglue import JSGlue
 from flask_sqlalchemy import SQLAlchemy
+from flask_mobility import Mobility
+from flask_mobility.decorators import mobile_template
 import requests
 import pandas as pd
 from bs4 import BeautifulSoup
@@ -728,6 +730,9 @@ def faq():
 
 @app.route('/editPlays')
 def editPlays():
+	# currently unused
+	return '1'
+
 	team_key = int(equest.values.get('team', '755'))
 	year = int(request.values.get('year', years[0]))
 

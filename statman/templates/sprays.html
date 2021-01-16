@@ -13,29 +13,21 @@
     </div><div></div><div></div>
     <div></div><div></div></div>
   <!-- </div> -->
-  <div hidden class="success banner">  </div>
-  <div hidden class="failure banner">  </div>
   <div hidden class="wait banner">  </div>
-  <div hidden class="use banner">  </div>
   <div id = body>
   <div id = headCont>
       <div id = name>  </div>
       <div id = search><input id =  searchTeam type="text" placeholder="Find Team..."></div>
   </div>
   <div id = updateDiv>
-    <table id = teamTable>
-      <tr class = scaf>
-        <!-- <th class = scaf >  </th> -->
-        <th class = scaf colspan="1"> <span class = 'seasonSpan sea{{years[1]}} selectedSpan'> {{years[1]}} </span> </th>
-        <th class = scaf colspan="1"> <span class = 'seasonSpan sea{{years[2]}}'> {{years[2]}} </span> </th>
-        <th class = scaf colspan="1"> <span class = 'seasonSpan sea{{years[3]}}'> {{years[3]}} </span> </th>
+    <div id = teamTable>
+        <div class = scaf> <span class = 'seasonSpan sea{{years[1]}} selectedSpan'> {{years[1]}} </span> </div>
+        <div class = scaf> <span class = 'seasonSpan sea{{years[2]}}'> {{years[2]}} </span> </div>
+        <div class = scaf> <span class = 'seasonSpan sea{{years[3]}}'> {{years[3]}} </span> </div>
         <!-- <th class = scaf colspan="1"> <span class = 'seasonSpan sea{{years[3]}}'> {{years[3]}} </span> </th> -->
-      </tr>
-      <tr>
-      </tr>
-    </table>
+    </div>
   </div>
-  <div hidden id = career> Show Career Spray </div>
+   <div hidden id = career> Show Career Spray </div>
   <div id = container>
       <div id = rosterDiv>
         <span hidden id = printAll> Print All </span>
@@ -51,27 +43,189 @@
       </div>
     </div>
   </div>
-  <div hidden id = toolTip> </div>
 </div>
-
-<div hidden id = textTip> </div>
 
 </html>
 
 <style>
 
+.selectedSpan{
+  color: black;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.seasonSpan:hover{
+  color: black;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+th.head{
+  border:none !important
+}
+
+tr.head{
+  border: 1px solid slategray
+}
+
+th.team{
+  width: 28%
+}
+
+th.ros{
+  width: 12%;
+}
+
+th.plays{
+  width: 12%;
+}
+
+.selected .print{
+  color: black
+}
+
+.infWedge, .ofWedge{
+  stroke: black;
+  cursor: pointer
+}
+
+.selectedWedge{
+  stroke-width: 3 !important;
+}
+
+
+#field{
+  border: 2px solid slategray;
+  background-color: rgb(254, 246, 235);
+}
+
+
+.selected{
+  background-color: rgb(254, 246, 235);
+  color: slategray;
+}
+
+
+
+#printAll:hover{
+  text-decoration: underline
+}
+
+#printAll{
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  cursor: pointer
+}
+
+#teamTable{
+  display: flex;
+  justify-content: space-between;
+  clear: both;
+  border-collapse: separate;
+  width: 100%;
+  margin-top: 10px;
+}
+
+#teamBody{
+  height: 80px;
+  width: 100%;
+  overflow: scroll;
+}
+
+#rosterDiv{
+  position: relative;
+  text-align: center;
+  border: 2px solid rgb(254, 246, 235);
+  background-color: slategray;
+  color: rgb(254, 246, 235);
+  box-shadow: 0px 0px 5px gray;
+  margin-bottom: 5px;
+  overflow-y: scroll;
+  clear:both
+}
+
+#roster{
+  border-collapse: collapse;
+  width: 96%;
+  margin-left: 2%;
+  font-weight: normal;
+}
+
+#name{
+  vertical-align: bottom;
+  font-weight: bold
+}
+
+#playDiv{
+  text-align: center;
+  border: 2px solid rgb(254, 246, 235);
+  background-color: slategray;
+  color: rgb(254, 246, 235);
+  box-sizing: 0px 0px 5px gray;
+  margin-top: 20px;
+  max-height: 200px;
+  overflow-y: scroll;
+  width: 650px;
+}
+
+
+#playTable{
+  border-collapse: collapse;
+  width: 96%;
+  margin-left: 2% !important;
+  font-weight: normal;
+  margin:2px;
+}
+
+
+#playTable td{
+  padding-left: 10px;
+  padding-right: 10px;
+  padding-top: 5px;
+  padding-bottom: 5px;
+  font-size: 15px;
+}
+
+
+.scaf{
+  position: relative;
+  background-color: slategray !important;
+  color: rgb(254, 246, 235);
+  letter-spacing: 4px;
+  text-align: center;
+  width: 32%;
+  border: 1px solid rgb(254, 246, 235);
+}
+
+
+#searchTeam{
+  vertical-align: bottom;
+  border-radius: 5px;
+  border: 1px solid black;
+  box-shadow: 0px 0px 5px slategray;
+  background-color: rgb(254, 246, 235)
+}
+
 #career{
   border: 1px solid black;
   border-radius: 4px;
-  font-size: 15px;
   background-color: white;
   color: black;
-  padding: 5px;
   cursor: pointer;
+  padding: 5px;
+  margin-top: 5px;
   float: left;
-  margin-bottom: 5px;
 }
 
+
+#headCont{
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline
+}
 
 .careerSelected{
   background-color: black !important;
@@ -79,13 +233,211 @@
   border: 1px solid white !important
 }
 
+
+{% if request.MOBILE %}
+
+#name{
+  font-size: 5vw
+}
+
+#roster td, #roster th{
+  padding: 5px;
+  font-size: 3vw;
+  height: 4vw;
+  line-height: 4vw;
+}
+
+
+#roster tr{
+  padding: 5px;
+  border-bottom: 1px solid rgb(254, 246, 235);
+}
+
+#teamName{
+  font-size: 5vw;
+  font-weight: bold
+}
+
+#printAll{
+  font-size: 2.3vw;
+}
+#teamTable{
+  margin-top: 5px !important;
+}
+
+#body{
+  width: 99%;
+  margin-left: .5%
+}
+
+.scaf{
+  font-size: 5vw;
+  padding-bottom: .5%
+}
+
+#search{
+  position: relative;
+  width: 40%;
+  margin-top: 1%;
+  margin-right: 1%;
+  text-align: right;
+}
+
+#searchTeam{
+  vertical-align: bottom;
+  font-size: 4vw;
+  width: 100%
+}
+
+#career{
+  font-size: 3vw;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  padding: 10px;
+}
+
+#rosterDiv{
+  max-height: 40vw;
+  margin-top: 5px
+}
+
+
+{% endif %}
+
+{% if not request.MOBILE %}
+#teamTable td, #teamTable th{
+  font-size: 20px;
+}
+
+#playTable tr{
+  border-bottom: 1px solid rgb(254, 246, 235);
+  padding: 5px;
+}
+
+#name{
+  font-size: 40px;
+}
+
+
+#roster td{
+  padding: 5px;
+  font-size: 20px;
+  height: 20px;
+  line-height: 20px;
+}
+
+#roster tr{
+  padding: 5px;
+  border-bottom: 1px solid rgb(254, 246, 235);
+}
+
+
+#roster tr.row:hover{
+  background-color: rgb(254, 246, 235);
+  color: slategray;
+  cursor: pointer;
+}
+
+#rosterDiv{
+  max-height: 450px;
+  width: 650px;
+  margin-right: 10px;
+}
+
+
+.scaf{
+  font-size: 35px !important;
+}
+
+
+#teamName{
+  font-size: 36px;
+  font-weight: bold
+}
+
+
+
+
+#career{
+  font-size: 15px;
+  padding: 5px;
+  margin-bottom: 5px
+}
+
+.plRow:hover{
+  background-color: rgb(254, 246, 235);
+  color: slategray;
+  cursor: pointer
+}
+
+
+#container{
+  width: 100%;
+  margin-top: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+#search{
+  text-align: right;
+  margin-top: 5px
+}
+
+#searchTeam{
+  vertical-align: bottom;
+  font-size: 25px;
+  border-radius: 5px;
+  border: 1px solid black;
+  margin-bottom: 3px;
+  width: 250px;
+  box-shadow: 0px 0px 5px slategray;
+  background-color: rgb(254, 246, 235)
+}
+
+
+#body{
+  width: 98%;
+  margin-left: 1%
+}
+
+@media (max-width: 1100px){
+  #container{
+    flex-direction: column;
+    justify-content: space-evenly;
+  }
+  #body{
+    width: 654px !important;
+    text-align: center;
+    margin: auto !important;
+
+  }
+  #rosterDiv{
+    max-height: 200px!important;
+    margin: auto;
+    margin-bottom: 5px;
+  }
+  #playDiv{
+    max-height: 200px!important;
+    margin-top: 0px !important;
+  }
+  #fieldDiv{
+    margin:auto;
+  }
+  #headTable{
+    width: 650px;
+    margin: auto;
+  }
+}
+{% endif %}
+
+
 /* https://loading.io/css/ */
 #loader{
   color: gray;
   position: fixed;
   width: 180px;
   height: 180px;
-  /* margin-top: 250px; */
   z-index: 1000;
   display: none;
   bottom:5px;
@@ -165,398 +517,6 @@
   }
 }
 
-/* #loaderCont{
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  top: 80px;
-} */
-
-
-
-#selectText{
-  text-anchor: middle;
-  font-size: 40px;
-}
-
-th.scaf{
-  background-color: slategray !important;
-  font-size: 35px !important;
-  border: 1px solid slategray;
-  color: rgb(254, 246, 235);
-  letter-spacing: 4px;
-  text-align: center;
-  border: 1px solid slategray;
-}
-
-.selectedSpan{
-  color: black;
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-.seasonSpan:hover{
-  color: black;
-  text-decoration: underline;
-  cursor: pointer;
-}
-
-th.head{
-  border:none !important
-}
-
-tr.head{
-  border: 1px solid slategray
-}
-
-th.team{
-  width: 28%
-}
-
-th.ros{
-  width: 12%;
-}
-
-th.plays{
-  width: 12%;
-}
-
-.upd{
-  font-size: 40px;
-  cursor: pointer;
-  display: inline-block;
-}
-
-.upd:hover{
-  font-weight: bold;
-  color: slategray;
-  text-decoration: underline
-}
-
-
-.progress{
-    animation: spin 2s linear infinite;
-}
-
-@keyframes spin {
-  0% { transform: rotate(360deg); }
-  100% { transform: rotate(0deg); }
-}
-
-
-#teamTable td, #teamTable th{
-  text-align: center;
-  border: 1px solid rgb(254, 246, 235);
-  font-size: 20px;
-  margin-left: auto;
-}
-
-/* #teamTable tr{
-  background-color: rgb(254, 246, 235)
-}
-#teamTable tr:nth-child(2n){
-  background-color: lightgray !important
-}
-#teamTable tr:not(.scaf):not(.head):hover{
-  border: 2px solid slategray !important
-} */
-
-#teamTable{
-  clear: both;
-  border-collapse: separate;
-  width: 100%;
-  /* box-shadow: 0px 0px 10px slategray; */
-  margin-top: 10px;
-}
-
-#teamBody{
-  height: 80px;
-  width: 100%;
-  overflow: scroll;
-}
-
-
-.done{
-  background-color: rgb(102, 204, 145);
-  color: rgb(254, 246, 235)
-}
-
-.success{
-  background-color: rgb(102, 204, 145);
-  color: black;
-  z-index: 10;
-}
-
-.failure{
-  background-color: red;
-  color: black;
-  z-index: 10;
-}
-
-.wait{
-  background-color: lightgray;
-  color: black;
-  z-index: 1;
-}
-
-.use{
-  background-color: orange;
-  color: black;
-  z-index: 10;
-}
-
-.dataTab{
-  float:left;
-  padding: 20px;
-  font-size: 12px;
-  border-collapse: separate;
-  text-align: center
-}
-
-.dataTab td{
-  text-align: center;
-  padding: 3px
-}
-
-.dataDiv{
-  padding: 10px;
-  text-align: center
-}
-
-#toolTip{
-  position: absolute;
-  background-color:  rgb(254, 246, 235);
-  border: 2px solid slategray;
-  border-radius: 6px;
-}
-
-#printAll{
-  position: absolute;
-  top: 3px;
-  right: 3px;
-  cursor: pointer
-}
-
-#printAll:hover{
-  text-decoration: underline
-}
-
-#textTip{
-  max-width: 400px;
-  background-color: lightgray;
-  color: black;
-  border: 1px solid white;
-  border-radius: 5px;
-  box-shadow: 0px 0px 5px gray;
-  padding: 10px;
-  position: absolute;
-}
-#headCont{
-  width: 100%;
-  margin-top: 5px;
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline
-}
-
-#teamName{
-  font-size: 36px;
-  font-weight: bold
-}
-
-
-#field{
-  /* border-radius: 5px; */
-  border: 2px solid slategray;
-  background-color: rgb(254, 246, 235);
-}
-
-
-.selected{
-  background-color: rgb(254, 246, 235);
-  color: slategray;
-}
-
-#container{
-  width: 100%;
-  margin-top: 15px;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-}
-
-@media (max-width: 1200px){
-  #container{
-    flex-direction: column;
-    justify-content: space-evenly;
-  }
-
-  #body{
-    width: 654px !important;
-    text-align: center;
-    margin: auto !important;
-
-  }
-  #rosterDiv{
-    max-height: 200px!important;
-    margin: auto;
-  }
-
-  #playDiv{
-    max-height: 200px!important;
-    margin-top: 0px !important;
-  }
-
-  #fieldDiv{
-    margin:auto;
-  }
-
-  #headTable{
-    width: 650px;
-    margin: auto;
-  }
-
-}
-
-
-
-#rosterDiv{
-  position: relative;
-  text-align: center;
-  border: 2px solid rgb(254, 246, 235);
-  background-color: slategray;
-  color: rgb(254, 246, 235);
-  /* border-radius: 5px; */
-  box-shadow: 0px 0px 5px gray;
-  margin-bottom: 5px;
-  max-height: 450px;
-  overflow-y: scroll;
-  width: 650px;
-  margin-right: 10px;
-}
-
-
-#roster{
-  border-collapse: collapse;
-  width: 96%;
-  margin-left: 2%;
-  font-weight: normal;
-}
-
-
-#roster td{
-  padding: 5px;
-  font-size: 20px;
-  height: 20px;
-  line-height: 20px;
-}
-
-#roster tr{
-  padding: 5px;
-  border-bottom: 1px solid rgb(254, 246, 235);
-}
-
-#roster tr.row:hover{
-  background-color: rgb(254, 246, 235);
-  color: slategray;
-  cursor: pointer;
-}
-
-.selected .print{
-  color: black
-}
-
-#playDiv{
-  text-align: center;
-  border: 2px solid rgb(254, 246, 235);
-  background-color: slategray;
-  color: rgb(254, 246, 235);
-  /* border-radius: 5px; */
-  box-sizing: 0px 0px 5px gray;
-  margin-top: 20px;
-  max-height: 200px;
-  overflow-y: scroll;
-  width: 650px;
-}
-
-
-#playTable{
-  border-collapse: collapse;
-  width: 96%;
-  margin-left: 2% !important;
-  font-weight: normal;
-  margin:2px;
-}
-
-
-#playTable td{
-  padding-left: 10px;
-  padding-right: 10px;
-  padding-top: 5px;
-  padding-bottom: 5px;
-  font-size: 15px;
-}
-
-
-#playTable tr{
-  border-bottom: 1px solid rgb(254, 246, 235);
-  padding: 5px;
-}
-
-
-#body{
-  width: 98%;
-  margin-left: 1%
-}
-
-#name{
-  vertical-align: bottom;
-  font-size: 40px;
-  font-weight: bold
-}
-
-#search{
-  text-align: right;
-}
-
-#searchTeam{
-  vertical-align: bottom;
-  font-size: 25px;
-  border-radius: 5px;
-  border: 1px solid black;
-  margin-bottom: 3px;
-  width: 250px;
-  box-shadow: 0px 0px 5px slategray;
-  background-color: rgb(254, 246, 235)
-}
-
-
-.infWedge, .ofWedge{
-  stroke: black;
-  cursor: pointer
-}
-
-.selectedWedge{
-  stroke-width: 3 !important;
-}
-
-.banner{
-  width: 100%;
-  position: fixed;
-  top: 0px;
-  height: 70px;
-  line-height: 70px;
-  text-align: left;
-  padding-left: 20px;
-  font-size: 30px;
-}
-
-.plRow:hover{
-  background-color: rgb(254, 246, 235);
-  color: slategray;
-  cursor: pointer
-}
-
 
 
 </style>
@@ -581,6 +541,17 @@ th.plays{
   $('body').click(function(d){
       $('#toolTip').hide()
   });
+
+
+  {% if request.MOBILE %}
+    width = $('#body').width()
+  {% else %}
+    width = 650
+  {% endif %}
+
+  d3.select('#field').attr('width', width+12).classed("svg-container", true)
+  d3.select('#field').attr('height', (width*(450/650)))
+
 
   $('.seasonSpan').click(function(){
     $("#rosterDiv").animate({ scrollTop: 0 }, "fast")
@@ -826,6 +797,7 @@ th.plays{
     var margins = {'bottom': '10', 'left': '5', 'right': '5', 'top': '10'}
     var height = d3.select('#field').attr('height')
     var width = d3.select('#field').attr('width')
+
     var field = d3.select('#field').append('g').attr('transform', `translate(${width}, ${height-margins.bottom})`)
     var fieldSVG = d3.select('#field').on('click', function(d){ makeSpray(plays, name, num, position, fresh, year, team_key, c)})
 
@@ -839,7 +811,7 @@ th.plays{
         var end = lfLine+(fieldWidth/infBuckets)*(i+1)
         var arc = d3.arc()
           .innerRadius(0)
-          .outerRadius(190)
+          .outerRadius(190*(height/450))
           .startAngle(start)
           .endAngle(end);
 
@@ -862,12 +834,10 @@ th.plays{
           wedgePlays = buckets[$(this).attr('index')].plays.sort(function(a, b){
             return d3.ascending(a.DATE_KEY, b.DATE_KEY)
           })
-          console.log('inf')
-          console.log(wedgePlays)
+
           $("#playTable").empty()
           $('#playDiv').hide()
           if(wedgePlays.length > 0){
-            // $('#playDiv').show()
             d3.select('#playTable')
             .selectAll('tr.play')
             .data(wedgePlays)
@@ -899,10 +869,10 @@ th.plays{
            .append("text")
            .attr('class','hitHead')
            .text(function (d) {return outNameMap[d.outcome]})
-           .attr('x', function(d){return 35*(d.index)+25})
-           .attr('y', height - 30)
+           .attr('x', function(d){return 35*(width/650)*(d.index)+(25*width/650)})
+           .attr('y', 420*height/450)
            .style('color', 'black')
-           .style('font-size', '18px')
+           .style('font-size', `${18*height/450}px`)
            .style('text-decoration', 'underline')
            .style('font-weight', 'bold')
            .style('text-anchor', 'middle')
@@ -913,10 +883,10 @@ th.plays{
             .append("text")
             .attr('class','hitText')
             .text(function (d) {return d.num})
-            .attr('x', function(d){return 35*(d.index)+25})
-            .attr('y', height - 10)
+            .attr('x', function(d){return 35*(width/650)*(d.index)+(25*width/650)})
+            .attr('y', 440*height/450)
             .style('color', 'black')
-            .style('font-size', '18px')
+            .style('font-size', `${18*height/450}px`)
             .style('text-anchor', 'middle')
 
 
@@ -926,10 +896,10 @@ th.plays{
              .append("text")
              .attr('class', 'typeHead')
              .text(function (d) {return outNameMap[d.outcome]})
-             .attr('x', function(d){return 35*(d.index-4)+25})
-             .attr('y', height - 75)
+             .attr('x', function(d){return 35*(width/650)*(d.index-4)+(25*width/650)})
+             .attr('y', 375*height/450)
              .style('color', 'black')
-             .style('font-size', '18px')
+             .style('font-size', `${18*height/450}px`)
              .style('text-decoration', 'underline')
              .style('font-weight', 'bold')
              .style('text-anchor', 'middle')
@@ -940,10 +910,10 @@ th.plays{
               .append("text")
               .attr('class','typeText')
               .text(function (d) {return d.num})
-              .attr('x', function(d){return 35*(d.index-4)+25})
-              .attr('y', height - 55)
+              .attr('x', function(d){return 35*(width/650)*(d.index-4)+(25*width/650)})
+              .attr('y', 395*height/450)
               .style('color', 'black')
-              .style('font-size', '18px')
+              .style('font-size', `${18*height/450}px`)
               .style('text-anchor', 'middle')
         })
         .style('fill', function(d){
@@ -963,9 +933,9 @@ th.plays{
         }
         fieldSVG.append('text')
         .text(str)
-        .attr('x', plotDict[i][0])
-        .attr('y', plotDict[i][1])
-        .style('font-size', '18px')
+        .attr('x', width/650*plotDict[i][0])
+        .attr('y', height/450*plotDict[i][1])
+        .style('font-size', `${18*height/450}px`)
         .style('text-anchor', 'middle')
         .style('font-weight', 'bold')
         .on('click', function(){
@@ -978,8 +948,8 @@ th.plays{
         start = lfLine+(fieldWidth/ofBuckets)*(i-infBuckets)
         end = lfLine+(fieldWidth/ofBuckets)*((i-infBuckets)+1)
         arc = d3.arc()
-          .innerRadius(190)
-          .outerRadius(400)
+          .innerRadius(190*(height/450))
+          .outerRadius(400*(height/450))
           .startAngle(start)
           .endAngle(end)
 
@@ -1004,8 +974,7 @@ th.plays{
           wedgePlays = buckets[$(this).attr('index')].plays.sort(function(a, b){
             return d3.ascending(a.DATE_KEY, b.DATE_KEY)
           })
-          console.log('of')
-          console.log(wedgePlays)
+
           $("#playTable").empty()
           $('#playDiv').hide()
           if(wedgePlays.length > 0){
@@ -1041,10 +1010,10 @@ th.plays{
            .append("text")
            .attr('class','hitHead')
            .text(function (d) {return outNameMap[d.outcome]})
-           .attr('x', function(d){return 35*(d.index)+25})
-           .attr('y', height - 30)
+           .attr('x', function(d){return 35*(width/650)*(d.index)+(25*width/650)})
+           .attr('y', 420*height/450)
            .style('color', 'black')
-           .style('font-size', '18px')
+           .style('font-size', `${18*height/450}px`)
            .style('text-decoration', 'underline')
            .style('font-weight', 'bold')
            .style('text-anchor', 'middle')
@@ -1055,10 +1024,10 @@ th.plays{
             .append("text")
             .attr('class','hitText')
             .text(function (d) {return d.num})
-            .attr('x', function(d){return 35*(d.index)+25})
-            .attr('y', height - 10)
+            .attr('x', function(d){return 35*(width/650)*(d.index)+(25*width/650)})
+            .attr('y', 440*height/450)
             .style('color', 'black')
-            .style('font-size', '18px')
+            .style('font-size', `${18*height/450}px`)
             .style('text-anchor', 'middle')
 
 
@@ -1068,10 +1037,10 @@ th.plays{
              .append("text")
              .attr('class', 'typeHead')
              .text(function (d) {return outNameMap[d.outcome]})
-             .attr('x', function(d){return 35*(d.index-4)+25})
-             .attr('y', height - 75)
+             .attr('x', function(d){return 35*(width/650)*(d.index-4)+(25*width/650)})
+             .attr('y', 375*height/450)
              .style('color', 'black')
-             .style('font-size', '18px')
+             .style('font-size', `${18*height/450}px`)
              .style('text-decoration', 'underline')
              .style('font-weight', 'bold')
              .style('text-anchor', 'middle')
@@ -1082,10 +1051,10 @@ th.plays{
               .append("text")
               .attr('class','typeText')
               .text(function (d) {return d.num})
-              .attr('x', function(d){return 35*(d.index-4)+25})
-              .attr('y', height - 55)
+              .attr('x', function(d){return 35*(width/650)*(d.index-4)+(25*width/650)})
+              .attr('y', 395*height/450)
               .style('color', 'black')
-              .style('font-size', '18px')
+              .style('font-size', `${18*height/450}px`)
               .style('text-anchor', 'middle')
 
         })
@@ -1110,9 +1079,9 @@ th.plays{
         }
         fieldSVG.append('text')
         .text(str)
-        .attr('x', plotDict[i][0])
-        .attr('y', plotDict[i][1])
-        .style('font-size', '28px')
+        .attr('x', width/650*plotDict[i][0])
+        .attr('y', height/450*plotDict[i][1])
+        .style('font-size', `${28*height/450}px`)
         .style('text-anchor', 'middle')
         .style('font-weight', 'bold')
         .on('click', function(){
@@ -1121,33 +1090,33 @@ th.plays{
 
         fieldSVG.append('text')
         .text(strHR)
-        .attr('x', hrDict[i][0])
-        .attr('y', hrDict[i][1])
-        .style('font-size', '20px')
+        .attr('x', width/650*hrDict[i][0])
+        .attr('y', height/450*hrDict[i][1])
+        .style('font-size', `${20*height/450}px`)
         .style('text-anchor', 'middle')
         .style('font-weight', 'bold')
       }
 
       fieldSVG.append('text')
       .text(name)
-      .attr('x', margins.left).attr('y', margins.top*2.5)
-      .style('font-size', '26px')
+      .attr('x', margins.left).attr('y', 25*height/450)
+      .style('font-size', `${26*height/450}px`)
 
       fieldSVG.append('text')
       .text(`#${num}` + (c == 'c' ? ' - Career' : ' - ' + String(year)))
-      .attr('x', margins.left).attr('y', margins.top*5.5)
-      .style('font-size', '26px')
+      .attr('x', margins.left).attr('y', 55*height/450)
+      .style('font-size', `${26*height/450}px`)
 
       fieldSVG.append('text')
       .text(`Tot. IF BIP: ${infPlaysEx}`)
-      .attr('x', width - margins.right).attr('y', margins.top*4.8)
-      .style('font-size', '20px')
+      .attr('x', width - margins.right).attr('y', 48*height/450)
+      .style('font-size', `${20*height/450}px`)
       .style('text-anchor', 'end')
 
       fieldSVG.append('text')
       .text(`Tot. OF BIP: ${ofPlays}`)
-      .attr('x', width - margins.right).attr('y', margins.top*2.3)
-      .style('font-size', '20px')
+      .attr('x', width - margins.right).attr('y', 23*height/450)
+      .style('font-size', `${20*height/450}px`)
       .style('text-anchor', 'end')
 
       // $('#playDiv').show()
@@ -1173,10 +1142,10 @@ th.plays{
        .append("text")
        .attr('class','hitHead')
        .text(function (d) {return outNameMap[d.outcome]})
-       .attr('x', function(d){return 35*(d.index)+25})
-       .attr('y', height - 30)
+       .attr('x', function(d){return 35*(width/650)*(d.index)+(25*width/650)})
+       .attr('y', 420*(height/450))
        .style('color', 'black')
-       .style('font-size', '18px')
+       .style('font-size', `${18*height/450}px`)
        .style('text-decoration', 'underline')
        .style('font-weight', 'bold')
        .style('text-anchor', 'middle')
@@ -1187,10 +1156,10 @@ th.plays{
         .append("text")
         .attr('class','hitText')
         .text(function (d) {return d.num})
-        .attr('x', function(d){return 35*(d.index)+25})
-        .attr('y', height - 10)
+        .attr('x', function(d){return 35*(width/650)*(d.index)+(25*width/650)})
+        .attr('y', 440*(height/450))
         .style('color', 'black')
-        .style('font-size', '18px')
+        .style('font-size', `${18*height/450}px`)
         .style('text-anchor', 'middle')
 
 
@@ -1200,10 +1169,10 @@ th.plays{
          .append("text")
          .attr('class', 'typeHead')
          .text(function (d) {return outNameMap[d.outcome]})
-         .attr('x', function(d){return 35*(d.index-4)+25})
-         .attr('y', height - 75)
+         .attr('x', function(d){return 35*(width/650)*(d.index-4)+(25*width/650)})
+         .attr('y', 375*(height/450))
          .style('color', 'black')
-         .style('font-size', '18px')
+         .style('font-size', `${20*height/450}px`)
          .style('text-decoration', 'underline')
          .style('font-weight', 'bold')
          .style('text-anchor', 'middle')
@@ -1214,10 +1183,10 @@ th.plays{
           .append("text")
           .attr('class','typeText')
           .text(function (d) {return d.num})
-          .attr('x', function(d){return 35*(d.index-4)+25})
-          .attr('y', height - 55)
+          .attr('x', function(d){return 35*(width/650)*(d.index-4)+(25*width/650)})
+          .attr('y', 395*(height/450))
           .style('color', 'black')
-          .style('font-size', '18px')
+          .style('font-size', `${18*height/450}px`)
           .style('text-anchor', 'middle')
 
 
@@ -1259,10 +1228,10 @@ th.plays{
         .append("text")
         .attr('class','statHead')
         .text(function (e) {return e})
-        .attr('x', function(e, i){return 45*i+(width-110)})
-        .attr('y', height - 75)
+        .attr('x', function(e, i){return 45*(width/650)*i+(540*width/650)})
+        .attr('y', 375*(height/450))
         .style('color', 'black')
-        .style('font-size', '18px')
+        .style('font-size', `${18*height/450}px`)
         .style('text-decoration', 'underline')
         .style('font-weight', 'bold')
         .style('text-anchor', 'middle')
@@ -1275,10 +1244,10 @@ th.plays{
           .append("text")
           .attr('class','statHead2')
           .text(function (e) {return e})
-          .attr('x', function(e, i){return 35*i+(width-123)})
-          .attr('y', height - 30)
+          .attr('x', function(e, i){return 35*(width/650)*i+(527*width/650)})
+          .attr('y', 420*(height/450))
           .style('color', 'black')
-          .style('font-size', '18px')
+          .style('font-size', `${18*height/450}px`)
           .style('text-decoration', 'underline')
           .style('font-weight', 'bold')
           .style('text-anchor', 'middle')
@@ -1295,10 +1264,10 @@ th.plays{
                .append("text")
                .attr('class','stat')
                .text(function (e) {return String(d3.format('.3f')(parseFloat(statData[e]))).replace('0.', '.')})
-               .attr('x', function(e, i){return 45*i+(width-110)})
-               .attr('y', height - 55)
+               .attr('x', function(e, i){return 45*(width/650)*i+(540*width/650)})
+               .attr('y', 395*(height/450))
                .style('color', 'black')
-               .style('font-size', '16px')
+               .style('font-size', `${18*height/450}px`)
                .style('font-weight', 'bold')
                .style('text-anchor', 'middle')
                .style('padding-left', '3px')
@@ -1310,10 +1279,10 @@ th.plays{
                .append("text")
                .attr('class','stat2')
                .text(function (e) {return String(parseFloat(statData[e]))})
-               .attr('x', function(e, i){return 35*i+(width-123)})
-               .attr('y', height - 10)
+               .attr('x', function(e, i){return 35*(width/650)*i+(527*width/650)})
+               .attr('y', 440*(height/450))
                .style('color', 'black')
-               .style('font-size', '16px')
+               .style('font-size', `${18*height/450}px`)
                .style('font-weight', 'bold')
                .style('text-anchor', 'middle')
                .style('padding-left', '3px')
