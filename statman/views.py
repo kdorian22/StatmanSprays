@@ -19,6 +19,7 @@ import itertools
 
 
 jsglue = JSGlue(app)
+Mobility(app)
 app.config['PDF_FOLDER'] = 'static/pdf/'
 
 yearCodes = {
