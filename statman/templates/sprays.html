@@ -234,7 +234,7 @@ th.plays{
 }
 
 
-{% if request.MOBILE  %}
+{% if request.MOBILE %}
 
 #name{
   font-size: 5vw
@@ -299,7 +299,7 @@ th.plays{
 
 {% endif %}
 
-{% if not request.MOBILE  %}
+{% if not request.MOBILE   %}
 #teamTable td, #teamTable th{
   font-size: 20px;
 }
@@ -538,7 +538,7 @@ th.plays{
   });
 
 
-  {% if request.MOBILE  %}
+  {% if request.MOBILE %}
     width = $('#body').width()
     height = width*(450/650)
   {% else %}
@@ -1285,6 +1285,16 @@ th.plays{
                .style('padding-left', '3px')
                .style('padding-right', '3px')
             }
+
+            {% if request.MOBILE %}
+              window.addEventListener("resize", function() {
+                width = $('#body').width()
+                height = width*(450/650)
+                d3.select('#field').attr('width', width-5)
+                d3.select('#field').attr('height', height)
+                makeSpray(plays, name, num, position, fresh, year, team_key, c)
+                }, false);
+            {% endif %}
   }
 
   $(function(){
@@ -1315,6 +1325,16 @@ th.plays{
     addRows(team, teamName)
     addData($('.selectedSpan').text().replace(/\s+/g,''), team, teamName)
   }
+
+  {% if request.MOBILE %}
+    window.addEventListener("resize", function() {
+      width = $('#body').width()
+      height = width*(450/650)
+      d3.select('#field').attr('width', width-5)
+      d3.select('#field').attr('height', height)
+      }, false);
+  {% endif %}
+
 
 </script>
 
