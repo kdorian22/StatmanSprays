@@ -618,7 +618,8 @@ th.plays{
       $(this).removeClass('selectedSpan')
     })
     $(this).addClass('selectedSpan')
-    addData($(this).text().replace(/\s+/g,''), $(this).attr('data-key'), $(this).attr('data-name'))
+    thisName = $(this).attr('data-name') == undefined ? 'No Roster' : $(this).attr('data-name')
+    addData($(this).text().replace(/\s+/g,''), $(this).attr('data-key'), thisName)
   })
 
   $('#career').click(function(){
@@ -660,7 +661,11 @@ th.plays{
 
       data = rosters.filter(function(d){ return d.TEAM_KEY == key & d.YEAR == year})
       $("#roster").empty()
-      $("#teamName").text(name + ' - ' + year)
+      if(name != 'No Roster'){
+        $("#teamName").text(name + ' - ' + year)
+      }else{
+        $("#teamName").text(name)
+      }
       $('#printAll').hide()
       if(data.length > 0){
 
