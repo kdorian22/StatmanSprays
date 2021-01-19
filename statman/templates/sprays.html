@@ -587,14 +587,14 @@ th.plays{
 
   {% if request.MOBILE %}
     width = $('#body').width()
-    height = width*(450/650)
+    height = width*(450/650)+10
   {% else %}
     width = 638
     height = 450
   {% endif %}
 
   d3.select('#field').attr('width', width+12)
-  d3.select('#field').attr('height', height+10)
+  d3.select('#field').attr('height', height)
 
   if(team == ''){
     selectTeamText()
@@ -1412,7 +1412,6 @@ th.plays{
   }
 
   function selectTeamText(){
-    console.log('yo')
     fieldBlank = d3.select('#field')
     $('#field').empty()
     width = d3.select('#field').attr('width')
