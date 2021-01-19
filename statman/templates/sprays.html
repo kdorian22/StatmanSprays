@@ -36,7 +36,7 @@
         </table>
       </div>
     <div id = fieldDiv>
-      <svg id = field height=450 width=650> </svg>
+      <svg id = field> </svg>
       <div hidden id = playDiv>
         <table id = playTable>
         </table>
@@ -527,7 +527,54 @@ th.plays{
   const rosters = {{rosters|safe}}
   const hitStats = {{stats|safe}}
   const team = '{{team}}'
+
+
   var rowNum = 0
+
+  const locDict = {
+    '1': ['3b', 'third base'],
+    '2': ['ss', 'shortstop', 'through the left side'],
+    '3': ['up the middle','p', 'c'],
+    '4': ['2b', 'second base', 'through the right side'],
+    '5': ['1b', 'first base'],
+    '6': ['lf', 'left', 'lf line', 'left center'],
+    '7': ['cf', 'center'],
+    '8': ['rf', 'right', 'rf line', 'right center'],
+  }
+
+  const plotDict = {
+    '0': [235,320],
+    '1': [277,300],
+    '2': [325,290],
+    '3': [373,300],
+    '4': [415,320],
+    '5': [165, 200],
+    '6': [325, 150],
+    '7': [485, 200]
+  }
+
+  const hrDict = {
+    '5': [125, 80],
+    '6': [325, 30],
+    '7': [525, 80]
+  }
+
+  const outcomes = ['1B', '2B', '3B', 'HR', 'LD','FB', 'GB']
+
+  const stats = ['BA', 'OBP', 'SLG', 'K', 'BB', 'SB', 'CS']
+
+  const outNameMap = {
+    '1B': '1B',
+    '2B': '2B',
+    '3B': '3B',
+    'HR': 'HR',
+    'LD': 'LO',
+    'FB': 'FO',
+    'GB': 'GO'
+  }
+
+  const lfLine = -Math.PI/4
+  const fieldWidth = Math.PI/2
 
   $('#searchTeam').click(function(d){
       $("#searchTeam").val('')
@@ -547,8 +594,20 @@ th.plays{
   {% endif %}
 
   d3.select('#field').attr('width', width+12)
-  d3.select('#field').attr('height', height)
+  d3.select('#field').attr('height', height+10)
 
+  if(team == ''){
+    selectTeamText()
+    {% if request.MOBILE %}
+      window.addEventListener("resize", function() {
+        width = $('#body').width()
+        height = width*(450/650)
+        d3.select('#field').attr('width', width-5)
+        d3.select('#field').attr('height', height)
+        selectTeamText()
+        }, false);
+    {% endif %}
+  }
 
   $('.seasonSpan').click(function(){
     $("#rosterDiv").animate({ scrollTop: 0 }, "fast")
@@ -592,12 +651,19 @@ th.plays{
 
 
   function addData(year, key, name){
+
     $("#playTable").empty()
     $('#field').empty()
-      data = rosters.filter(function(d){ return d.TEAM_KEY == key & d.YEAR == year})
+    if(team == ''){
+      selectTeamText()
+    }
 
+      data = rosters.filter(function(d){ return d.TEAM_KEY == key & d.YEAR == year})
       $("#roster").empty()
       if(data.length > 0){
+
+        drawBlankField()
+
         data1 = data
         // Change player with arrows -- currently not in effect
         $(document).keydown(function(e){
@@ -691,9 +757,6 @@ th.plays{
         $('#printAll').click(function(){
           window.open("{{url_for('printSprays')}}?team="+key+"&year="+year)
         })
-
-
-
       }
     }
 
@@ -719,53 +782,10 @@ th.plays{
 
     plays = infPlays.concat(ofPlays)
 
-    // infPlaysEx = infPlays.filter(function(d){ return d.LOCATION != 'p' & d.LOCATION != 'c' }).length
     infPlaysEx = infPlays.length
     infPlays = infPlays.length
     ofPlays = ofPlays.length
 
-
-    const locDict = {
-      '1': ['3b', 'third base'],
-      '2': ['ss', 'shortstop', 'through the left side'],
-      '3': ['up the middle','p', 'c'],
-      '4': ['2b', 'second base', 'through the right side'],
-      '5': ['1b', 'first base'],
-      '6': ['lf', 'left', 'lf line', 'left center'],
-      '7': ['cf', 'center'],
-      '8': ['rf', 'right', 'rf line', 'right center'],
-    }
-
-    const plotDict = {
-      '0': [235,320],
-      '1': [277,300],
-      '2': [325,290],
-      '3': [373,300],
-      '4': [415,320],
-      '5': [165, 200],
-      '6': [325, 150],
-      '7': [485, 200]
-    }
-
-    const hrDict = {
-      '5': [125, 80],
-      '6': [325, 30],
-      '7': [525, 80]
-    }
-
-    const outcomes = ['1B', '2B', '3B', 'HR', 'LD','FB', 'GB']
-
-    const stats = ['BA', 'OBP', 'SLG', 'K', 'BB', 'SB', 'CS']
-
-    const outNameMap = {
-      '1B': '1B',
-      '2B': '2B',
-      '3B': '3B',
-      'HR': 'HR',
-      'LD': 'LO',
-      'FB': 'FO',
-      'GB': 'GO'
-    }
 
     for(loc in locDict){
       if(loc < 9){
@@ -798,8 +818,6 @@ th.plays{
     var field = d3.select('#field').append('g').attr('transform', `translate(${width}, ${height-margins.bottom})`)
     var fieldSVG = d3.select('#field').on('click', function(d){ makeSpray(plays, name, num, position, fresh, year, team_key, c)})
 
-    var lfLine = -Math.PI/4
-    var fieldWidth = Math.PI/2
     var ofBuckets = 3
     var infBuckets = buckets.length - ofBuckets
 
@@ -1292,7 +1310,11 @@ th.plays{
                 height = width*(450/650)
                 d3.select('#field').attr('width', width-5)
                 d3.select('#field').attr('height', height)
-                makeSpray(plays, name, num, position, fresh, year, team_key, c)
+                if($('.infWedge').length == 0){
+                  drawBlankField()
+                }else{
+                  makeSpray(plays, name, num, position, fresh, year, team_key, c)
+                }
                 }, false);
             {% endif %}
   }
@@ -1332,9 +1354,110 @@ th.plays{
       height = width*(450/650)
       d3.select('#field').attr('width', width-5)
       d3.select('#field').attr('height', height)
+      if($('.infWedge').length == 0){
+        drawBlankField()
+      }
       }, false);
   {% endif %}
 
+  function drawBlankField(){
+    fieldBlank = d3.select('#field')
+    $('#field').empty()
+    width = d3.select('#field').attr('width')
+    height = d3.select('#field').attr('height')
+    for(var i = 0; i < 5; ++i){
+      var start = lfLine+(fieldWidth/5)*i
+      var end = lfLine+(fieldWidth/5)*(i+1)
+
+      var arc = d3.arc()
+        .innerRadius(0)
+        .outerRadius(190*(height/450))
+        .startAngle(start)
+        .endAngle(end);
+
+      fieldBlank.append('path')
+      .attr('d', arc)
+      .attr('transform', `translate(${(width)/2}, ${height-15})`)
+      .style('fill', 'lightgray')
+      .style('stroke', 'black')
+      .style('opacity', '.3')
+
+
+    }
+
+    for(var i = 5; i < 8; i++){
+      start = lfLine+(fieldWidth/3)*(i-5)
+      end = lfLine+(fieldWidth/3)*((i-5)+1)
+      arc = d3.arc()
+        .innerRadius(190*(height/450))
+        .outerRadius(400*(height/450))
+        .startAngle(start)
+        .endAngle(end)
+
+      fieldBlank.append('path')
+      .attr('d', arc)
+      .attr('transform', `translate(${(width)/2}, ${height-15})`)
+      .style('fill', 'lightgray')
+      .style('opacity', '.3')
+      .style('stroke', 'black')
+
+      d3.select('#field').append('text')
+        .text('Select Player From Roster')
+        .attr('text-anchor', 'middle')
+        .attr('font-size', `${35*height/450}px`)
+        .attr('transform', `translate(${(parseFloat(width)+12)/2}, ${(height-50)/2})`)
+    }
+  }
+
+  function selectTeamText(){
+    console.log('yo')
+    fieldBlank = d3.select('#field')
+    $('#field').empty()
+    width = d3.select('#field').attr('width')
+    height = d3.select('#field').attr('height')
+    for(var i = 0; i < 5; ++i){
+      var start = lfLine+(fieldWidth/5)*i
+      var end = lfLine+(fieldWidth/5)*(i+1)
+
+      var arc = d3.arc()
+        .innerRadius(0)
+        .outerRadius(190*(height/450))
+        .startAngle(start)
+        .endAngle(end);
+
+      fieldBlank.append('path')
+      .attr('d', arc)
+      .attr('transform', `translate(${(width)/2}, ${height-15})`)
+      .style('fill', 'lightgray')
+      .style('stroke', 'black')
+      .style('opacity', '.3')
+
+
+    }
+
+    for(var i = 5; i < 8; i++){
+      start = lfLine+(fieldWidth/3)*(i-5)
+      end = lfLine+(fieldWidth/3)*((i-5)+1)
+      arc = d3.arc()
+        .innerRadius(190*(height/450))
+        .outerRadius(400*(height/450))
+        .startAngle(start)
+        .endAngle(end)
+
+      fieldBlank.append('path')
+      .attr('d', arc)
+      .attr('transform', `translate(${(width)/2}, ${height-15})`)
+      .style('fill', 'lightgray')
+      .style('opacity', '.3')
+      .style('stroke', 'black')
+  }
+
+      fieldBlank.append('text')
+        .text('Select Team From Search Bar')
+        .attr('text-anchor', 'middle')
+        .attr('font-size', `${35*height/450}px`)
+        .attr('transform', `translate(${(parseFloat(width)+12)/2}, ${(height-50)/2})`)
+}
 
 </script>
 
