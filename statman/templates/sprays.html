@@ -660,6 +660,8 @@ th.plays{
 
       data = rosters.filter(function(d){ return d.TEAM_KEY == key & d.YEAR == year})
       $("#roster").empty()
+      $("#teamName").text(name + ' - ' + year)
+      $('#printAll').hide()
       if(data.length > 0){
 
         drawBlankField()
