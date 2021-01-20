@@ -701,6 +701,7 @@ def printSprays():
 		keys = list(db.engine.execute(f"""SELECT * FROM PLAYER_DIM
 		WHERE TEAM_KEY = {team} and YEAR = {year} and ACTIVE_RECORD = 1"""))
 		keyList = [str(x.PLAYER_KEY) for x in keys]
+		print(keyList)
 		keys = ', '.join(keyList)
 
 

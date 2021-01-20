@@ -47,6 +47,7 @@ if(plays.length > 0){
   for(key of keys){
     player = plays.filter(function(d){
       return d.BATTER_PLAYER_KEY == key
+      & d.OUTCOME != null & d.OUTCOME != 'null'
     })
 
     statPlayer = statsAll.filter(function(d){
@@ -57,11 +58,9 @@ if(plays.length > 0){
       var svg = '#field'+key
       name = player[0].FULL_NAME
       num = player[0].NUMBER
-
-
       makeSpray(player, name, num, svg, key, statPlayer)
     }else{
-      $('#field'+key).hide()
+      $('#field'+key).remove()
     }
   }
   setTimeout(function(){ print(); }, 1000)
