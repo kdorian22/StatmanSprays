@@ -628,6 +628,8 @@ th.plays{
     cDatum = d3.selectAll('.selected').datum()
     careerName = cDatum.FULL_NAME
     playerID = cDatum.PLAYER_KEY
+
+    playerKeysCareer = rosters.filter(function(d){ return d.FULL_NAME == careerName}).map(function(d){ return d.PLAYER_KEY})
     if($(this).hasClass('careerSelected')){
       $(this).removeClass('careerSelected')
       $(this).text('Show Career Spray')
@@ -636,7 +638,7 @@ th.plays{
     }else{
       $(this).addClass('careerSelected')
       $(this).text('Show '+$('.selectedSpan').text().replace(/\s+/g,'') + ' Spray')
-      thesePlays = teamPlays.filter(function(d){ return d.FULL_NAME == careerName})
+      thesePlays = teamPlays.filter(function(d){ return playerKeysCareer.indexOf(d.BATTER_PLAYER_KEY) > -1})
       c = 'c'
     }
       makeSpray(thesePlays, cDatum.FULL_NAME, cDatum.NUMBER, cDatum.POSITION, cDatum.CLASS, cDatum.YEAR, cDatum.TEAM_KEY, c)

@@ -574,6 +574,7 @@ def scrapePlays():
 			team))
 
 	play_by_play.query.filter_by(YEAR=int(year)).filter_by(BATTER_TEAM_KEY=team).delete()
+
 	for play in allPlays:
 		try:
 			pbp = play_by_play(play['date'], play['batter'], play['btk'], play['ptk'], play['outcome'], play['location'], year, play['description'])
@@ -631,7 +632,7 @@ def data():
 	 FROM PLAY_BY_PLAY
 	 GROUP BY BATTER_TEAM_KEY
 	) b on b.BATTER_TEAM_KEY = t.TEAM_KEY
-	WHERE t.ACTIVE_RECORD = 1 {string}
+	WHERE t.ACTIVE_RECORD = 1
 	ORDER BY NAME;
 	"""
 	status = list(db.engine.execute(query))
@@ -661,9 +662,11 @@ def sprays():
 	num = row.VISITS
 	db.engine.execute(f"""UPDATE TEAM_DIM SET VISITS = {num+1} WHERE TEAM_KEY = {team}""")
 
-	plays = list(db.engine.execute(f"""SELECT p.*, FULL_NAME FROM PLAY_BY_PLAY p
-	 JOIN PLAYER_DIM d on d.PLAYER_KEY = p.BATTER_PLAYER_KEY
-	 WHERE d.ACTIVE_RECORD = 1 AND BATTER_TEAM_KEY = {team} and p.ACTIVE_RECORD = 1 """))
+	# plays = list(db.engine.execute(f"""SELECT p.*, FULL_NAME FROM PLAY_BY_PLAY_2020 p
+	#  JOIN PLAYER_DIM d on d.PLAYER_KEY = p.BATTER_PLAYER_KEY
+	#  WHERE p.ACTIVE_RECORD = 1 AND BATTER_TEAM_KEY = {team} and d.ACTIVE_RECORD = 1 """))
+
+	plays = list(db.engine.execute(f"""SELECT * FROM PLAY_BY_PLAY WHERE BATTER_TEAM_KEY = {team} and ACTIVE_RECORD = 1"""))
 	rosters = list(db.engine.execute(f"""SELECT * FROM PLAYER_DIM WHERE TEAM_KEY = {team} AND ACTIVE_RECORD = 1"""))
 	stats = list(db.engine.execute(f"""SELECT * FROM HITTER_STATS WHERE TEAM_KEY = {team} AND ACTIVE_RECORD = 1"""))
 	return render_template('sprays.html', team = team, stats = jsonDump(stats), plays = jsonDump(plays), rosters = jsonDump(rosters), data = json.dumps(teams), years = years)
@@ -699,6 +702,7 @@ def printSprays():
 		WHERE TEAM_KEY = {team} and YEAR = {year} and ACTIVE_RECORD = 1"""))
 		keyList = [str(x.PLAYER_KEY) for x in keys]
 		keys = ', '.join(keyList)
+
 
 	plays = list(db.engine.execute(f"""
 	SELECT d.FULL_NAME, d.NUMBER, p.* FROM PLAY_BY_PLAY p
@@ -736,7 +740,7 @@ def editPlays():
 	team_key = int(equest.values.get('team', '755'))
 	year = int(request.values.get('year', years[0]))
 
-	playsORG = list(db.engine.execute(f"""SELECT p.FULL_NAME NAME, t.NAME TEAM_NAME, pbp.* FROM PLAY_BY_PLAY pbp
+	playsORG = list(db.engine.execute(f"""SELECT p.FULL_NAME NAME, t.NAME TEAM_NAME, pbp.* FROM PLAY_BY_PLAY_{year} pbp
  	LEFT JOIN PLAYER_DIM p on p.PLAYER_KEY = pbp.BATTER_PLAYER_KEY
  	LEFT JOIN TEAM_DIM t on t.TEAM_KEY = pbp.BATTER_TEAM_KEY
 	WHERE t.TEAM_KEY = {team_key} and pbp.YEAR = {year}
@@ -754,7 +758,7 @@ def PBPWrite():
 	id = request.values.get('id','')
 	col = request.values.get('col', '')
 	val = request.values.get('val', '')
-	if id != '':
+	if id != '' and year != '':
 		play = play_by_play.query.filter_by(PLAY_ID=id).first()
 		if col == 'ar':
 			play.ACTIVE_RECORD = play.ACTIVE_RECORD*-1 + 1

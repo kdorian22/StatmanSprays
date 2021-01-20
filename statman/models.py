@@ -103,7 +103,7 @@ class play_by_play(db.Model):
     YEAR = db.Column(db.Integer)
     ACTIVE_RECORD = db.Column(db.Integer)
 
-    def __init__(self, date, bpk, btk, ptk, out, loc, year, dec):
+    def __init__(self, date, bpk, btk, ptk, out, loc, dec, year):
         self.DATE_KEY = date
         self.BATTER_PLAYER_KEY = bpk
         self.BATTER_TEAM_KEY = btk
