@@ -595,6 +595,7 @@ def scrapePlays():
 			continue
 		lastName = player.FULL_NAME
 		lastNum = player.NUMBER
+	db.session.commit()
 	gc.collect()
 	return jsonify(allPlays)
 
