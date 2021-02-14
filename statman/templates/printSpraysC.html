@@ -379,13 +379,14 @@ function makeSpray(plays, name, num, fieldSVG, statPlayer){
             soloStats = d3.nest()
                .rollup(function(leaves) {
                  pa = d3.sum(leaves, function(d){ return d.SF + d.SH + d.AB + d.BB + d.HBP + d.IBB});
+                 ab = d3.sum(leaves, function(d){ return d.AB});
                  return { 'K': d3.sum(leaves, function(d){ return d.K}),
                      'BB': d3.sum(leaves, function(d){ return d.BB}),
                      'SB': d3.sum(leaves, function(d){ return d.SB}),
                      'CS': d3.sum(leaves, function(d){ return d.CS}),
-                     'BA': d3.sum(leaves, function(d){ return d.BA*d.AB})/d3.sum(leaves, function(d){ return d.AB}),
-                     'OBP': d3.sum(leaves, function(d){ return d.OBP*(d.SF + d.SH + d.AB + d.BB + d.HBP + d.IBB)})/pa,
-                     'SLG': d3.sum(leaves, function(d){ return d.SLG*d.AB})/d3.sum(leaves, function(d){ return d.AB})
+                     'BA': ab == 0 ? 0 : d3.sum(leaves, function(d){ return d.BA*d.AB})/ab,
+                     'OBP': pa == 0 ? 0 : d3.sum(leaves, function(d){ return d.OBP*(d.SF + d.SH + d.AB + d.BB + d.HBP + d.IBB)})/pa,
+                     'SLG': ab == 0 ? 0 : d3.sum(leaves, function(d){ return d.SLG*d.AB})/ab
                  }
                })
                .entries(statPlayer)
