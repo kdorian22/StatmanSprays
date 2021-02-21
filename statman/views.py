@@ -145,40 +145,33 @@ def scrapeRoster():
 	team = int(request.values.get('team','755'))
 	r = request.values.get('r', '')
 
+	def getRoster(team, year):
+		url=f'https://stats.ncaa.org/team/{team}/roster/{yearCodes[str(year)]}'
+		soup = BeautifulSoup(requests.get(url, headers = {"User-Agent": "Mozilla/5.0"}).content, 'lxml')
+		table = soup.find('tbody')
+		rosterToAdd = []
+		if table is not None:
+			for row in table.findAll('tr'):
+				cells = []
+				for cell in row.findAll('td'):
+					text = cell.text.replace("\n", '')
+					text = cell.text.replace('nbsp&', '')
+					cells.append(text)
+				rosterToAdd.append(player_dim(cells[0], cells[1].replace('â€™',"'"), cells[2], cells[3], year, team))
+		return rosterToAdd
 
-	rosterToAdd = []
-	try:
-		exists = player_dim.query.filter_by(YEAR=str(year)).filter_by(TEAM_KEY=team).all()
-		if len(exists) > 0 and r != 'r':
-			return 'Already Scraped'
-		else:
-			if r == 'r':
-				player_dim.query.filter_by(YEAR=str(year)).filter_by(TEAM_KEY=team).delete()
-				db.session.commit()
-			url=f'https://stats.ncaa.org/team/{team}/roster/{yearCodes[str(year)]}'
-			soup = BeautifulSoup(requests.get(url, headers = {"User-Agent": "Mozilla/5.0"}).content, 'lxml')
-			table = soup.find('tbody')
-			if table is not None:
-				for row in table.findAll('tr'):
-					cells = []
-					for cell in row.findAll('td'):
-						text = cell.text.replace("\n", '')
-						text = cell.text.replace('nbsp&', '')
-						cells.append(text)
-					rosterToAdd.append(player_dim(cells[0], cells[1].replace('â€™',"'"), cells[2], cells[3], year, team))
-			else:
-				return 'no'
-
-		for player in rosterToAdd:
-			db.session.add(player)
+	existingRoster = player_dim.query.filter_by(YEAR=str(year)).filter_by(TEAM_KEY=team).all()
+	players = [[x.FULL_NAME, x.NUMBER, x.CLASS] for x in existingRoster]
+	rosterToAdd = getRoster(team,year)
+	for player in rosterToAdd:
+		if [player.FULL_NAME, player.NUMBER, player.CLASS] not in players:
+			db.session.merge(player)
 			db.session.commit()
 
-		players = list(db.engine.execute(f"SELECT * FROM PLAYER_DIM WHERE YEAR = '{year}' and TEAM_KEY = {team}"))
-		db.session.commit()
+	players = list(db.engine.execute(f"SELECT * FROM PLAYER_DIM WHERE YEAR = '{year}' and TEAM_KEY = {team}"))
+	db.session.commit()
 
-		return jsonDump(players)
-	except:
-		return 'no'
+	return jsonDump(players)
 
 
 ## Levenshtein Distance -- https://towardsdatascience.com/fuzzywuzzy-how-to-measure-string-distance-on-python-4e8852d7c18f
@@ -577,7 +570,7 @@ def scrapePlays():
 
 	for play in allPlays:
 		try:
-			pbp = play_by_play(play['date'], play['batter'], play['btk'], play['ptk'], play['outcome'], play['location'], year, play['description'])
+			pbp = play_by_play(play['date'], play['batter'], play['btk'], play['ptk'], play['outcome'], play['location'], play['description'], year)
 			db.session.add(pbp)
 		except:
 			continue
