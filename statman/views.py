@@ -192,7 +192,6 @@ def calcDist(a, b):
 		dist = 0
 	return dist
 
-
 def partialDist(a, b):
 	if len(a) > 3 and len(b) > 3:
 		dist = fuzz.partial_ratio(a.lower(),b.lower())
