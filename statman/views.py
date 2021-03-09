@@ -74,7 +74,10 @@ outDict = {
 teamNameDict = {
 	'Appalachian St.': 'App State',
 	'CWRU': 'Case Western',
-	'IIT': 'Illinois State'
+	'IIT': 'Illinois State',
+	'Sam Houston': 'Sam Houston St.',
+	'CSU Pueblo': 'Colorado St.-Pueblo',
+	'USC Aiken': 'S.C. Aiken'
 }
 
 
@@ -219,6 +222,12 @@ def scrapePlays():
 		teamNameList.append('CWRU')
 	if int(team) == 30172:
 		teamNameList.appen('IIT')
+	if int(team) == 624:
+		teamNameList.append('Sam Houston')
+	if int(team) == 11276:
+		teamNameList.append('USC Aiken')
+	if int(team) == 2720:
+		teamNameList.append('CSU Pueblo')
 
 
 	## Get team roster
@@ -662,7 +671,7 @@ def sprays():
 	#  WHERE p.ACTIVE_RECORD = 1 AND BATTER_TEAM_KEY = {team} and d.ACTIVE_RECORD = 1 """))
 
 	plays = list(db.engine.execute(f"""SELECT * FROM PLAY_BY_PLAY WHERE BATTER_TEAM_KEY = {team} and ACTIVE_RECORD = 1"""))
-	rosters = list(db.engine.execute(f"""SELECT * FROM PLAYER_DIM WHERE TEAM_KEY = {team} AND ACTIVE_RECORD = 1"""))
+	rosters = list(db.engine.execute(f"""SELECT * FROM PLAYER_DIM WHERE TEAM_KEY = {team} AND ACTIVE_RECORD = 1 ORDER BY FULL_NAME"""))
 	stats = list(db.engine.execute(f"""SELECT * FROM HITTER_STATS WHERE TEAM_KEY = {team} AND ACTIVE_RECORD = 1"""))
 	return render_template('sprays.html', team = team, stats = jsonDump(stats), plays = jsonDump(plays), rosters = jsonDump(rosters), data = json.dumps(teams), years = years)
 
