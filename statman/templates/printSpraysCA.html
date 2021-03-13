@@ -13,8 +13,7 @@
 <html>
 <body>
   <div id = body>
-    <div>
-      <svg class = field height=420 width=650 id = field> </svg>
+    <div id = plots>
     </div>
   </div>
 </body>
@@ -38,17 +37,34 @@
 
 
 <script>
-var player = {{plays|safe}}
-var stats = {{stats|safe}}
-if(player.length > 0){
-    var svg = '#field'
-    name = player[0].FULL_NAME
-    num = player[0].NUMBER
-    makeSpray(player, name, num, svg, stats)
-  }else{
+var plays = {{plays|safe}}
+var statsAll = {{stats|safe}}
+var names = {{names|safe}}
+if(plays.length > 0){
+  for(i = 0; i < names.length; ++i){
+    names[i]
+    player = plays.filter(function(d){
+      return d.FULL_NAME == names[i].FULL_NAME
+      & d.OUTCOME != null & d.OUTCOME != 'null'
+    })
+
+    statPlayer = statsAll.filter(function(d){
+      return d.FULL_NAME == names[i].FULL_NAME
+    })
+
+    if(player.length > 0){
+      d3.select('#plots').append('svg').attr('class', 'field').attr('width', '650').attr('height', '420').attr('id', 'field'+i)
+      name = player[0].FULL_NAME
+      num = player[0].NUMBER
+      makeSpray(player, name, num, String('#field'+i), statPlayer)
+    }
+  }
+  setTimeout(function(){ print(); }, 1000)
+}else{
   $('#body').html("<span style = 'font-size: 30px; margin-top: 30px;'>No Plays Found.</span>")
   $('body').css('background-color', 'white')
 }
+
 
 
 function makeSpray(plays, name, num, fieldSVG, statPlayer){

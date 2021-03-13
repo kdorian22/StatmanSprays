@@ -685,16 +685,33 @@ def printSprays():
 	if year != '':
 		year = int(year)
 	c = request.values.get('c','')
+	if c == 'ca':
+		names = list(db.engine.execute(f"""
+		SELECT * FROM PLAYER_DIM WHERE TEAM_KEY = {team} and YEAR = {year}
+		"""))
+		plays = []
+		stats = []
+		for name in names:
+			plays = plays + list(db.engine.execute(f"""
+			SELECT d.FULL_NAME, d.NUMBER, p.* FROM PLAY_BY_PLAY p
+			JOIN PLAYER_DIM d on d.PLAYER_KEY = p.BATTER_PLAYER_KEY
+			WHERE d.FULL_NAME = '{str(name.FULL_NAME).replace("'","''")}' and d.TEAM_KEY = {team} and p.ACTIVE_RECORD = 1
+			"""))
+			stats = stats + list(db.engine.execute(f"""
+			SELECT * FROM HITTER_STATS
+			WHERE ACTIVE_RECORD = 1 and FULL_NAME = '{str(name.FULL_NAME).replace("'","''")}' and TEAM_KEY = {team}"""))
+		return render_template('printSpraysCA.html', names = jsonDump(names), stats = jsonDump(stats), plays = jsonDump(plays))
+
 	if c == 'c':
 		name = player_dim.query.filter_by(PLAYER_KEY=key).first().FULL_NAME
 		plays = list(db.engine.execute(f"""
 		SELECT d.FULL_NAME, d.NUMBER, p.* FROM PLAY_BY_PLAY p
 		JOIN PLAYER_DIM d on d.PLAYER_KEY = p.BATTER_PLAYER_KEY
-		WHERE FULL_NAME = '{name}' and d.TEAM_KEY = {team} and p.ACTIVE_RECORD = 1
+		WHERE FULL_NAME = '{str(name).replace("'","''")}' and d.TEAM_KEY = {team} and p.ACTIVE_RECORD = 1
 		"""))
 		stats = list(db.engine.execute(f"""
 		SELECT * FROM HITTER_STATS
-		WHERE ACTIVE_RECORD = 1 and FULL_NAME = '{name}' and TEAM_KEY = {team}"""))
+		WHERE ACTIVE_RECORD = 1 and FULL_NAME = '{str(name).replace("'","''")}' and TEAM_KEY = {team}"""))
 		return render_template('printSpraysC.html', name = name, stats = jsonDump(stats), plays = jsonDump(plays))
 
 	if key != '':
