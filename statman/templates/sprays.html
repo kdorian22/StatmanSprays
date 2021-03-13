@@ -31,9 +31,8 @@
    <div hidden id = career> Show Career Spray </div>
   <div id = container>
       <div id = rosterDiv>
-        <span hidden id = printAll> Print All </span>
-        <span hidden id = printAllCareer> Print All (Career) </span>
-        {% if team %} <br> {% endif %}
+        <span hidden id = printAllLabel> Print All </span>
+        <div hidden id = printDiv> <span id = printAll>Year</span>/<span id = printAllCareer>Career</span> </div>
         <span id = teamName> No Roster </span>
         <table id = roster>
         </table>
@@ -119,17 +118,26 @@ th.plays{
   text-decoration: underline
 }
 
-#printAll{
+#printAllLabel{
   position: absolute;
   top: 3px;
-  right: 3px;
+  right: 25px;
+  font-size: 14px;
+  text-decoration: underline
+}
+
+#printDiv{
+  position: absolute;
+  top: 22px;
+  right: 12px;
+  font-size: 14px;
+}
+
+#printAll{
   cursor: pointer
 }
 
 #printAllCareer{
-  position: absolute;
-  top: 3px;
-  left: 3px;
   cursor: pointer
 }
 
@@ -273,8 +281,18 @@ th.plays{
   margin-top: 10px;
 }
 
-#printAll, #printAllCareer{
+#printDiv, #printAllLabel{
   font-size: 2.3vw;
+}
+#printDiv{
+  right: 5px;
+}
+#printAllLabel{
+  right: 12px;
+}
+
+#printDiv{
+  top: 15px;
 }
 
 #teamTable{
@@ -366,9 +384,6 @@ th.plays{
   font-weight: bold;
   margin-top: 10px;
 }
-
-
-
 
 #career{
   font-size: 15px;
@@ -685,7 +700,7 @@ th.plays{
       }else{
         $("#teamName").text(name)
       }
-      $('#printAll, #printAllCareer').hide()
+      $('#printDiv, #printAllLabel').hide()
       if(data.length > 0){
 
         drawBlankField()
@@ -779,7 +794,7 @@ th.plays{
 
 
         $('#printAll, #printAllCareer').unbind()
-        $('#printAll, #printAllCareer').show()
+        $('#printDiv, #printAllLabel').show()
         $('#printAll').click(function(){
           window.open("{{url_for('printSprays')}}?team="+key+"&year="+year)
         })

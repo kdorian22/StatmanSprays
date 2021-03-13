@@ -22,6 +22,7 @@
 <style>
 
 .field{
+  margin: 14px;
 }
 
 .ofWedge, .infWedge{
@@ -53,7 +54,7 @@ if(plays.length > 0){
     })
 
     if(player.length > 0){
-      d3.select('#plots').append('svg').attr('class', 'field').attr('width', '650').attr('height', '420').attr('id', 'field'+i)
+      d3.select('#plots').append('div').append('svg').attr('class', 'field').attr('width', '650').attr('height', '420').attr('id', 'field'+i)
       name = player[0].FULL_NAME
       num = player[0].NUMBER
       makeSpray(player, name, num, String('#field'+i), statPlayer)
@@ -436,9 +437,6 @@ function makeSpray(plays, name, num, fieldSVG, statPlayer){
              .style('padding-left', '3px')
              .style('padding-right', '3px')
           }
-
-          setTimeout(function(){ print(); }, 1000)
-
 }
 
 
