@@ -77,7 +77,8 @@ teamNameDict = {
 	'IIT': 'Illinois State',
 	'Sam Houston': 'Sam Houston St.',
 	'CSU Pueblo': 'Colorado St.-Pueblo',
-	'USC Aiken': 'S.C. Aiken'
+	'USC Aiken': 'S.C. Aiken',
+	'Nicholls': 'Nicholls St.'
 }
 
 
@@ -228,6 +229,8 @@ def scrapePlays():
 		teamNameList.append('USC Aiken')
 	if int(team) == 2720:
 		teamNameList.append('CSU Pueblo')
+	if int(team) == 483:
+		teamNameList.append('Nicholls')
 
 
 	## Get team roster
@@ -666,10 +669,6 @@ def sprays():
 	num = row.VISITS
 	db.engine.execute(f"""UPDATE TEAM_DIM SET VISITS = {num+1} WHERE TEAM_KEY = {team}""")
 
-	# plays = list(db.engine.execute(f"""SELECT p.*, FULL_NAME FROM PLAY_BY_PLAY_2020 p
-	#  JOIN PLAYER_DIM d on d.PLAYER_KEY = p.BATTER_PLAYER_KEY
-	#  WHERE p.ACTIVE_RECORD = 1 AND BATTER_TEAM_KEY = {team} and d.ACTIVE_RECORD = 1 """))
-
 	plays = list(db.engine.execute(f"""SELECT * FROM PLAY_BY_PLAY WHERE BATTER_TEAM_KEY = {team} and ACTIVE_RECORD = 1"""))
 	rosters = list(db.engine.execute(f"""SELECT * FROM PLAYER_DIM WHERE TEAM_KEY = {team} AND ACTIVE_RECORD = 1 ORDER BY FULL_NAME"""))
 	stats = list(db.engine.execute(f"""SELECT * FROM HITTER_STATS WHERE TEAM_KEY = {team} AND ACTIVE_RECORD = 1"""))
@@ -742,7 +741,6 @@ def printSprays():
 	return render_template('printSprays.html', keys = keyList, plays = jsonDump(plays),
 	stats = jsonDump(stats))
 
-
 @app.route('/about')
 def about():
 	return render_template('about.html')
@@ -751,22 +749,20 @@ def about():
 def faq():
 	return render_template('faq.html')
 
-
-
 @app.route('/editPlays')
 def editPlays():
 	# currently unused
 	return '1'
-
-	team_key = int(equest.values.get('team', '755'))
+	team_key = int(request.values.get('team', '755'))
 	year = int(request.values.get('year', years[0]))
 
-	playsORG = list(db.engine.execute(f"""SELECT p.FULL_NAME NAME, t.NAME TEAM_NAME, pbp.* FROM PLAY_BY_PLAY_{year} pbp
+	playsORG = list(db.engine.execute(f"""SELECT p.FULL_NAME NAME, t.NAME TEAM_NAME, pbp.* FROM PLAY_BY_PLAY pbp
  	LEFT JOIN PLAYER_DIM p on p.PLAYER_KEY = pbp.BATTER_PLAYER_KEY
  	LEFT JOIN TEAM_DIM t on t.TEAM_KEY = pbp.BATTER_TEAM_KEY
 	WHERE t.TEAM_KEY = {team_key} and pbp.YEAR = {year}
  	ORDER BY p.PLAYER_KEY
  	 """))
+	print(len(playsORG))
 	name = ''
 	if len(playsORG) > 0:
 		name = str(playsORG[0].TEAM_NAME)
@@ -776,18 +772,21 @@ def editPlays():
 
 @app.route('/PBPWrite')
 def PBPWrite():
+	# currently unused
+	return '1'
 	id = request.values.get('id','')
 	col = request.values.get('col', '')
 	val = request.values.get('val', '')
-	if id != '' and year != '':
+	if id != '':
 		play = play_by_play.query.filter_by(PLAY_ID=id).first()
 		if col == 'ar':
 			play.ACTIVE_RECORD = play.ACTIVE_RECORD*-1 + 1
 			db.session.commit()
+			return 'yes'
 		if col == 'loc':
 			play.LOCATION = val
 			db.session.commit()
-		return 'yes'
+			return 'yes'
 	else:
 		return 'no'
 
