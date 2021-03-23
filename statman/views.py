@@ -223,6 +223,7 @@ def scrapePlays():
 		teamNameList.append('CWRU')
 	if int(team) == 30172:
 		teamNameList.appen('IIT')
+		teamNameList.append('Illinois State')
 	if int(team) == 624:
 		teamNameList.append('Sam Houston')
 	if int(team) == 11276:
