@@ -74,7 +74,7 @@ outDict = {
 teamNameDict = {
 	'Appalachian St.': 'App State',
 	'CWRU': 'Case Western',
-	'IIT': 'Illinois State',
+	'IIT': 'Illinois Tech',
 	'Sam Houston': 'Sam Houston St.',
 	'CSU Pueblo': 'Colorado St.-Pueblo',
 	'USC Aiken': 'S.C. Aiken',
