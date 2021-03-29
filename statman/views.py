@@ -82,6 +82,10 @@ teamNameDict = {
 }
 
 
+unwanted = ['wild pitch', 'passed ball', ' balk.', ' balk ', 'picked off', 'pickoff', 'caught stealing', ' struck ', ' walked ', ' walked.', ' stole ']
+mistakes = ['advanced', 'advances', 'advnace', 'scored', 'scores', 'score']
+
+
 @app.template_filter()
 def date(text):
 	text = str(text)
@@ -281,7 +285,6 @@ def scrapePlays():
 			namesNotLast = []
 		players[r.PLAYER_KEY] = names
 		playersNotLast[r.PLAYER_KEY] = namesNotLast
-	unwanted = ['wild pitch', 'passed ball', ' balk ','picked off', 'caught stealing', ' struck ', ' walked ', ' walked.', ' stole ']
 	## start on the team-year roster page
 	start = f'https://stats.ncaa.org/team/{team}/roster/{yearCodes[str(year)]}'
 	soup = BeautifulSoup(requests.get(start, headers = {"User-Agent": "Mozilla/5.0"}).content, 'lxml')
@@ -499,6 +502,10 @@ def scrapePlays():
 							play_details['outcome'] = outDict[out]
 					else:
 						play_details['outcome'] = None
+
+					if len([t for t in mistakes if(t in start)]) > 0 and len([t for t in outcomes+outcomes2 if(t in play)]) == 0:
+						play_details['outcome'] = None
+
 					allPlays.append(play_details)
 			return allPlays
 
