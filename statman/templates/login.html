@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+{% extends 'base.html' %}
+{% block title %} Log In {% endblock %}
+
+{% block content %}
+<html>
+  {% with messages = get_flashed_messages() %}
+  {% if messages %}
+      <div class="notification">
+          {{ messages[0] }}
+      </div>
+  {% endif %}
+  {% endwith %}
+  <div id = all>
+
+
+    <div class = section>
+      <div class = head>  Log In </div> <hr>
+      <div id = "input">
+        <form method="POST" action="/login">
+        <input type = Email name = "email" placeholder="Email"> <br>
+        <input type = Password name = "password" placeholder="Password"> <br>
+        <button id = 'submit'> Log In </button>
+      </form>
+      </div>
+    </div>
+
+
+  </div>
+
+
+
+</html>
+
+<style>
+.notification{
+  width: 100%;
+  text-align: center;
+  padding: 5px;
+  background-color: red;
+  color: white;
+  opacity: .6;
+  font-size: 30px;
+}
+
+#input{
+  text-align: center;
+  margin-left: 3px;
+  display: inline-block;
+}
+#submit{
+  border: 2px solid black;
+  color: black;
+  background-color: rgb(254, 246, 235);
+  font-size: 18px;
+  padding: 5px 10px 5px 10px;
+  border-radius: 5px;
+  text-align: center;
+  cursor: pointer;
+  margin-top: 5px;
+  display: inline-block;
+}
+
+#submit:hover{
+  box-shadow: 0px 0px 3px black;
+}
+
+#all{
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.section{
+  border: 2px solid rgb(254, 246, 235);
+  background-color: slategray;
+  color: rgb(254, 246, 235);
+  padding: 10px;
+  text-align: left;
+  font-size: 24px;
+  box-shadow: 0px 0px 5px gray;
+  margin: 20px;
+  border-radius: 5px;
+  text-align: center;
+  display: inline-block;
+}
+
+.head{
+  font-weight: bold;
+  font-size: 36px;
+  text-align: center
+}
+input{
+  font-size: 18px;
+  width: 300px;
+  border-radius: 5px;
+  padding: 3px;
+}
+</style>
+
+
+<script>
+
+</script>
+
+<script >
+
+
+
+
+
+
+</script>
+
+{% endblock %}

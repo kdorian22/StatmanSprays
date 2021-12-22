@@ -3,6 +3,9 @@ from flask_jsglue import JSGlue
 from flask_sqlalchemy import SQLAlchemy
 from flask_mobility import Mobility
 from flask_mobility.decorators import mobile_template
+from flask_login import login_required, current_user, login_user, logout_user
+from werkzeug.security import generate_password_hash, check_password_hash
+from functools import wraps
 import requests
 import pandas as pd
 from bs4 import BeautifulSoup
@@ -18,7 +21,9 @@ import time
 import itertools
 
 jsglue = JSGlue(app)
+
 Mobility(app)
+
 app.config['PDF_FOLDER'] = 'static/pdf/'
 
 yearCodes = {
@@ -86,6 +91,28 @@ unwanted = ['wild pitch', 'passed ball', ' balk.', ' balk ', 'picked off', 'pick
 mistakes = ['advanced', 'advances', 'advnace', 'scored', 'scores', 'score']
 
 
+def admin_required():
+	def wrapper(fn):
+		@wraps(fn)
+		def decorator(*args, **kwargs):
+			if current_user.is_authenticated:
+				if current_user.ADMIN == 1:
+					return fn(*args, **kwargs)
+				else:
+					flash('You do not have permission to access that page.')
+					return redirect(url_for('index'))
+			else:
+				flash('Please log in to access that page.')
+				return redirect(url_for('login'))
+
+		return decorator
+
+	return wrapper
+
+@app.before_request
+def get_current_user():
+	g.user = current_user
+
 @app.template_filter()
 def date(text):
 	text = str(text)
@@ -119,7 +146,60 @@ def index():
 		teams.append({'NAME': d.NAME, 'TEAM_KEY': d.TEAM_KEY})
 	return render_template('index.html', teams = teams)
 
+@app.route('/login')
+def login():
+	print(list(db.engine.execute(f"""SELECT * FROM USER_DIM""")))
+	return render_template('login.html')
+
+@app.route('/login', methods=['POST'])
+def login_post():
+	email = request.form.get('email')
+	password = request.form.get('password')
+	user = User.query.filter_by(EMAIL=email).first()
+
+	if not user or not check_password_hash(user.PASSWORD, password):
+		flash('User not found. Try Again.')
+		return redirect(url_for('login'))
+
+	login_user(user, remember=True)
+	return redirect(url_for('index'))
+
+@app.route('/signup')
+def signup():
+	return render_template('signup.html')
+
+@app.route('/signup', methods=['POST'])
+def signup_post():
+	email = request.form.get('email')
+	name = request.form.get('name')
+	pass1 = request.form.get('password1')
+	pass2 = request.form.get('password2')
+	user = User.query.filter_by(EMAIL=email).first()
+
+	if user:
+		flash('Email Address Already Exists')
+		return redirect(url_for('signup'))
+
+	if pass1 != pass2:
+		flash('Passwords Do Not Match')
+		return redirect(url_for('signup'))
+
+	new_user = User(email, name, generate_password_hash(pass1, method='sha256'))
+
+	db.session.add(new_user)
+	db.session.commit()
+
+	return redirect(url_for('login'))
+
+@app.route('/logout')
+@login_required
+def logout():
+	logout_user()
+	return redirect(url_for('index'))
+
 @app.route('/scrapeTeams', methods = ['GET'])
+@login_required
+@admin_required()
 def scrapeTeams():
 	team_dim.query.delete()
 	db.session.commit()
@@ -148,6 +228,8 @@ def scrapeTeams():
 
 
 @app.route('/scrapeRoster', methods = ['GET'])
+@login_required
+@admin_required()
 def scrapeRoster():
 	year = int(request.values.get('year', years[0]))
 	team = int(request.values.get('team','755'))
@@ -211,6 +293,8 @@ def partialDist(a, b):
 
 
 @app.route('/scrapePlays', methods = ['POST', 'GET'])
+@login_required
+@admin_required()
 def scrapePlays():
 
 	team = int(request.values.get('team', '755'))
@@ -226,7 +310,7 @@ def scrapePlays():
 	if int(team) == 122:
 		teamNameList.append('CWRU')
 	if int(team) == 30172:
-		teamNameList.appen('IIT')
+		teamNameList.append('IIT')
 		teamNameList.append('Illinois State')
 	if int(team) == 624:
 		teamNameList.append('Sam Houston')
@@ -618,8 +702,10 @@ def scrapePlays():
 	return 'no'
 
 
-@app.route('/data', methods = ['POST', 'GET'])
-def data():
+@app.route('/dataDownload', methods = ['POST', 'GET'])
+@login_required
+@admin_required()
+def dataDownload():
 	query = f"""
 	SELECT t.NAME, t.TEAM_KEY, t.ACTIVE_RECORD,
 	CAST(IFNULL(ROS_0, 0) as signed) ROS_0,
@@ -652,7 +738,7 @@ def data():
 	"""
 	status = list(db.engine.execute(query))
 
-	return render_template('data.html', status=status, data = jsonDump(status), years=years)
+	return render_template('dataDownload.html', status=status, data = jsonDump(status), years=years)
 
 
 @app.route('/sprays', methods = ['POST', 'GET'])
@@ -681,6 +767,7 @@ def sprays():
 	rosters = list(db.engine.execute(f"""SELECT * FROM PLAYER_DIM WHERE TEAM_KEY = {team} AND ACTIVE_RECORD = 1 ORDER BY FULL_NAME"""))
 	stats = list(db.engine.execute(f"""SELECT * FROM HITTER_STATS WHERE TEAM_KEY = {team} AND ACTIVE_RECORD = 1"""))
 	return render_template('sprays.html', team = team, stats = jsonDump(stats), plays = jsonDump(plays), rosters = jsonDump(rosters), data = json.dumps(teams), years = years)
+
 
 @app.route('/printSprays', methods = ['POST', 'GET'])
 def printSprays():
@@ -758,9 +845,9 @@ def faq():
 	return render_template('faq.html')
 
 @app.route('/editPlays')
+@login_required
+@admin_required()
 def editPlays():
-	# currently unused
-	return '1'
 	team_key = int(request.values.get('team', '755'))
 	year = int(request.values.get('year', years[0]))
 
@@ -770,7 +857,6 @@ def editPlays():
 	WHERE t.TEAM_KEY = {team_key} and pbp.YEAR = {year}
  	ORDER BY p.PLAYER_KEY
  	 """))
-	print(len(playsORG))
 	name = ''
 	if len(playsORG) > 0:
 		name = str(playsORG[0].TEAM_NAME)
@@ -779,9 +865,9 @@ def editPlays():
 
 
 @app.route('/PBPWrite')
+@login_required
+@admin_required()
 def PBPWrite():
-	# currently unused
-	return '1'
 	id = request.values.get('id','')
 	col = request.values.get('col', '')
 	val = request.values.get('val', '')
@@ -801,10 +887,10 @@ def PBPWrite():
 
 
 
-@app.route('/getData/<key>/<year>/<type>/<csv>', methods = ['POST', 'GET'])
-def getData(key, year, type, csv):
-	# currently unused
-	return '1'
+@app.route('/download/<key>/<year>/<type>/<csv>', methods = ['POST', 'GET'])
+@login_required
+@admin_required()
+def download(key, year, type, csv):
 	if key != '' and year != '' and type != '' and len(key) < 10 and len(year) < 5 and len(type) < 10:
 		if type == 'pbpT':
 			tab = 'PLAY_BY_PLAY'
@@ -838,9 +924,9 @@ def getData(key, year, type, csv):
 
 
 @app.route('/getStats/<name>/<num>/<pos>/<fresh>/<year>/<team>', methods = ['POST', 'GET'])
+@login_required
+@admin_required()
 def getStats(name, num, pos, fresh, year, team):
-	## currently unused
-	return '1'
 	string = f"""SELECT * FROM HITTER_STATS WHERE FULL_NAME = '{name}' and NUMBER = '{num}' and POSITION = '{pos}' and YEAR = '{year}' and CLASS = '{fresh}' and TEAM_KEY = '{team}'"""
 	if ';' not in string:
 		data = list(db.engine.execute(string))

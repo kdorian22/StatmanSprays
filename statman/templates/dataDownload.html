@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 {% extends 'base.html' %}
-{% block title %} Update DB {% endblock %}
+{% block title %} Download Data {% endblock %}
 
 {% block content %}
 <html>
@@ -296,14 +296,13 @@ th.plays{
      .html(function(d){return '<div data-num = 6 class = upd data-name = "'+d.NAME+'" data-col = pbpT data-key ='+d.TEAM_KEY+' data-year = {{years[2]}}><i class="fa fa-download"></i> </div>'})
 
      function toolTip(el, ev){
-       if(1 == 0){
          $('#toolTip').css('top', 0).css('left', 0)
          $("#toolTip").empty()
          child = $(el)
          var col = child.data('col')
          var key = child.data('key')
          var year = child.data('year')
-         $.get(Flask.url_for('getData', {key: key, year: year, type: col, csv: 'n'}), function(data){
+         $.get(Flask.url_for('download', {key: key, year: year, type: col, csv: 'n'}), function(data){
            startX = ev.pageX
            startY = ev.pageY
            setTimeout(function(){
@@ -390,9 +389,8 @@ th.plays{
                .html(maxDate)
              }
            }
-         }, 500);
+         }, 250);
          })
-       }
      }
 
      $('.has .upd').on('mouseenter', function(e){toolTip(this, e)})
@@ -407,7 +405,7 @@ th.plays{
        var loader = $(this)
        loader.addClass('progress')
        par = $(this).children()
-       $.get(Flask.url_for('getData', {key: par.data('key'), year: par.data('year'), type: par.data('col'), csv: 'y'}), function(data){
+       $.get(Flask.url_for('download', {key: par.data('key'), year: par.data('year'), type: par.data('col'), csv: 'y'}), function(data){
          $('#body').css("pointer-events", "auto")
          // Export csv
          // https://www.developintelligence.com/blog/2017/04/use-javascript-to-export-your-data-as-csv/

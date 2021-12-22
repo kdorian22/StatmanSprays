@@ -2,6 +2,14 @@
 {% extends 'base.html' %}
 {% block title %}Statman Sprays{% endblock %}
 {% block content %}
+
+  {% with messages = get_flashed_messages() %}
+  {% if messages %}
+      <div class="notification">
+          {{ messages[0] }}
+      </div>
+  {% endif %}
+  {% endwith %}
     <div id = search>
       <div id = cont><h1 id = logo>Statman Sprays</h1>
       <input id =  searchTeam type="text" placeholder="Find Team..."></input>
@@ -22,6 +30,16 @@
         <div></div><div></div></div>
     </div>
 <style>
+
+.notification{
+  width: 100%;
+  text-align: center;
+  padding: 5px;
+  background-color: red;
+  color: white;
+  opacity: .6;
+  font-size: 30px;
+}
 
 .ui-menu-item{
   font-size: 30px;

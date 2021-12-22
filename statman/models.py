@@ -1,5 +1,25 @@
 from statman import db
+from flask_login import UserMixin
 
+class User(UserMixin, db.Model):
+    __tablename__ = 'USER_DIM'
+
+    USER_KEY = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    EMAIL = db.Column(db.String(100), unique=True)
+    PASSWORD = db.Column(db.String(100))
+    NAME = db.Column(db.String(100))
+    ADMIN = db.Column(db.Integer)
+    ACTIVE_RECORD = db.Column(db.Integer)
+
+    def __init__(self, email, name, password):
+        self.EMAIL = email
+        self.NAME = name
+        self.PASSWORD = password
+        self.ADMIN = 0
+        self.ACTIVE_RECORD = 1
+
+    def get_id(self):
+           return (self.USER_KEY)
 
 class team_dim(db.Model):
     __tablename__ = 'TEAM_DIM'
@@ -13,6 +33,29 @@ class team_dim(db.Model):
         self.TEAM_KEY = key
         self.NAME = name
         self.VISITS = 0
+        self.ACTIVE_RECORD = 1
+
+class game_dim(db.Model):
+    __tablename__ = 'GAME_DIM'
+
+    GAME_KEY = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    DATE_KEY = db.Column(db.Integer)
+    YEAR = db.Column(db.Integer)
+    HOME_TEAM_KEY = db.Column(db.Integer)
+    AWAY_TEAM_KEY = db.Column(db.Integer)
+    HOME_TEAM_SCORE = db.Column(db.Integer)
+    AWAY_TEAM_SCORE = db.Column(db.Integer)
+    PLAY_BY_PLAY = db.Column(db.Integer)
+    ACTIVE_RECORD = db.Column(db.Integer)
+
+    def __init__(self, dk, year, htk, atk, hts, ats, pbp):
+        self.DATE_KEY = dk
+        self.YEAR = year
+        self.HOME_TEAM_KEY = htk
+        self.AWAY_TEAM_KEY = atk
+        self.HOME_TEAM_SCORE = hts
+        self.AWAY_TEAM_SCORE = ats
+        self.PLAY_BY_PLAY = pbp
         self.ACTIVE_RECORD = 1
 
 class player_dim(db.Model):
