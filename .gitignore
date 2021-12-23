@@ -107,3 +107,4 @@ statman/db.py
 statman/scrapeRoster.py
 statman/scrapeRosters.py
 statman/backfillGames.py
+statman/backfillGD.py
