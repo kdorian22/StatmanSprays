@@ -23,6 +23,7 @@
           <a class = headAnchor href = "{{url_for('sprays')}}">SPRAYS</a> |
           <a class = headAnchor href = "{{url_for('about')}}">ABOUT</a> |
           <a class = headAnchor href = "{{url_for('faq')}}">FAQ</a>
+          {% if current_user.is_authenticated and current_user.ADMIN == 1 %} | <a class = headAnchor href = "{{url_for('admin')}}">ADMIN</a>{% endif %}
         </div>
         <div id = title > <a id = titleAnchor href = "{{url_for('index')}}">STATMAN SPRAYS </a> </div>
       </div>

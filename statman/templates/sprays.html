@@ -31,8 +31,10 @@
    <div hidden id = career> Show Career Spray </div>
   <div id = container>
       <div id = rosterDiv>
-        <span hidden id = printAllLabel> Print All </span>
-        <div hidden id = printDiv> <span id = printAll>Year</span>/<span id = printAllCareer>Career</span> </div>
+        <div id = printAllDiv>
+          <div hidden id = printAllLabel> Print All </div>
+          <div hidden id = printDiv> <span id = printAll>Year</span>/<span id = printAllCareer>Career</span> </div>
+        </div>
         <span id = teamName> No Roster </span>
         <table id = roster>
         </table>
@@ -117,21 +119,20 @@ th.plays{
 #printAllCareer:hover{
   text-decoration: underline
 }
+#printAllDiv{
+  position: absolute;
+  border: 1px solid rgb(254, 246, 235);
+  padding: 2px;
+  top: 3px;
+  font-size: 14px;
+  right: 3px;
+  text-align: center;
+}
 
 #printAllLabel{
-  position: absolute;
-  top: 3px;
-  right: 23px;
-  font-size: 14px;
   text-decoration: underline
 }
 
-#printDiv{
-  position: absolute;
-  top: 22px;
-  right: 12px;
-  font-size: 14px;
-}
 
 #printAll{
   cursor: pointer
@@ -281,18 +282,21 @@ th.plays{
   margin-top: 10px;
 }
 
+#printAllDiv{
+  border: none !important;
+}
+
 #printDiv, #printAllLabel{
   font-size: 2.3vw;
 }
-#printDiv{
-  right: 5px;
-}
-#printAllLabel{
-  right: 12px;
-}
 
 #printDiv{
-  top: 15px;
+  right: 5px;
+    top: 15px;
+}
+
+#printAllLabel{
+  right: 12px;
 }
 
 #teamTable{

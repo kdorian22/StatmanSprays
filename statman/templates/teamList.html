@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+{% extends 'base.html' %}
+{% block title %} Team List {% endblock %}
+
+{% block content %}
+<html>
+  <div id = body>
+  <table id = headTable>
+    <tr>
+      <td id = name><h1 id = pageHead>  </h1> </td>
+      <td id = search><input id =  searchTeam type="text" placeholder=" Find Team..."></td>
+    </tr>
+</table>
+  <table id = teamTable>
+    <tr class = head>
+      <th> TEAM KEY </th>
+      <th> NAME </th>
+      <th> ALT NAMES </th>
+      <th> VISITS </th>
+    </tr>
+    <tr>
+    <tbody id = teamBody>
+    </tbody>
+    </tr>
+  </table>
+</div>
+
+</html>
+
+<style>
+
+#body{
+  width: 98%;
+  margin-left: 1%
+}
+
+#headTable{
+  width: 100%
+}
+
+
+#name{
+  vertical-align: bottom;
+}
+
+
+#search{
+  vertical-align: bottom;
+  text-align: right;
+
+}
+
+#searchTeam{
+  font-size: 25px;
+  border-radius: 5px;
+  border: 1px solid black;
+  margin-bottom: 3px;
+  width: 250px;
+  box-shadow: 0px 0px 5px slategray;
+  background-color: rgb(254, 246, 235)
+}
+
+.head th{
+  background-color: slategray !important;
+  font-size: 40px;
+  border: 1px solid slategray;
+  color: rgb(254, 246, 235);
+  letter-spacing: 4px;
+  text-align: center;
+  border: 1px solid slategray
+}
+
+tr.head{
+  border: 1px solid slategray
+}
+
+th.team{
+  width: 28%
+}
+
+th.ros{
+  width: 12%;
+}
+
+th.plays{
+  width: 12%;
+}
+
+
+
+#teamTable td, #teamTable th{
+  text-align: center;
+  border: 1px solid slategray;
+  font-size: 30px;
+}
+
+#teamTable tr{
+  background-color: rgb(254, 246, 235)
+}
+
+#teamTable tr:nth-child(2n){
+  background-color: lightgray !important
+}
+
+#teamTable tr:not(.scaf):not(.head):hover{
+  border: 2px solid slategray !important
+}
+
+#teamTable{
+  clear: both;
+  border-collapse: collapse;
+  width: 100%;
+  box-shadow: 0px 0px 10px slategray;
+  display: table;
+}
+
+#teamBody{
+  height: 80px;
+  width: 100%;
+  overflow: scroll;
+}
+
+.sprayLink:hover{
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+</style>
+
+
+<script>
+  const init = {{data|safe}}
+  const teams = init.map(function(d){ return d.NAME})
+  const years = {{years|safe}}
+
+  // https://stackoverflow.com/questions/2601097/how-to-get-the-mouse-position-without-events-without-moving-the-mouse
+  d3.select('#body').on('mousemove', function () {
+     xCur = d3.mouse(this)[0];
+     yCur = d3.mouse(this)[1]
+  })
+
+  function addRows(data){
+
+    d3.select('#teamBody')
+    .selectAll('tr.row')
+    .data(data, function(d){ return d.TEAM_KEY})
+    .enter()
+    .append('tr')
+    .attr('class', 'row')
+
+    d3.selectAll('tr.row')
+    .append('td').html(function(d){ return d.TEAM_KEY })
+
+    d3.selectAll('tr.row')
+    .append('td').html(function(d){ return d.NAME })
+    .attr('class', 'sprayLink')
+    .attr('val', function(d){ return d.TEAM_KEY})
+
+    d3.selectAll('tr.row')
+    .append('td').html(function(d){ return d.ALT_NAMES })
+
+    d3.selectAll('tr.row')
+    .append('td').html(function(d){ return d.VISITS })
+   }
+  addRows(init)
+
+
+  function updateRows(rows){
+    d3.selectAll('tr.row').remove()
+    addRows(rows)
+  }
+
+
+  $('#searchTeam').keyup(function(){
+    var str = $(this).val()
+    if(str.length > 0){
+      let re = new RegExp(`${str}`, 'i')
+      var match = []
+
+      for(let team of init){
+        if(team.NAME.search(re) > -1){
+          match.push(team.TEAM_KEY)
+        }
+      }
+
+      var subset = init.filter(function(d){
+        return match.indexOf(d.TEAM_KEY) > -1
+      })
+      updateRows(subset)
+    }else{
+      updateRows(init)
+    }
+  })
+
+  $('.sprayLink').click(function(){
+    key = d3.select(this).attr('val')
+    window.location.href = "{{url_for('sprays')}}?team="+key
+  })
+
+
+
+
+</script>
+
+{% endblock %}

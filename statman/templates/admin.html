@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+{% extends 'base.html' %}
+{% block title %} Admin {% endblock %}
+
+{% block content %}
+<html>
+  <div id = all>
+
+
+    <div class = section>
+      <div class = head>  Admin Link </div> <hr>
+        <div class = anchorDiv> <a href = "{{url_for('teamList')}}">View Team List</a> </div>
+        <div class = anchorDiv> <a href = "{{url_for('updateTeamDim')}}?update=u">Update Team Dim</a> </div>
+    </div>
+
+
+  </div>
+
+
+
+</html>
+
+<style>
+
+
+  .anchorDiv a{
+    color: rgb(254, 246, 235);
+  }
+
+  .anchorDiv a:hover{
+    color: black;
+  }
+
+  #contact{
+    text-align: center;
+    width: 100%;
+    margin-bottom: 20px;
+    margin-top: 20px;
+    font-weight: bold;
+  }
+
+  #all{
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  .section{
+    border: 2px solid rgb(254, 246, 235);
+    background-color: slategray;
+    color: rgb(254, 246, 235);
+    padding: 10px;
+    text-align: left;
+    font-size: 24px;
+    box-shadow: 0px 0px 5px gray;
+    margin: 20px;
+    width: 90%;
+    border-radius: 5px;
+  }
+
+  .head{
+    font-weight: bold;
+    font-size: 36px;
+    text-align: center
+  }
+
+  li{
+    margin-top: 20px
+  }
+
+  strong{
+    font-size: 30px
+  }
+
+
+  @media only screen and (max-width: 700px) {
+    .head{
+      font-size: 30px;
+    }
+
+    .section{
+      font-size: 18px;
+    }
+
+    strong{
+      font-size: 24px;
+    }
+  }
+
+</style>
+
+
+<script>
+
+</script>
+
+<script >
+
+
+
+
+
+
+</script>
+
+{% endblock %}

@@ -28,12 +28,14 @@ class team_dim(db.Model):
     NAME = db.Column(db.String(50))
     VISITS = db.Column(db.Integer)
     ACTIVE_RECORD = db.Column(db.Integer)
+    ALT_NAMES = db.Column(db.String(1000))
 
     def __init__(self, key, name):
         self.TEAM_KEY = key
         self.NAME = name
         self.VISITS = 0
         self.ACTIVE_RECORD = 1
+        self.ALT_NAMES = None
 
 class game_dim(db.Model):
     __tablename__ = 'GAME_DIM'
@@ -42,20 +44,24 @@ class game_dim(db.Model):
     DATE_KEY = db.Column(db.Integer)
     YEAR = db.Column(db.Integer)
     HOME_TEAM_KEY = db.Column(db.Integer)
+    HOME_TEAM_NAME = db.Column(db.String(50))
     AWAY_TEAM_KEY = db.Column(db.Integer)
+    AWAY_TEAM_NAME = db.Column(db.String(50))
     HOME_TEAM_SCORE = db.Column(db.Integer)
     AWAY_TEAM_SCORE = db.Column(db.Integer)
-    PLAY_BY_PLAY = db.Column(db.Integer)
+    BOX_LINK = db.Column(db.Integer)
     ACTIVE_RECORD = db.Column(db.Integer)
 
-    def __init__(self, dk, year, htk, atk, hts, ats, pbp):
+    def __init__(self, dk, year, htk, htn, atk, atn, hts, ats, box):
         self.DATE_KEY = dk
         self.YEAR = year
         self.HOME_TEAM_KEY = htk
+        self.HOME_TEAM_NAME = htn
         self.AWAY_TEAM_KEY = atk
+        self.AWAY_TEAM_NAME = atn
         self.HOME_TEAM_SCORE = hts
         self.AWAY_TEAM_SCORE = ats
-        self.PLAY_BY_PLAY = pbp
+        self.BOX_LINK = box
         self.ACTIVE_RECORD = 1
 
 class player_dim(db.Model):

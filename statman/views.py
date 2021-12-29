@@ -76,6 +76,7 @@ outDict = {
  }
 
 
+
 teamNameDict = {
 	'Appalachian St.': 'App State',
 	'CWRU': 'Case Western',
@@ -83,9 +84,12 @@ teamNameDict = {
 	'Sam Houston': 'Sam Houston St.',
 	'CSU Pueblo': 'Colorado St.-Pueblo',
 	'USC Aiken': 'S.C. Aiken',
-	'Nicholls': 'Nicholls St.'
+	'Nicholls': 'Nicholls St.',
+	'UT Tyler': 'Texas-Tyler',
+	'CUI': 'Concordia (CA)',
+	'UVA Wise': 'UVA-Wise',
+	'LIU Post': 'Post'
 }
-
 
 unwanted = ['wild pitch', 'passed ball', ' balk.', ' balk ', 'picked off', 'pickoff', 'caught stealing', ' struck ', ' walked ', ' walked.', ' stole ']
 mistakes = ['advanced', 'advances', 'advnace', 'scored', 'scores', 'score']
@@ -129,6 +133,23 @@ def exists(text):
 
 def jsonDump(data):
 	return json.dumps([dict(d) for d in data])
+
+def scrapeTeams():
+	url='https://stats.ncaa.org/game_upload/team_codes'
+	page = requests.get(url, headers = {"User-Agent": "Mozilla/5.0"})
+	html = page.content
+	soup = BeautifulSoup(html, 'lxml')
+	table = soup.find('table')
+	rows = []
+	for row in table.findAll('tr'):
+		cells = []
+		for cell in row.findAll('td'):
+			text = cell.text.replace("\n", '')
+			text = cell.text.replace('nbsp&', '')
+			cells.append(text)
+		rows.append(cells)
+	teamList = rows[2:]
+	return teamList
 
 @app.route('/')
 def index():
@@ -197,34 +218,41 @@ def logout():
 	logout_user()
 	return redirect(url_for('index'))
 
-@app.route('/scrapeTeams', methods = ['GET'])
+@app.route('/updateTeamDim', methods = ['GET'])
 @login_required
 @admin_required()
-def scrapeTeams():
-	team_dim.query.delete()
-	db.session.commit()
-	url='https://stats.ncaa.org/game_upload/team_codes'
-	page = requests.get(url, headers = {"User-Agent": "Mozilla/5.0"})
-	html = page.content
-	soup = BeautifulSoup(html, 'lxml')
-	table = soup.find('table')
-	rows = []
-	for row in table.findAll('tr'):
-		cells = []
-		for cell in row.findAll('td'):
-			text = cell.text.replace("\n", '')
-			text = cell.text.replace('nbsp&', '')
-			cells.append(text)
-		rows.append(cells)
-	teamList = rows[2:]
-	try:
+def updateTeamDim():
+	update = request.values.get('update', 'u')
+	teamList = list(db.engine.execute("""SELECT TEAM_KEY, NAME, ALT_NAMES FROM TEAM_DIM"""))
+	newTeams = scrapeTeams()
+	if update == 'd':
+		team_dim.query.delete()
+		db.session.commit()
+		try:
+			for team in newTeams:
+				ele = team_dim(int(team[0]), str(team[1]))
+				db.session.add(ele)
+		except:
+			return {'result': 'upload failed'}
+
+	elif update == 'u':
 		for team in teamList:
-			ele = team_dim(int(team[0]), str(team[1]))
-			db.session.add(ele)
-	except:
-		return {'result': 'upload failed'}
+			key = team[0]
+			curName = team[1]
+			newName = [x[1] for x in newTeams if int(x[0]) == int(key)]
+			curAlts = str(team[2])
+			if curAlts == 'None':
+				curAltList = []
+			else:
+				curAltList = curAlts.split(', ')
+			if len(newName) == 0:
+				continue
+			elif curName != newName[0] and newName[0] not in curAltList:
+				curAltList.append(newName[0])
+				db.engine.execute(f"""UPDATE TEAM_DIM SET ALT_NAMES = '{', '.join(curAltList)}' WHERE TEAM_KEY = {key}""")
+
 	db.session.commit()
-	return json.dumps([dict(r) for r in list(db.engine.execute('SELECT * FROM TEAM_DIM;'))])
+	return render_template('teamList.html', data = jsonDump(list(db.engine.execute('SELECT * FROM TEAM_DIM WHERE ACTIVE_RECORD = 1;'))))
 
 
 @app.route('/scrapeRoster', methods = ['GET'])
@@ -320,6 +348,14 @@ def scrapePlays():
 		teamNameList.append('CSU Pueblo')
 	if int(team) == 483:
 		teamNameList.append('Nicholls')
+	if int(team) == 30028:
+		teamNameList.append('UT Tyler')
+	if int(team) == 30199:
+		teamNameList.append('CUI')
+	if int(team) == 30181:
+		teamNameList.append('UVA Wise')
+	if int(team) == 1318:
+		teamNameList.append('LIU Post')
 
 
 	## Get team roster
@@ -843,6 +879,16 @@ def about():
 @app.route('/faq')
 def faq():
 	return render_template('faq.html')
+
+@app.route('/teamList')
+def teamList():
+	return render_template('teamList.html', data = jsonDump(list(db.engine.execute('SELECT * FROM TEAM_DIM WHERE ACTIVE_RECORD = 1;'))))
+
+@app.route('/admin')
+@login_required
+@admin_required()
+def admin():
+	return render_template('admin.html')
 
 @app.route('/editPlays')
 @login_required
