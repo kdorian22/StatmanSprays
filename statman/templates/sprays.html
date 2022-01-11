@@ -110,6 +110,12 @@ th.plays{
   color: slategray;
 }
 
+{% if current_user.is_authenticated and current_user.ADMIN == 1 %}
+#teamName:hover{
+  cursor: pointer
+}
+{% endif %}
+
 
 
 #printAll:hover{
@@ -121,7 +127,7 @@ th.plays{
 }
 #printAllDiv{
   position: absolute;
-  border: 1px solid rgb(254, 246, 235);
+  /* border: 1px solid rgb(254, 246, 235); */
   padding: 2px;
   top: 3px;
   font-size: 14px;
@@ -1527,6 +1533,11 @@ th.plays{
         .attr('transform', `translate(${(parseFloat(width)+12)/2}, ${(height-50)/2})`)
 }
 
+{% if current_user.is_authenticated and current_user.ADMIN == 1 %}
+$('#teamName').click(function(){
+  window.open(`{{url_for('editPlays')}}?team=${team}&year=${$('.selectedSpan').text().replace(/\s+/g,'')}`)
+})
+{% endif %}
 </script>
 
 {% endblock %}

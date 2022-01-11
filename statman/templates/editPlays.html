@@ -10,7 +10,9 @@
   <div hidden class="use banner">  </div>
   <div id = body>
   <span  data-key = '{{key}}' data-col = ros data-year = '{{year}}' class = upd id = updateRoster> Update Roster </span>
-    <span  data-key = '{{key}}' data-col = pbpT data-year = '{{year}}' class = upd id = updatePlays> Update Plays </span>
+  <span  data-key = '{{key}}' data-col = pbpT data-year = '{{year}}' class = upd id = updatePlays> Update Plays </span><br>
+  <span id = editFilter><input id =  start type="date"/> - <input id =  end type="date"></span>
+  <span id = search><input id =  searchBatter type="text" placeholder="Find Batter..."></span>
   <table id = playTable>
     <tr class = head>
       <th class = 'head'> DATE </th>
@@ -29,14 +31,32 @@
 
 <style>
 .upd{
-  font-size: 30px;
-  margin-bottom: 5px;
+  font-size: 15px;
   cursor: pointer;
-  margin-right: 20px
+  margin-right: 20px;
+  padding: 3px;
+  border: 1px solid black;
+  background-color: white;
+  border-radius: 3px;
 }
 .upd:hover{
   text-decoration: underline;
 }
+
+#search{
+  float: right;
+}
+
+#editFilter input{
+  font-size: 11px
+}
+
+#editFilter{
+  margin-top: 3px;
+  clear: both;
+  float: left;
+}
+
 #playTable th{
   background-color: slategray;
   color: rgb(254, 246, 235);
@@ -55,10 +75,13 @@
 }
 #playTable tr{
   background-color: rgb(254, 246, 235);
-  cursor: pointer;
 }
 
-#playTable tr:hover{
+.act, .inact{
+  cursor: pointer
+}
+
+#playTable .tr:hover{
   border: 2px solid black
 }
 
@@ -72,6 +95,7 @@
   width: 100%;
   box-shadow: 0px 0px 10px slategray;
   display: table;
+  margin-top: 27px;
 
 }
 
@@ -136,57 +160,70 @@ textarea{
 
 <script>
 
-    const plays = {{playsJS|safe}}
+    var plays = {{playsJS|safe}}
     const cols = ['DATE_KEY', 'TEAM_NAME', 'NAME', 'DESCRIPTION', 'LOCATION', 'OUTCOME']
 
-
+    allPlays = plays.sort(function(a, b){ return d3.descending(a.BATTER_PLAYER_KEY, b.BATTER_PLAYER_KEY) || d3.ascending(a.DATE_KEY, b.DATE_KEY)})
+    startDate = d3.min(allPlays, function(d){ return  String(d.DATE_KEY).substring(0,4)+'-'+String(d.DATE_KEY).substring(4,6)+'-'+String(d.DATE_KEY).substring(6,8) })
+    endDate = d3.max(allPlays, function(d){ return  String(d.DATE_KEY).substring(0,4)+'-'+String(d.DATE_KEY).substring(4,6)+'-'+String(d.DATE_KEY).substring(6,8) })
+    $('#start').val(startDate)
+    $('#end').val(endDate)
+    allPlays = allPlays.filter(function(d){ return d.NAME != null})
+    curPlays = allPlays
     table = d3.select('tbody')
 
-    rows = table.selectAll('.tr')
-    .data(plays)
-    .enter().append('tr')
+    function addPlays(plays){
+
+      d3.selectAll('#playTable .tr').remove()
+
+      rows = table.selectAll('.tr')
+      .data(plays)
+      .enter().append('tr').classed('tr', true)
 
 
 
-    rows.append('td')
-    .html(function(d){ return d.DATE_KEY})
+      rows.append('td')
+      .html(function(d){ return d.DATE_KEY})
 
-    rows.append('td')
-    .html(function(d){ return d.TEAM_NAME})
+      rows.append('td')
+      .html(function(d){ return d.TEAM_NAME})
 
-    rows.append('td')
-    .html(function(d){ return d.NAME})
+      rows.append('td')
+      .html(function(d){ return d.NAME})
 
-    rows.append('td')
-    .html(function(d){ return d.DESCRIPTION})
-    .attr('data-id', function(d){ return d.PLAY_ID})
-    .attr('class', function(d){ return d.ACTIVE_RECORD == 1 ? 'act' : 'inact'})
+      rows.append('td')
+      .html(function(d){ return d.DESCRIPTION})
+      .attr('data-id', function(d){ return d.PLAY_ID})
+      .attr('class', function(d){ return d.ACTIVE_RECORD == 1 ? 'act' : 'inact'})
 
-    rows.append('td')
-    .html(function(d){ return `<textarea data-id = ${d.PLAY_ID} class = 'loc'> ${d.LOCATION} </textarea>`})
+      rows.append('td')
+      .html(function(d){ return `<textarea data-id = ${d.PLAY_ID} class = 'loc'> ${d.LOCATION} </textarea>`})
 
-    rows.append('td')
-    .html(function(d){ return d.OUTCOME})
+      rows.append('td')
+      .html(function(d){ return d.OUTCOME})
 
 
-    $('.act, .inact').click(function(){
-      if($(this).hasClass('act')){
-        $(this).addClass('inact')
-        $(this).removeClass('act')
-      }else{
-        $(this).addClass('act')
-        $(this).removeClass('inact')
-      }
-      $.get(`{{url_for('PBPWrite')}}?id=${$(this).data('id')}&col=ar`, function(d){
-          return d
+      $('.act, .inact').click(function(){
+        if($(this).hasClass('act')){
+          $(this).addClass('inact')
+          $(this).removeClass('act')
+        }else{
+          $(this).addClass('act')
+          $(this).removeClass('inact')
+        }
+        $.get(`{{url_for('PBPWrite')}}?id=${$(this).data('id')}&col=ar`, function(d){
+            return d
+        })
       })
-    })
 
-    $('.loc').on('keyup', function(){
-      $.get(`{{url_for('PBPWrite')}}?id=${$(this).data('id')}&col=loc&val=${$(this).val()}`, function(d){
-          return d
+      $('.loc').on('keyup', function(){
+        $.get(`{{url_for('PBPWrite')}}?id=${$(this).data('id')}&col=loc&val=${$(this).val()}`, function(d){
+            return d
+        })
       })
-    })
+    }
+    addPlays(curPlays)
+
 
     $('.upd').click(function(d){
       $('#body').css("pointer-events", "none")
@@ -245,6 +282,40 @@ textarea{
         alert('Good Thinking.')
       }
     })
+
+    $('#searchBatter').keyup(function(){
+      var searchStr = $(this).val()
+      if(searchStr.length > 2){
+        let re = new RegExp(`${searchStr}`, 'i')
+        var match = []
+        for(pl of curPlays){
+          if(pl.NAME.search(re) > -1){
+              match.push(pl.BATTER_PLAYER_KEY)
+            }
+        }
+
+        curPlays = curPlays.filter(function(d){
+          return match.indexOf(d.BATTER_PLAYER_KEY) > -1
+        })
+        filterDate()
+        addPlays(curPlays)
+      }else{
+        curPlays = allPlays
+        filterDate()
+        addPlays(curPlays)
+      }
+    })
+
+    $('#end, #start').change(function(){
+      filterDate()
+      addPlays(curPlays)
+    })
+
+    function filterDate(){
+      newStart = $('#start').val().replace('-', '').replace('-', '')
+      newEnd = $('#end').val().replace('-', '').replace('-', '')
+      curPlays = curPlays.filter(function(d){ return d.DATE_KEY > parseInt(newStart) && d.DATE_KEY < parseInt(newEnd)})
+    }
 </script>
 
 <script >

@@ -43,7 +43,7 @@ statCodes = {
 		 'field':'14762'
 		 }
 
-locations = ['1b', '2b', '3b', ' ss', ' p ', ' p.', ' p,',' p;', ' c ', ' c.', ' c,', ' c;', 'catcher', 'pitcher',
+locations = ['1b', '2b', '3b', ' ss', ' p ', ' p.', ' p,',' p;', ' p:', ' c ', ' c.', ' c,', ' c;', 'catcher', 'pitcher',
 ' lf', ' rf', ' cf', 'shortstop', 'center',
 'lcf', 'rcf',
 '1b line', '3b line', 'left', 'right',
@@ -896,12 +896,12 @@ def admin():
 def editPlays():
 	team_key = int(request.values.get('team', '755'))
 	year = int(request.values.get('year', years[0]))
-
+	print(list(db.engine.execute(f"""SELECT * FROM GAME_DIM WHERE AWAY_TEAM_KEY = {team_key} and YEAR = {year}""")))
 	playsORG = list(db.engine.execute(f"""SELECT p.FULL_NAME NAME, t.NAME TEAM_NAME, pbp.* FROM PLAY_BY_PLAY pbp
  	LEFT JOIN PLAYER_DIM p on p.PLAYER_KEY = pbp.BATTER_PLAYER_KEY
  	LEFT JOIN TEAM_DIM t on t.TEAM_KEY = pbp.BATTER_TEAM_KEY
 	WHERE t.TEAM_KEY = {team_key} and pbp.YEAR = {year}
- 	ORDER BY p.PLAYER_KEY
+ 	ORDER BY pbp.DATE_KEY, pbp.BATTER_PLAYER_KEY
  	 """))
 	name = ''
 	if len(playsORG) > 0:
