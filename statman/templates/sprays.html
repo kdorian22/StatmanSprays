@@ -270,6 +270,13 @@ th.plays{
   line-height: 4vw;
 }
 
+#playTable td, #playTable th{
+  padding: 5px;
+  font-size: 2.4vw;
+  height: 2.5vw;
+  line-height: 2.5vw;
+}
+
 
 #roster tr{
   padding: 5px;
@@ -334,6 +341,12 @@ th.plays{
   margin-top: 5px
 }
 
+#playDiv{
+  max-height: 40vw;
+  margin-top: 5px;
+  margin-bottom: 5px;
+  width: 100%;
+}
 
 {% endif %}
 
@@ -901,6 +914,9 @@ th.plays{
           $("#playTable").empty()
           $('#playDiv').hide()
           if(wedgePlays.length > 0){
+            {% if current_user.is_authenticated and current_user.ADMIN == 1 %}
+              $('#playDiv').show()
+            {% endif %}
             d3.select('#playTable')
             .selectAll('tr.play')
             .data(wedgePlays)
@@ -1041,7 +1057,9 @@ th.plays{
           $("#playTable").empty()
           $('#playDiv').hide()
           if(wedgePlays.length > 0){
-            // $('#playDiv').show()
+            {% if current_user.is_authenticated and current_user.ADMIN == 1 %}
+              $('#playDiv').show()
+            {% endif %}
             d3.select('#playTable')
             .selectAll('tr.play')
             .data(wedgePlays)
@@ -1182,7 +1200,9 @@ th.plays{
       .style('font-size', `${20*height/450}px`)
       .style('text-anchor', 'end')
 
-      // $('#playDiv').show()
+      {% if current_user.is_authenticated and current_user.ADMIN == 1 %}
+        $('#playDiv').show()
+      {% endif %}
       d3.select('#playTable')
       .selectAll('tr.play')
       .data(plays.sort(function(a, b){
