@@ -5,95 +5,16 @@ from flask_mobility import Mobility
 from flask_mobility.decorators import mobile_template
 from flask_login import login_required, current_user, login_user, logout_user
 from werkzeug.security import generate_password_hash, check_password_hash
-from functools import wraps
-import requests
-import pandas as pd
-from bs4 import BeautifulSoup
-import numpy as np
-import re
-from datetime import datetime
-from statman import app
+from statman import *
 from statman.models import *
-from fuzzywuzzy import fuzz
-import Levenshtein as lev
-import gc
-import time
-import itertools
+from statman.helper import *
+
 
 jsglue = JSGlue(app)
 
 Mobility(app)
 
 app.config['PDF_FOLDER'] = 'static/pdf/'
-
-yearCodes = {
-		 '2021': '15580',
-		 '2020': '15204',
-		 '2019': '14781',
-		 '2018': '12973',
-		 '2017': '12560',
-		 '2016': '12360'
-		}
-
-years = ['2021', '2020', '2019', '2018']
-
-statCodes = {
-		 'hit': '14760',
-		 'pitch':'14761',
-		 'field':'14762'
-		 }
-
-locations = ['1b', '2b', '3b', ' ss', ' p ', ' p.', ' p,',' p;', ' p:', ' c ', ' c.', ' c,', ' c;', 'catcher', 'pitcher',
-' lf', ' rf', ' cf', 'shortstop', 'center',
-'lcf', 'rcf',
-'1b line', '3b line', 'left', 'right',
-]
-
-locMult = ['through the left side', 'through the right side', 'up the middle', 'left field line',
-'right field line', 'left center', 'right center', 'third base', 'first base', 'second base',
-'rf line', 'lf line']
-
-outcomes = ['grounded','muffed','error','line','lined','flied','fly','force','pop','single','double','triple','home','choice','foul','bunt', 'out at']
-outcomes2 = [' singled',' doubled',' tripled',' homer',' homered', ' reached', ' grounded',' muffed',' error',' line',' lined',' flied',' fly',' force',' pop',' single',' double',' triple',' home',' choice',' foul',' bunt',' bunted', ' out', ' out at']
-
-outDict = {
- 'grounded': 'GB',
- 'muffed': 'GB',
- 'force': 'GB',
- 'choice': 'GB',
- 'bunt': 'GB',
- 'out at': 'GB',
- 'line': 'LD',
- 'lined': 'LD',
- 'single': '1B',
- 'double': '2B',
- 'triple': '3B',
- 'home': 'HR',
- 'flied': 'FB',
- 'fly': 'FB',
- 'pop': 'FB',
- 'foul': 'FB'
- }
-
-
-
-teamNameDict = {
-	'Appalachian St.': 'App State',
-	'CWRU': 'Case Western',
-	'IIT': 'Illinois Tech',
-	'Sam Houston': 'Sam Houston St.',
-	'CSU Pueblo': 'Colorado St.-Pueblo',
-	'USC Aiken': 'S.C. Aiken',
-	'Nicholls': 'Nicholls St.',
-	'UT Tyler': 'Texas-Tyler',
-	'CUI': 'Concordia (CA)',
-	'UVA Wise': 'UVA-Wise',
-	'LIU Post': 'Post'
-}
-
-unwanted = ['wild pitch', 'passed ball', ' balk.', ' balk ', 'picked off', 'pickoff', 'caught stealing', ' struck ', ' walked ', ' walked.', ' stole ']
-mistakes = ['advanced', 'advances', 'advnace', 'scored', 'scores', 'score']
-
 
 def admin_required():
 	def wrapper(fn):
@@ -131,26 +52,6 @@ def exists(text):
 	else:
 		return text
 
-def jsonDump(data):
-	return json.dumps([dict(d) for d in data])
-
-def scrapeTeams():
-	url='https://stats.ncaa.org/game_upload/team_codes'
-	page = requests.get(url, headers = {"User-Agent": "Mozilla/5.0"})
-	html = page.content
-	soup = BeautifulSoup(html, 'lxml')
-	table = soup.find('table')
-	rows = []
-	for row in table.findAll('tr'):
-		cells = []
-		for cell in row.findAll('td'):
-			text = cell.text.replace("\n", '')
-			text = cell.text.replace('nbsp&', '')
-			cells.append(text)
-		rows.append(cells)
-	teamList = rows[2:]
-	return teamList
-
 @app.route('/')
 def index():
 	data = db.engine.execute(f"""SELECT p.TEAM_KEY, NAME, COUNT(*) FROM PLAYER_DIM p
@@ -161,7 +62,6 @@ def index():
 	db.engine.execute("""SELECT p.*, FULL_NAME FROM PLAY_BY_PLAY p
 	 JOIN PLAYER_DIM d on d.PLAYER_KEY = p.BATTER_PLAYER_KEY
 	 WHERE d.ACTIVE_RECORD = 1 AND BATTER_TEAM_KEY = 2 and p.ACTIVE_RECORD = 1 Limit 200""")
-
 	teams = []
 	for d in data:
 		teams.append({'NAME': d.NAME, 'TEAM_KEY': d.TEAM_KEY})
