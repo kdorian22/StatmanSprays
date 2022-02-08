@@ -14,6 +14,7 @@ import itertools
 import json
 
 divDict = {
+'2022': ['17760', '17761', '17762'],
 '2021': ['17500', '17501', '17502'],
 '2020': ['17126', '17127', '17128'],
 '2019': ['16800', '16801', '16802'],
@@ -21,6 +22,7 @@ divDict = {
 }
 
 yearCodes = {
+		 '2022': '15860',
 		 '2021': '15580',
 		 '2020': '15204',
 		 '2019': '14781',
@@ -29,7 +31,7 @@ yearCodes = {
 		 '2016': '12360'
 		}
 
-years = ['2021', '2020', '2019', '2018']
+years = ['2022', '2021', '2020', '2019', '2018']
 
 statCodes = {
 		 'hit': '14760',
@@ -70,20 +72,6 @@ outDict = {
  }
 
 
-teamNameDict = {
-	'Appalachian St.': 'App State',
-	'CWRU': 'Case Western',
-	'IIT': 'Illinois Tech',
-	'Sam Houston': 'Sam Houston St.',
-	'CSU Pueblo': 'Colorado St.-Pueblo',
-	'USC Aiken': 'S.C. Aiken',
-	'Nicholls': 'Nicholls St.',
-	'UT Tyler': 'Texas-Tyler',
-	'CUI': 'Concordia (CA)',
-	'UVA Wise': 'UVA-Wise',
-	'LIU Post': 'Post'
-}
-
 unwanted = ['wild pitch', 'passed ball', ' balk.', ' balk ', 'picked off', 'pickoff', 'caught stealing', ' struck ', ' walked ', ' walked.', ' stole ']
 mistakes = ['advanced', 'advances', 'advnace', 'scored', 'scores', 'score']
 
@@ -100,7 +88,7 @@ def scrapeTeams():
 			text = cell.text.replace("\n", '')
 			text = cell.text.replace('nbsp&', '')
 			cells.append(text)
-		rows.append(cells)
+			rows.append(cells)
 	teamList = rows[2:]
 	return teamList
 
@@ -120,6 +108,7 @@ def dist(a, b):
 		return False
 
 
+
 def calcDist(a, b):
 	if len(a) > 3 and len(b) > 3:
 		dist = fuzz.ratio(a.lower(),b.lower())/100
@@ -136,27 +125,27 @@ def partialDist(a, b):
 	return dist
 
 
-def getRoster(team, year):
-    url=f'https://stats.ncaa.org/team/{team}/roster/{yearCodes[str(year)]}'
-    soup = BeautifulSoup(requests.get(url, headers = {"User-Agent": "Mozilla/5.0"}).content, 'lxml')
-    table = soup.find('tbody')
-    rosterToAdd = []
-    if table is not None:
-        for row in table.findAll('tr'):
-            cells = []
-            for cell in row.findAll('td'):
-                text = cell.text.replace("\n", '')
-                text = cell.text.replace('nbsp&', '')
-                cells.append(text)
-            rosterToAdd.append(player_dim(cells[0], cells[1].replace('â€™',"'"), cells[2], cells[3], year, team))
-    return rosterToAdd
+def getRoster(team, year, player_dim):
+	url=f'https://stats.ncaa.org/team/{team}/roster/{yearCodes[str(year)]}'
+	soup = BeautifulSoup(requests.get(url, headers = {"User-Agent": "Mozilla/5.0"}).content, 'lxml')
+	table = soup.find('tbody')
+	rosterToAdd = []
+	if table is not None:
+		for row in table.findAll('tr'):
+			cells = []
+			for cell in row.findAll('td'):
+				text = cell.text.replace("\n", '')
+				text = cell.text.replace('nbsp&', '')
+				cells.append(text)
+			rosterToAdd.append(player_dim(cells[0], cells[1].replace('â€™',"'"), cells[2], cells[4] if year == '2022' else cells[3], year, team))
+	return rosterToAdd
 
 
-def scrapeRoster(team, year):
+def scrapeRoster(team, year, db, player_dim):
 	try:
 		existingRoster = player_dim.query.filter_by(YEAR=str(year)).filter_by(TEAM_KEY=team).all()
 		players = [[x.FULL_NAME, x.NUMBER, x.CLASS] for x in existingRoster]
-		rosterToAdd = getRoster(team,year)
+		rosterToAdd = getRoster(team,year,player_dim)
 		for player in rosterToAdd:
 			if [player.FULL_NAME, player.NUMBER, player.CLASS] not in players:
 				db.session.merge(player)
@@ -167,6 +156,7 @@ def scrapeRoster(team, year):
 
 		return players
 	except:
+		print(f'error encountered on {team} roster scrape')
 		return []
 
 # gameParser takes in several parameters pertaining to the game, search team, and alternate team name list
@@ -350,85 +340,87 @@ def jsonDump(data):
 
 # Get list of box score links for a give date/division
 def getBoxLinks(div, year, month, day):
-    direct = []
-    try:
-        url = f"https://stats.ncaa.org/contests/scoreboards?season_division_id={div}&game_date={month}%2F{day}%2F{year}"
-        soup = BeautifulSoup(requests.get(url, headers = {"User-Agent": "Mozilla/5.0"}).content, 'html.parser')
-        for link in soup.findAll('a', attrs={'href': re.compile("^/contests"), 'target': re.compile("box")}):
-            direct.append(link.get('href'))
-    except:
-        direct = []
-    return direct
+	direct = []
+	try:
+		url = f"https://stats.ncaa.org/contests/scoreboards?season_division_id={div}&game_date={month}%2F{day}%2F{year}"
+		soup = BeautifulSoup(requests.get(url, headers = {"User-Agent": "Mozilla/5.0"}).content, 'html.parser')
+		pageDate = soup.select('input#game_date')[0]['value'].split('/')
+		compDate = [month, day, year]
+		if pageDate == pageDate:
+			for link in soup.findAll('a', attrs={'href': re.compile("^/contests"), 'target': re.compile("box")}):
+				direct.append(link.get('href'))
+	except:
+		direct = []
+	return direct
 
 # Get anchor linking to the PBP from box score link (available in GAME_DIM)
 def getPBPElement(box):
-    try:
-        boxLink = f"https://stats.ncaa.org{box}"
-        soup = BeautifulSoup(requests.get(boxLink, headers = {"User-Agent": "Mozilla/5.0"}).content, 'lxml')
-        element = soup.find('a', attrs={'href': re.compile("/play_by_play")})
-    except:
-        element = None
-    return element
+	try:
+		boxLink = f"https://stats.ncaa.org{box}"
+		soup = BeautifulSoup(requests.get(boxLink, headers = {"User-Agent": "Mozilla/5.0"}).content, 'lxml')
+		element = soup.find('a', attrs={'href': re.compile("/play_by_play")})
+	except:
+		element = None
+	return element
 
 
 def getRosterNames(roster):
-    players = {}
-    ## For each guy on the roster, list the different ways his name can be stored and return as dict
-    for r in roster:
-        try:
-            names = []
-            full = r.FULL_NAME.split(', ')
-            if len(full) > 1 and '' not in full:
-                fullNS = full
-                full = [f.replace(' ','') for f in full]
-                last = fullNS[0].split(' ')
-                names.append(full[1] + ' ' + full[0])
-                names.append(full[1][0] + '. ' + full[0])
-                names.append(full[1][0] + '.' + full[0])
-                names.append(full[1][0] + ' ' + full[0])
-                names.append(full[1][0] + full[0])
-                names.append(full[0] + ', ' + full[1][0]+'.')
-                names.append(full[0] + ', ' + full[1][0])
-                names.append(full[0] + ',' + full[1][0]+'.')
-                names.append(full[0] + ',' + full[1][0])
-                names.append(full[1][0:2] + '. ' + full[0])
-                names.append(full[1][0:3] + '. ' + full[0])
-                names.append(full[0] + ', ' + full[1][0:2]+'.')
-                names.append(full[0] + ', ' + full[1][0:3]+'.')
-                names.append(full[0] + ' ' + full[1][0])
-                names.append(r.FULL_NAME)
-                names.append(full[0])
-                if "'" in r.FULL_NAME:
-                    names.append(r.FULL_NAME.replace("'",'').replace("'",''))
-                    names.append(full[0].replace("'",'').replace("'",''))
-                if len(last) == 2:
-                    names.append(last[0][0] + '. ' + last[1])
-                names = names + [x.upper() for x in names]
-            else:
-                names = []
-        except:
-            names = []
-        players[r.PLAYER_KEY] = names
-    return players
+	players = {}
+	## For each guy on the roster, list the different ways his name can be stored and return as dict
+	for r in roster:
+		try:
+			names = []
+			full = r.FULL_NAME.split(', ')
+			if len(full) > 1 and '' not in full:
+				fullNS = full
+				full = [f.replace(' ','') for f in full]
+				last = fullNS[0].split(' ')
+				names.append(full[1] + ' ' + full[0])
+				names.append(full[1][0] + '. ' + full[0])
+				names.append(full[1][0] + '.' + full[0])
+				names.append(full[1][0] + ' ' + full[0])
+				names.append(full[1][0] + full[0])
+				names.append(full[0] + ', ' + full[1][0]+'.')
+				names.append(full[0] + ', ' + full[1][0])
+				names.append(full[0] + ',' + full[1][0]+'.')
+				names.append(full[0] + ',' + full[1][0])
+				names.append(full[1][0:2] + '. ' + full[0])
+				names.append(full[1][0:3] + '. ' + full[0])
+				names.append(full[0] + ', ' + full[1][0:2]+'.')
+				names.append(full[0] + ', ' + full[1][0:3]+'.')
+				names.append(full[0] + ' ' + full[1][0])
+				names.append(r.FULL_NAME)
+				names.append(full[0])
+				if "'" in r.FULL_NAME:
+					names.append(r.FULL_NAME.replace("'",'').replace("'",''))
+					names.append(full[0].replace("'",'').replace("'",''))
+				if len(last) == 2:
+					names.append(last[0][0] + '. ' + last[1])
+					names = names + [x.upper() for x in names]
+			else:
+				names = []
+		except:
+			names = []
+		players[r.PLAYER_KEY] = names
+	return players
 
 
 def getMatchup(pbp, altNames, altTeamNameList):
-    if 1 == 1:
-        pbpSoup = BeautifulSoup(requests.get(pbp, headers = {"User-Agent": "Mozilla/5.0"}).content, 'lxml')
-        teams = []
+	try:
+		pbpSoup = BeautifulSoup(requests.get(pbp, headers = {"User-Agent": "Mozilla/5.0"}).content, 'lxml')
+		teams = []
 
-        for i, td in enumerate(pbpSoup.find('table', {'class': 'mytable', 'width': '1000px'}).find('tr', {'class': 'grey_heading'}).findAll('td', {'width': '40%'})):
-            if td.text != 'Score':
-                if td.text in altNames:
-                    listedName = [x.NAME for x in altTeamNameList if td.text in x.ALT_NAMES][0]
-                    teams.append(listedName)
-                else:
-                    teams.append(td.text)
-    # except:
-    #     print('her')
-    #     teams = []
+		for i, td in enumerate(pbpSoup.find('table', {'class': 'mytable', 'width': '1000px'}).find('tr', {'class': 'grey_heading'}).findAll('td', {'width': '40%'})):
+			if td.text != 'Score':
+				if td.text in altNames:
+					listedName = [x.NAME for x in altTeamNameList if td.text in x.ALT_NAMES][0]
+					teams.append(listedName)
+				else:
+					teams.append(td.text)
+	except:
+		teams = []
 
-    return teams, pbpSoup
+	return teams, pbpSoup
 
 def updateHitterStats(year, team, hitter_stats, db):
 	url=f'https://stats.ncaa.org/team/{team}/stats/{yearCodes[str(year)]}'
@@ -508,12 +500,12 @@ def updateHitterStats(year, team, hitter_stats, db):
 			try:
 				if name != lastName and num != lastNum:
 					pass
-					# db.session.merge(player)
+					db.session.merge(player)
 			except:
 				continue
 			lastName = player.FULL_NAME
 			lastNum = player.NUMBER
-	# db.session.commit()
+	db.session.commit()
 	return True
 
 def getScoreVal(val):
@@ -540,14 +532,14 @@ def getLink(row):
 	except:
 		return None
 
-def getTeamKey(teamName, team_dim):
+def getTeamKey(teamName, team_dim, altNames, altTeamNameList):
 	if teamName is not None:
 		try:
 			teamKey = team_dim.query.filter_by(NAME=teamName).first()
 			if teamKey is not None:
 				return teamKey.TEAM_KEY
-			elif teamName in teamNameDict:
-				teamKey = team_dim.query.filter_by(NAME=teamNameDict[teamName]).first()
+			elif teamName in altNames:
+				teamKey = [x.TEAM_KEY for x in altTeamNameList if teamName in x.ALT_NAMES][0]
 				if teamKey is not None:
 					return teamKey.TEAM_KEY
 		except:
@@ -556,13 +548,12 @@ def getTeamKey(teamName, team_dim):
 		return None
 
 
-def getSchedule(year, month, day, div, divList, game_dim, team_dim):
+def getSchedule(year, month, day, div, divList, game_dim, team_dim, altNames, altTeamNameList, db):
 	games = []
 	url = f"https://stats.ncaa.org/contests/scoreboards?season_division_id={div}&game_date={month}%2F{day}%2F{year}"
 	soup = BeautifulSoup(requests.get(url, headers = {"User-Agent": "Mozilla/5.0"}).content, 'lxml')
 	pageDate = soup.select('input#game_date')[0]['value'].split('/')
 	compDate = [month, day, year]
-	print(month, day, year)
 	dbDate = year+month+day
 	if compDate == pageDate:
 		print(f"Yes D{divList.index(div)+1} Games On {month+'/'+day+'/'+year}")
@@ -571,7 +562,7 @@ def getSchedule(year, month, day, div, divList, game_dim, team_dim):
 		rows = soup.select('tbody > tr')
 		print(f"{len(gameDates)} D{divList.index(div)+1} Games On {month+'/'+day+'/'+year}")
 		for i in range(0, len(gameDates)):
-			if 1 == 1:
+			try:
 				rowNum = i
 				rows[rowNum*3].select('td a.skipMask')
 				away_team = getTeamName(rows[rowNum*3].select('td a.skipMask'))
@@ -579,13 +570,14 @@ def getSchedule(year, month, day, div, divList, game_dim, team_dim):
 				home_team = getTeamName(rows[rowNum*3+1].select('td a.skipMask'))
 				home_score = getScoreVal(rows[rowNum*3+1].select('td.totalcol'))
 				boxLink = getLink(rows[rowNum*3+2])
-				home_key = getTeamKey(home_team, team_dim)
-				away_key = getTeamKey(away_team, team_dim)
+				home_key = getTeamKey(home_team, team_dim, altNames, altTeamNameList)
+				away_key = getTeamKey(away_team, team_dim, altNames, altTeamNameList)
 				newGame = game_dim(dbDate, year, home_key, home_team, away_key, away_team, home_score, away_score, boxLink)
-				games.append(newGame)
-			else:
+				db.session.add(newGame)
+			except:
 				print(f'Broke on {dbDate} D{divList.index(div)+1}')
 				continue
 	else:
 		print(f"No D{divList.index(div)+1} Games On {month+'/'+day+'/'+year}")
-	return games
+	db.session.commit()
+	return True
