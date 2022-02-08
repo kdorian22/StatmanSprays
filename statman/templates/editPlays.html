@@ -168,7 +168,7 @@ textarea{
     endDate = d3.max(allPlays, function(d){ return  String(d.DATE_KEY).substring(0,4)+'-'+String(d.DATE_KEY).substring(4,6)+'-'+String(d.DATE_KEY).substring(6,8) })
     $('#start').val(startDate)
     $('#end').val(endDate)
-    allPlays = allPlays.filter(function(d){ return d.NAME != null})
+    // allPlays = allPlays.filter(function(d){ return d.NAME != null})
     curPlays = allPlays
     table = d3.select('tbody')
 
