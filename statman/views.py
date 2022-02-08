@@ -38,6 +38,7 @@ def admin_required():
 def get_current_user():
 	g.user = current_user
 
+
 @app.template_filter()
 def date(text):
 	text = str(text)
@@ -680,6 +681,12 @@ def dataDownload():
 @app.route('/sprays', methods = ['POST', 'GET'])
 def sprays():
 	team = request.values.get('team', '')
+
+	years2 = ['2021', '2020', '2019', '2018']
+	if current_user.is_authenticated:
+		if current_user.NAME in ['Statman Sprays']:
+			years2 = ['2022', '2021', '2020', '2019', '2018']
+
 	if team != '':
 		team = int(team)
 	data = db.engine.execute(f"""SELECT p.TEAM_KEY, NAME, COUNT(*) FROM PLAYER_DIM p
@@ -694,7 +701,7 @@ def sprays():
 	rosters = []
 	row = team_dim.query.filter_by(TEAM_KEY=team).first()
 	if team == '' or row is None:
-		return render_template('sprays.html', team = team, stats = jsonDump(stats), plays = jsonDump(plays), rosters = jsonDump(rosters), data = jsonDump(teams), years = years)
+		return render_template('sprays.html', team = team, stats = jsonDump(stats), plays = jsonDump(plays), rosters = jsonDump(rosters), data = jsonDump(teams), years = years2)
 
 	num = row.VISITS
 	db.engine.execute(f"""UPDATE TEAM_DIM SET VISITS = {num+1} WHERE TEAM_KEY = {team}""")
@@ -702,7 +709,7 @@ def sprays():
 	plays = list(db.engine.execute(f"""SELECT * FROM PLAY_BY_PLAY WHERE BATTER_TEAM_KEY = {team} and ACTIVE_RECORD = 1"""))
 	rosters = list(db.engine.execute(f"""SELECT * FROM PLAYER_DIM WHERE TEAM_KEY = {team} AND ACTIVE_RECORD = 1 ORDER BY FULL_NAME"""))
 	stats = list(db.engine.execute(f"""SELECT * FROM HITTER_STATS WHERE TEAM_KEY = {team} AND ACTIVE_RECORD = 1"""))
-	return render_template('sprays.html', team = team, stats = jsonDump(stats), plays = jsonDump(plays), rosters = jsonDump(rosters), data = json.dumps(teams), years = years)
+	return render_template('sprays.html', team = team, stats = jsonDump(stats), plays = jsonDump(plays), rosters = jsonDump(rosters), data = json.dumps(teams), years = years2)
 
 
 @app.route('/printSprays', methods = ['POST', 'GET'])
