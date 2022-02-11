@@ -682,10 +682,6 @@ def dataDownload():
 def sprays():
 	team = request.values.get('team', '')
 
-	years2 = ['2021', '2020', '2019', '2018']
-	if current_user.is_authenticated:
-		if current_user.NAME in ['Statman Sprays']:
-			years2 = ['2022', '2021', '2020', '2019', '2018']
 
 	if team != '':
 		team = int(team)
@@ -709,7 +705,7 @@ def sprays():
 	plays = list(db.engine.execute(f"""SELECT * FROM PLAY_BY_PLAY WHERE BATTER_TEAM_KEY = {team} and ACTIVE_RECORD = 1"""))
 	rosters = list(db.engine.execute(f"""SELECT * FROM PLAYER_DIM WHERE TEAM_KEY = {team} AND ACTIVE_RECORD = 1 ORDER BY FULL_NAME"""))
 	stats = list(db.engine.execute(f"""SELECT * FROM HITTER_STATS WHERE TEAM_KEY = {team} AND ACTIVE_RECORD = 1"""))
-	return render_template('sprays.html', team = team, stats = jsonDump(stats), plays = jsonDump(plays), rosters = jsonDump(rosters), data = json.dumps(teams), years = years2)
+	return render_template('sprays.html', team = team, stats = jsonDump(stats), plays = jsonDump(plays), rosters = jsonDump(rosters), data = json.dumps(teams), years = years)
 
 
 @app.route('/printSprays', methods = ['POST', 'GET'])
