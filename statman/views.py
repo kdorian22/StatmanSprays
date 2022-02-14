@@ -126,6 +126,7 @@ def updateTeamDim():
 	update = request.values.get('update', 'u')
 	teamList = list(db.engine.execute("""SELECT TEAM_KEY, NAME, ALT_NAMES FROM TEAM_DIM"""))
 	newTeams = scrapeTeams()
+
 	if update == 'd':
 		team_dim.query.delete()
 		db.session.commit()
@@ -135,12 +136,12 @@ def updateTeamDim():
 				db.session.add(ele)
 		except:
 			return {'result': 'upload failed'}
-
 	elif update == 'u':
 		for team in teamList:
 			key = team[0]
 			curName = team[1]
-			newName = [x[1] for x in newTeams if int(x[0]) == int(key)]
+			print(key, curName)
+			newName = [x[1] for x in newTeams[1:] if int(x[0]) == int(key)]
 			curAlts = str(team[2])
 			if curAlts == 'None':
 				curAltList = []
@@ -151,8 +152,8 @@ def updateTeamDim():
 			elif curName != newName[0] and newName[0] not in curAltList:
 				curAltList.append(newName[0])
 				db.engine.execute(f"""UPDATE TEAM_DIM SET ALT_NAMES = '{', '.join(curAltList)}' WHERE TEAM_KEY = {key}""")
-
 	db.session.commit()
+	
 	return render_template('teamList.html', data = jsonDump(list(db.engine.execute('SELECT * FROM TEAM_DIM WHERE ACTIVE_RECORD = 1;'))))
 
 

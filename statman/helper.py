@@ -86,7 +86,7 @@ def scrapeTeams():
 			text = cell.text.replace("\n", '')
 			text = cell.text.replace('nbsp&', '')
 			cells.append(text)
-			rows.append(cells)
+		rows.append(cells)
 	teamList = rows[2:]
 	return teamList
 
