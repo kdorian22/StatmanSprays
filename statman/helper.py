@@ -344,7 +344,7 @@ def getBoxLinks(div, year, month, day):
 		soup = BeautifulSoup(requests.get(url, headers = {"User-Agent": "Mozilla/5.0"}).content, 'html.parser')
 		pageDate = soup.select('input#game_date')[0]['value'].split('/')
 		compDate = [month, day, year]
-		if pageDate == pageDate:
+		if compDate == pageDate:
 			for link in soup.findAll('a', attrs={'href': re.compile("^/contests"), 'target': re.compile("box")}):
 				direct.append(link.get('href'))
 	except:
