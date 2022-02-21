@@ -153,7 +153,7 @@ def updateTeamDim():
 				curAltList.append(newName[0])
 				db.engine.execute(f"""UPDATE TEAM_DIM SET ALT_NAMES = '{', '.join(curAltList)}' WHERE TEAM_KEY = {key}""")
 	db.session.commit()
-	
+
 	return render_template('teamList.html', data = jsonDump(list(db.engine.execute('SELECT * FROM TEAM_DIM WHERE ACTIVE_RECORD = 1;'))))
 
 
@@ -698,7 +698,7 @@ def sprays():
 	rosters = []
 	row = team_dim.query.filter_by(TEAM_KEY=team).first()
 	if team == '' or row is None:
-		return render_template('sprays.html', team = team, stats = jsonDump(stats), plays = jsonDump(plays), rosters = jsonDump(rosters), data = jsonDump(teams), years = years2)
+		return render_template('sprays.html', team = team, stats = jsonDump(stats), plays = jsonDump(plays), rosters = jsonDump(rosters), data = jsonDump(teams), years = years)
 
 	num = row.VISITS
 	db.engine.execute(f"""UPDATE TEAM_DIM SET VISITS = {num+1} WHERE TEAM_KEY = {team}""")
