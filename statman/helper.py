@@ -36,9 +36,9 @@ yearCodes = {
 years = ['2023', '2022', '2021', '2020', '2019', '2018']
 
 statCodes = {
-		 'hit': '14760',
-		 'pitch':'14761',
-		 'field':'14762'
+		 'hit': '15000',
+		 'pitch':'15001',
+		 'field':'15002'
 		 }
 
 locations = ['1b', '2b', '3b', ' ss', ' p ', ' p.', ' p,',' p;', ' p:', ' c ', ' c.', ' c,', ' c;', 'catcher', 'pitcher',
