@@ -165,24 +165,9 @@ def scrapeRoster():
 	team = int(request.values.get('team','755'))
 	r = request.values.get('r', '')
 
-	def getRoster(team, year):
-		url=f'https://stats.ncaa.org/team/{team}/roster/{yearCodes[str(year)]}'
-		soup = BeautifulSoup(requests.get(url, headers = {"User-Agent": "Mozilla/5.0"}).content, 'lxml')
-		table = soup.find('tbody')
-		rosterToAdd = []
-		if table is not None:
-			for row in table.findAll('tr'):
-				cells = []
-				for cell in row.findAll('td'):
-					text = cell.text.replace("\n", '')
-					text = cell.text.replace('nbsp&', '')
-					cells.append(text)
-				rosterToAdd.append(player_dim(cells[0], cells[1].replace('â€™',"'"), cells[2], cells[3], year, team))
-		return rosterToAdd
-
 	existingRoster = player_dim.query.filter_by(YEAR=str(year)).filter_by(TEAM_KEY=team).all()
 	players = [[x.FULL_NAME, x.NUMBER, x.CLASS] for x in existingRoster]
-	rosterToAdd = getRoster(team,year)
+	rosterToAdd = getRoster(team,year,player_dim)
 	for player in rosterToAdd:
 		if [player.FULL_NAME, player.NUMBER, player.CLASS] not in players:
 			db.session.merge(player)
