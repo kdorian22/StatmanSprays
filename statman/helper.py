@@ -42,7 +42,7 @@ statCodes = {
 		 }
 
 locations = ['1b', '2b', '3b', ' ss', ' p ', ' p.', ' p,',' p;', ' p:', ' c ', ' c.', ' c,', ' c;', 'catcher', 'pitcher',
-' lf', ' rf', ' cf', 'shortstop', 'center', 'lcf', 'rcf', '1b line', '3b line', 'left', 'right',
+' lf', ' rf', ' cf', 'shortstop', 'center', 'lcf', 'rcf', '1b line', '3b line', ' left', ' right',
 ]
 
 locMult = ['through the left side', 'through the right side', 'up the middle', 'left field line',
