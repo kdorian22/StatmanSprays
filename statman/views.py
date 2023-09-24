@@ -704,6 +704,13 @@ def sprays():
 			except:
 				print('fail', p)
 		rosters = list(conn.execute(text(f"""SELECT * FROM PLAYER_DIM WHERE TEAM_KEY = {team} AND ACTIVE_RECORD = 1 ORDER BY FULL_NAME""")).fetchall())
+		for p in rosters[0:10]:
+			try:
+				a = dict(p)
+				print('success', a)
+			except:
+				print('fail', p)
+
 		stats = list(conn.execute(text(f"""SELECT FULL_NAME, POSITION, NUMBER, CLASS, YEAR,
 		IFNULL(G,0) G, IFNULL(GS,0) GS, IFNULL(AB,0) AB, IFNULL(BA,0) BA, IFNULL(OBP,0) OBP, IFNULL(SLG,0) SLG, IFNULL(K,0) K, IFNULL(BB,0) BB,
 		IFNULL(SB,0) SB, IFNULL(CS,0) CS, IFNULL(IBB,0) IBB, IFNULL(HBP,0) HBP, IFNULL(SF,0) SF, IFNULL(SH,0) SH, IFNULL(R,0) R, IFNULL(RBI,0) RBI, TEAM_KEY
