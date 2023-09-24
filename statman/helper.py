@@ -151,8 +151,9 @@ def scrapeRoster(team, year, db, player_dim):
 				db.session.merge(player)
 				db.session.commit()
 
-		players = list(db.engine.execute(f"SELECT * FROM PLAYER_DIM WHERE YEAR = '{year}' and TEAM_KEY = {team}"))
-		db.session.commit()
+		with db.engine.connect() as conn:
+			players = list(conn.execute(f"SELECT * FROM PLAYER_DIM WHERE YEAR = '{year}' and TEAM_KEY = {team}").fetchall())
+			db.session.commit()
 
 		return players
 	except:
