@@ -691,31 +691,18 @@ def sprays():
 		rosters = []
 		row = team_dim.query.filter_by(TEAM_KEY=team).first()
 		if team == '' or row is None:
-			return render_template('sprays.html', team = team, stats = jsonDump(stats), plays = jsonDump(plays), rosters = jsonDump(rosters), data = jsonDump(teams), years = years)
+			return render_template('sprays.html', team = team, stats = jsonDump(stats), plays = jsonDump(plays), rosters = jsonDump(rosters), data = teams, years = years)
 
 		num = row.VISITS
 		conn.execute(text(f"""UPDATE TEAM_DIM SET VISITS = {num+1} WHERE TEAM_KEY = {team}"""))
 
-		plays = list(conn.execute(text(f"""SELECT BATTER_PLAYER_KEY, PLAY_ID, DATE_KEY, IFNULL(OUTCOME, '') OUTCOME, IFNULL(LOCATION, '') LOCATION, DESCRIPTION, YEAR FROM PLAY_BY_PLAY WHERE BATTER_TEAM_KEY = {team} and ACTIVE_RECORD = 1 and BATTER_PLAYER_KEY is not null""")).fetchall())
-		for p in plays[0:100]:
-			try:
-				a = dict(p)
-				print('success', a)
-			except:
-				print('fail', p)
-		rosters = list(conn.execute(text(f"""SELECT * FROM PLAYER_DIM WHERE TEAM_KEY = {team} AND ACTIVE_RECORD = 1 ORDER BY FULL_NAME""")).fetchall())
-		for p in rosters[0:10]:
-			try:
-				a = dict(p)
-				print('success', a)
-			except:
-				print('fail', p)
-
-		stats = list(conn.execute(text(f"""SELECT FULL_NAME, POSITION, NUMBER, CLASS, YEAR,
+		plays = pd.read_sql_query(f"""SELECT BATTER_PLAYER_KEY, PLAY_ID, DATE_KEY, IFNULL(OUTCOME, '') OUTCOME, IFNULL(LOCATION, '') LOCATION, DESCRIPTION, YEAR FROM PLAY_BY_PLAY WHERE BATTER_TEAM_KEY = {team} and ACTIVE_RECORD = 1 and BATTER_PLAYER_KEY is not null""", conn)
+		rosters = pd.read_sql_query(f"""SELECT * FROM PLAYER_DIM WHERE TEAM_KEY = {team} AND ACTIVE_RECORD = 1 ORDER BY FULL_NAME""", conn)
+		stats = pd.read_sql_query(f"""SELECT FULL_NAME, POSITION, NUMBER, CLASS, YEAR,
 		IFNULL(G,0) G, IFNULL(GS,0) GS, IFNULL(AB,0) AB, IFNULL(BA,0) BA, IFNULL(OBP,0) OBP, IFNULL(SLG,0) SLG, IFNULL(K,0) K, IFNULL(BB,0) BB,
 		IFNULL(SB,0) SB, IFNULL(CS,0) CS, IFNULL(IBB,0) IBB, IFNULL(HBP,0) HBP, IFNULL(SF,0) SF, IFNULL(SH,0) SH, IFNULL(R,0) R, IFNULL(RBI,0) RBI, TEAM_KEY
-		FROM HITTER_STATS WHERE TEAM_KEY = {team} AND ACTIVE_RECORD = 1""")).fetchall())
-	return render_template('sprays.html', team = team, stats = jsonDump(stats), plays=jsonDump(plays), rosters =jsonDump(rosters), data = teams, years = years)
+		FROM HITTER_STATS WHERE TEAM_KEY = {team} AND ACTIVE_RECORD = 1""", conn)
+	return render_template('sprays.html', team = team, stats = stats.to_json(orient='records'), plays=plays.to_json(orient='records'), rosters=rosters.to_json(orient='records'), data = teams, years = years)
 
 
 @app.route('/printSprays', methods = ['POST', 'GET'])
