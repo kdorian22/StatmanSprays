@@ -337,6 +337,7 @@ def gameParser(soup, players, teamNameList, altNames, altTeamNameList, team_dim,
 	return allPlays
 
 def jsonDump(data):
+	print(data[0])
 	return json.dumps([dict(d) for d in data])
 
 # Get list of box score links for a give date/division

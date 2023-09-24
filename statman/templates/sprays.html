@@ -574,6 +574,7 @@ th.plays{
 
 <script>
   const init = {{data|safe}}
+	console.log(init)
   const years = {{years|safe}}
   const teams = init.map(function(d){ return {'label': d.NAME, 'value': {'key': d.TEAM_KEY, 'name': d.NAME}}})
   const teams2 = init.map(function(d){ return d.NAME})
@@ -582,7 +583,6 @@ th.plays{
   const rosters = {{rosters|safe}}
   const hitStats = {{stats|safe}}
   const team = '{{team}}'
-
 
   var rowNum = 0
 
@@ -1538,6 +1538,6 @@ $('#teamName').click(function(){
   window.open(`{{url_for('editPlays')}}?team=${team}&year=${$('.selectedSpan').text().replace(/\s+/g,'')}`)
 })
 {% endif %}
-</script>
+ </script>
 
 {% endblock %}
