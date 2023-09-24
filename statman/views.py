@@ -697,11 +697,12 @@ def sprays():
 		conn.execute(text(f"""UPDATE TEAM_DIM SET VISITS = {num+1} WHERE TEAM_KEY = {team}"""))
 
 		plays = list(conn.execute(text(f"""SELECT BATTER_PLAYER_KEY, PLAY_ID, DATE_KEY, IFNULL(OUTCOME, '') OUTCOME, IFNULL(LOCATION, '') LOCATION, DESCRIPTION, YEAR FROM PLAY_BY_PLAY WHERE BATTER_TEAM_KEY = {team} and ACTIVE_RECORD = 1 and BATTER_PLAYER_KEY is not null""")).fetchall())
-		for p in plays:
+		for p in plays[0:100]:
 			try:
 				a = dict(p)
+				print('success', a)
 			except:
-				print(p)
+				print('fail', p)
 		rosters = list(conn.execute(text(f"""SELECT * FROM PLAYER_DIM WHERE TEAM_KEY = {team} AND ACTIVE_RECORD = 1 ORDER BY FULL_NAME""")).fetchall())
 		stats = list(conn.execute(text(f"""SELECT FULL_NAME, POSITION, NUMBER, CLASS, YEAR,
 		IFNULL(G,0) G, IFNULL(GS,0) GS, IFNULL(AB,0) AB, IFNULL(BA,0) BA, IFNULL(OBP,0) OBP, IFNULL(SLG,0) SLG, IFNULL(K,0) K, IFNULL(BB,0) BB,
