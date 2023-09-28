@@ -714,9 +714,9 @@ def printSprays():
 	c = request.values.get('c','')
 	with db.engine.connect() as conn:
 		if c == 'ca':
-			names = list(conn.execute(f"""
+			names = list(conn.execute(text(f"""
 			SELECT * FROM PLAYER_DIM WHERE TEAM_KEY = {team} and YEAR = {year}
-			""").fetchall())
+			""")).fetchall())
 			plays = pd.DataFrame()
 			stats = pd.DataFrame()
 			for name in names:
