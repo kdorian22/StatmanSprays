@@ -729,7 +729,12 @@ def printSprays():
 				stats = pd.concat([stats, pd.read_sql_query(text(f"""
 				SELECT * FROM HITTER_STATS
 				WHERE ACTIVE_RECORD = 1 and FULL_NAME = '{str(name.FULL_NAME).replace("'","''")}' and TEAM_KEY = {team}"""), conn)])
-			return render_template('printSpraysCA.html', names = jsonDump(names), stats = stats.to_json(orient='records'), plays = plays.to_json(orient='records'))
+
+			names = pd.read_sql_query(text(f"""
+			SELECT * FROM PLAYER_DIM WHERE TEAM_KEY = {team} and YEAR = {year}
+			"""), conn)
+
+			return render_template('printSpraysCA.html', names = names.to_json(orient='records'), stats = stats.to_json(orient='records'), plays = plays.to_json(orient='records'))
 
 		if c == 'c':
 			name = player_dim.query.filter_by(PLAYER_KEY=key).first().FULL_NAME
