@@ -56,7 +56,10 @@ def exists(text):
 
 @app.route('/')
 def index():
-	conn = db.engine.connect()
+	try:
+		conn = db.engine.connect()
+	except:
+		conn = db.engine.connect()
 	data = conn.execute(text(f"""SELECT p.TEAM_KEY, NAME, COUNT(*) FROM PLAYER_DIM p
 	JOIN TEAM_DIM t on t.TEAM_KEY = p.TEAM_KEY
 	WHERE p.ACTIVE_RECORD = 1 and t.ACTIVE_RECORD = 1
@@ -674,7 +677,10 @@ def sprays():
 	team = request.values.get('team', '')
 	if team != '':
 		team = int(team)
-	conn = db.engine.connect()
+	try:
+		conn = db.engine.connect()
+	except:
+		conn = db.engine.connect()
 	data = conn.execute(text(f"""SELECT p.TEAM_KEY, NAME, COUNT(*) FROM PLAYER_DIM p
 	JOIN TEAM_DIM t on t.TEAM_KEY = p.TEAM_KEY
 	WHERE p.ACTIVE_RECORD = 1 and t.ACTIVE_RECORD = 1
