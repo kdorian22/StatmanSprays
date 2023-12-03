@@ -672,8 +672,6 @@ def dataDownload():
 @app.route('/sprays', methods = ['POST', 'GET'])
 def sprays():
 	team = request.values.get('team', '')
-
-
 	if team != '':
 		team = int(team)
 	conn = db.engine.connect()
@@ -691,12 +689,12 @@ def sprays():
 	if team == '' or row is None:
 		return render_template('sprays.html', team = team, stats = jsonDump(stats), plays = jsonDump(plays), rosters = jsonDump(rosters), data = teams, years = years)
 
-	num = row.VISITS
-	conn.execute(text(f"""UPDATE TEAM_DIM SET VISITS = {num+1} WHERE TEAM_KEY = {team}"""))
+	conn.execute(text(f"""UPDATE TEAM_DIM SET VISITS = VISITS+1 WHERE TEAM_KEY = {team}"""))
 
 	plays = pd.read_sql_query(f"""SELECT * FROM PLAY_BY_PLAY WHERE BATTER_TEAM_KEY = {team} and ACTIVE_RECORD = 1 and BATTER_PLAYER_KEY is not null""", conn)
 	rosters = pd.read_sql_query(f"""SELECT * FROM PLAYER_DIM WHERE TEAM_KEY = {team} AND ACTIVE_RECORD = 1 ORDER BY FULL_NAME""", conn)
 	stats = pd.read_sql_query(f"""SELECT * FROM HITTER_STATS WHERE TEAM_KEY = {team} AND ACTIVE_RECORD = 1""", conn)
+	conn.close()
 	return render_template('sprays.html', team = team, stats = stats.to_json(orient='records'), plays=plays.to_json(orient='records'), rosters=rosters.to_json(orient='records'), data = teams, years = years)
 
 
