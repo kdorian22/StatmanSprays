@@ -56,15 +56,15 @@ def exists(text):
 
 @app.route('/')
 def index():
-	with db.engine.connect() as conn:
-		data = conn.execute(text(f"""SELECT p.TEAM_KEY, NAME, COUNT(*) FROM PLAYER_DIM p
-		JOIN TEAM_DIM t on t.TEAM_KEY = p.TEAM_KEY
-		WHERE p.ACTIVE_RECORD = 1 and t.ACTIVE_RECORD = 1
-		GROUP BY p.TEAM_KEY;""")).fetchall()
+	conn = db.engine.connect()
+	data = conn.execute(text(f"""SELECT p.TEAM_KEY, NAME, COUNT(*) FROM PLAYER_DIM p
+	JOIN TEAM_DIM t on t.TEAM_KEY = p.TEAM_KEY
+	WHERE p.ACTIVE_RECORD = 1 and t.ACTIVE_RECORD = 1
+	GROUP BY p.TEAM_KEY;""")).fetchall()
 
-		conn.execute(text("""SELECT p.*, FULL_NAME FROM PLAY_BY_PLAY p
-		JOIN PLAYER_DIM d on d.PLAYER_KEY = p.BATTER_PLAYER_KEY
-		WHERE d.ACTIVE_RECORD = 1 AND BATTER_TEAM_KEY = 2 and p.ACTIVE_RECORD = 1 Limit 200"""))
+	conn.execute(text("""SELECT p.*, FULL_NAME FROM PLAY_BY_PLAY p
+	JOIN PLAYER_DIM d on d.PLAYER_KEY = p.BATTER_PLAYER_KEY
+	WHERE d.ACTIVE_RECORD = 1 AND BATTER_TEAM_KEY = 2 and p.ACTIVE_RECORD = 1 Limit 200"""))
 
 	teams = []
 	for d in data:
@@ -126,8 +126,8 @@ def logout():
 @admin_required()
 def updateTeamDim():
 	update = request.values.get('update', 'u')
-	with db.engine.connect() as conn:
-		teamList = list(conn.execute(text("""SELECT TEAM_KEY, NAME, ALT_NAMES FROM TEAM_DIM""")).fetchall())
+	conn = db.engine.connect()
+	teamList = list(conn.execute(text("""SELECT TEAM_KEY, NAME, ALT_NAMES FROM TEAM_DIM""")).fetchall())
 	newTeams = scrapeTeams()
 
 	if update == 'd':
@@ -153,13 +153,10 @@ def updateTeamDim():
 				continue
 			elif curName != newName[0] and newName[0] not in curAltList:
 				curAltList.append(newName[0])
-				with db.engine.connect() as conn:
-		
-					conn.execute(text(f"""UPDATE TEAM_DIM SET ALT_NAMES = '{', '.join(curAltList)}' WHERE TEAM_KEY = {key}"""))
+				conn.execute(text(f"""UPDATE TEAM_DIM SET ALT_NAMES = '{', '.join(curAltList)}' WHERE TEAM_KEY = {key}"""))
 	db.session.commit()
 
-	with db.engine.connect() as conn:
-		data = list(conn.execute(text('SELECT * FROM TEAM_DIM WHERE ACTIVE_RECORD = 1;')).fetchall())
+	data = list(conn.execute(text('SELECT * FROM TEAM_DIM WHERE ACTIVE_RECORD = 1;')).fetchall())
 	return render_template('teamList.html', data = jsonDump(data))
 
 
@@ -179,8 +176,8 @@ def scrapeRoster():
 			db.session.merge(player)
 			db.session.commit()
 
-	with db.engine.connect() as conn:
-		players = list(conn.execute(text(f"SELECT * FROM PLAYER_DIM WHERE YEAR = '{year}' and TEAM_KEY = {team}"))).fetchall()
+	conn = db.engine.connect()
+	players = list(conn.execute(text(f"SELECT * FROM PLAYER_DIM WHERE YEAR = '{year}' and TEAM_KEY = {team}"))).fetchall()
 	db.session.commit()
 
 	return jsonDump(players)
@@ -666,8 +663,8 @@ def dataDownload():
 	WHERE t.ACTIVE_RECORD = 1
 	ORDER BY NAME;
 	"""
-	with db.engine.connect() as conn:
-		status = list(conn.execute(text(query)).fetchall())
+	conn = db.engine.connect()
+	status = list(conn.execute(text(query)).fetchall())
 
 	return render_template('dataDownload.html', status=status, data = jsonDump(status), years=years)
 
@@ -679,27 +676,27 @@ def sprays():
 
 	if team != '':
 		team = int(team)
-	with db.engine.connect() as conn:
-		data = conn.execute(text(f"""SELECT p.TEAM_KEY, NAME, COUNT(*) FROM PLAYER_DIM p
-		JOIN TEAM_DIM t on t.TEAM_KEY = p.TEAM_KEY
-		WHERE p.ACTIVE_RECORD = 1 and t.ACTIVE_RECORD = 1
-		GROUP BY p.TEAM_KEY;""")).fetchall()
-		teams = []
-		for d in data:
-			teams.append({'NAME': d.NAME, 'TEAM_KEY': d.TEAM_KEY})
-		stats = []
-		plays = []
-		rosters = []
-		row = team_dim.query.filter_by(TEAM_KEY=team).first()
-		if team == '' or row is None:
-			return render_template('sprays.html', team = team, stats = jsonDump(stats), plays = jsonDump(plays), rosters = jsonDump(rosters), data = teams, years = years)
+	conn = db.engine.connect()
+	data = conn.execute(text(f"""SELECT p.TEAM_KEY, NAME, COUNT(*) FROM PLAYER_DIM p
+	JOIN TEAM_DIM t on t.TEAM_KEY = p.TEAM_KEY
+	WHERE p.ACTIVE_RECORD = 1 and t.ACTIVE_RECORD = 1
+	GROUP BY p.TEAM_KEY;""")).fetchall()
+	teams = []
+	for d in data:
+		teams.append({'NAME': d.NAME, 'TEAM_KEY': d.TEAM_KEY})
+	stats = []
+	plays = []
+	rosters = []
+	row = team_dim.query.filter_by(TEAM_KEY=team).first()
+	if team == '' or row is None:
+		return render_template('sprays.html', team = team, stats = jsonDump(stats), plays = jsonDump(plays), rosters = jsonDump(rosters), data = teams, years = years)
 
-		num = row.VISITS
-		conn.execute(text(f"""UPDATE TEAM_DIM SET VISITS = {num+1} WHERE TEAM_KEY = {team}"""))
+	num = row.VISITS
+	conn.execute(text(f"""UPDATE TEAM_DIM SET VISITS = {num+1} WHERE TEAM_KEY = {team}"""))
 
-		plays = pd.read_sql_query(f"""SELECT * FROM PLAY_BY_PLAY WHERE BATTER_TEAM_KEY = {team} and ACTIVE_RECORD = 1 and BATTER_PLAYER_KEY is not null""", conn)
-		rosters = pd.read_sql_query(f"""SELECT * FROM PLAYER_DIM WHERE TEAM_KEY = {team} AND ACTIVE_RECORD = 1 ORDER BY FULL_NAME""", conn)
-		stats = pd.read_sql_query(f"""SELECT * FROM HITTER_STATS WHERE TEAM_KEY = {team} AND ACTIVE_RECORD = 1""", conn)
+	plays = pd.read_sql_query(f"""SELECT * FROM PLAY_BY_PLAY WHERE BATTER_TEAM_KEY = {team} and ACTIVE_RECORD = 1 and BATTER_PLAYER_KEY is not null""", conn)
+	rosters = pd.read_sql_query(f"""SELECT * FROM PLAYER_DIM WHERE TEAM_KEY = {team} AND ACTIVE_RECORD = 1 ORDER BY FULL_NAME""", conn)
+	stats = pd.read_sql_query(f"""SELECT * FROM HITTER_STATS WHERE TEAM_KEY = {team} AND ACTIVE_RECORD = 1""", conn)
 	return render_template('sprays.html', team = team, stats = stats.to_json(orient='records'), plays=plays.to_json(orient='records'), rosters=rosters.to_json(orient='records'), data = teams, years = years)
 
 
@@ -713,67 +710,67 @@ def printSprays():
 	if year != '':
 		year = int(year)
 	c = request.values.get('c','')
-	with db.engine.connect() as conn:
-		if c == 'ca':
-			names = list(conn.execute(text(f"""
-			SELECT * FROM PLAYER_DIM WHERE TEAM_KEY = {team} and YEAR = {year}
-			""")).fetchall())
-			plays = pd.DataFrame()
-			stats = pd.DataFrame()
-			for name in names:
-				plays = pd.concat([plays, pd.read_sql_query(text(f"""
-				SELECT d.FULL_NAME, d.NUMBER, p.* FROM PLAY_BY_PLAY p
-				JOIN PLAYER_DIM d on d.PLAYER_KEY = p.BATTER_PLAYER_KEY
-				WHERE d.FULL_NAME = '{str(name.FULL_NAME).replace("'","''")}' and d.TEAM_KEY = {team} and p.ACTIVE_RECORD = 1
-				"""), conn)])
-
-				stats = pd.concat([stats, pd.read_sql_query(text(f"""
-				SELECT * FROM HITTER_STATS
-				WHERE ACTIVE_RECORD = 1 and FULL_NAME = '{str(name.FULL_NAME).replace("'","''")}' and TEAM_KEY = {team}"""), conn)])
-
-			names = pd.read_sql_query(text(f"""
-			SELECT * FROM PLAYER_DIM WHERE TEAM_KEY = {team} and YEAR = {year}
-			"""), conn)
-
-			return render_template('printSpraysCA.html', names = names.to_json(orient='records'), stats = stats.to_json(orient='records'), plays = plays.to_json(orient='records'))
-
-		if c == 'c':
-			name = player_dim.query.filter_by(PLAYER_KEY=key).first().FULL_NAME
-			plays = pd.read_sql_query(text(f"""
+	conn = db.engine.connect()
+	if c == 'ca':
+		names = list(conn.execute(text(f"""
+		SELECT * FROM PLAYER_DIM WHERE TEAM_KEY = {team} and YEAR = {year}
+		""")).fetchall())
+		plays = pd.DataFrame()
+		stats = pd.DataFrame()
+		for name in names:
+			plays = pd.concat([plays, pd.read_sql_query(text(f"""
 			SELECT d.FULL_NAME, d.NUMBER, p.* FROM PLAY_BY_PLAY p
 			JOIN PLAYER_DIM d on d.PLAYER_KEY = p.BATTER_PLAYER_KEY
-			WHERE FULL_NAME = '{str(name).replace("'","''")}' and d.TEAM_KEY = {team} and p.ACTIVE_RECORD = 1
-			"""), conn)
-			stats = pd.read_sql_query(text(f"""
+			WHERE d.FULL_NAME = '{str(name.FULL_NAME).replace("'","''")}' and d.TEAM_KEY = {team} and p.ACTIVE_RECORD = 1
+			"""), conn)])
+
+			stats = pd.concat([stats, pd.read_sql_query(text(f"""
 			SELECT * FROM HITTER_STATS
-			WHERE ACTIVE_RECORD = 1 and FULL_NAME = '{str(name).replace("'","''")}' and TEAM_KEY = {team}"""), conn)
+			WHERE ACTIVE_RECORD = 1 and FULL_NAME = '{str(name.FULL_NAME).replace("'","''")}' and TEAM_KEY = {team}"""), conn)])
 
-			return render_template('printSpraysC.html', name = name, stats = stats.to_json(orient='records'), plays = plays.to_json(orient='records'))
+		names = pd.read_sql_query(text(f"""
+		SELECT * FROM PLAYER_DIM WHERE TEAM_KEY = {team} and YEAR = {year}
+		"""), conn)
 
-		if key != '':
-			keys = int(key)
-			keyList = [keys]
+		return render_template('printSpraysCA.html', names = names.to_json(orient='records'), stats = stats.to_json(orient='records'), plays = plays.to_json(orient='records'))
 
-		if key == '':
-			keys = list(conn.execute(text(f"""SELECT * FROM PLAYER_DIM
-			WHERE TEAM_KEY = {team} and YEAR = {year} and ACTIVE_RECORD = 1""")).fetchall())
-			keyList = [str(x.PLAYER_KEY) for x in keys]
-			keys = ', '.join(keyList)
-
-
+	if c == 'c':
+		name = player_dim.query.filter_by(PLAYER_KEY=key).first().FULL_NAME
 		plays = pd.read_sql_query(text(f"""
 		SELECT d.FULL_NAME, d.NUMBER, p.* FROM PLAY_BY_PLAY p
 		JOIN PLAYER_DIM d on d.PLAYER_KEY = p.BATTER_PLAYER_KEY
-		WHERE BATTER_PLAYER_KEY in ({keys}) and p.ACTIVE_RECORD = 1
+		WHERE FULL_NAME = '{str(name).replace("'","''")}' and d.TEAM_KEY = {team} and p.ACTIVE_RECORD = 1
 		"""), conn)
-
 		stats = pd.read_sql_query(text(f"""
-		SELECT p.PLAYER_KEY, h.* FROM HITTER_STATS h
-		JOIN PLAYER_DIM p on p.FULL_NAME = h.FULL_NAME
-		and h.TEAM_KEY = p.TEAM_KEY and h.NUMBER = p.NUMBER
-		and h.POSITION = p.POSITION and h.CLASS = p.CLASS and h.YEAR = p.YEAR
-		WHERE p.PLAYER_KEY in ({keys})
-		"""), conn)
+		SELECT * FROM HITTER_STATS
+		WHERE ACTIVE_RECORD = 1 and FULL_NAME = '{str(name).replace("'","''")}' and TEAM_KEY = {team}"""), conn)
+
+		return render_template('printSpraysC.html', name = name, stats = stats.to_json(orient='records'), plays = plays.to_json(orient='records'))
+
+	if key != '':
+		keys = int(key)
+		keyList = [keys]
+
+	if key == '':
+		keys = list(conn.execute(text(f"""SELECT * FROM PLAYER_DIM
+		WHERE TEAM_KEY = {team} and YEAR = {year} and ACTIVE_RECORD = 1""")).fetchall())
+		keyList = [str(x.PLAYER_KEY) for x in keys]
+		keys = ', '.join(keyList)
+
+
+	plays = pd.read_sql_query(text(f"""
+	SELECT d.FULL_NAME, d.NUMBER, p.* FROM PLAY_BY_PLAY p
+	JOIN PLAYER_DIM d on d.PLAYER_KEY = p.BATTER_PLAYER_KEY
+	WHERE BATTER_PLAYER_KEY in ({keys}) and p.ACTIVE_RECORD = 1
+	"""), conn)
+
+	stats = pd.read_sql_query(text(f"""
+	SELECT p.PLAYER_KEY, h.* FROM HITTER_STATS h
+	JOIN PLAYER_DIM p on p.FULL_NAME = h.FULL_NAME
+	and h.TEAM_KEY = p.TEAM_KEY and h.NUMBER = p.NUMBER
+	and h.POSITION = p.POSITION and h.CLASS = p.CLASS and h.YEAR = p.YEAR
+	WHERE p.PLAYER_KEY in ({keys})
+	"""), conn)
 
 	return render_template('printSprays.html', keys = keyList, plays = plays.to_json(orient='records'), stats = stats.to_json(orient='records'))
 
@@ -787,8 +784,8 @@ def faq():
 
 @app.route('/teamList')
 def teamList():
-	with db.engine.connect() as conn:
-		return render_template('teamList.html', data = pd.read_sql_query(text('SELECT * FROM TEAM_DIM WHERE ACTIVE_RECORD = 1;'), conn).to_json(orient='records'))
+	conn = db.engine.connect()
+	return render_template('teamList.html', data = pd.read_sql_query(text('SELECT * FROM TEAM_DIM WHERE ACTIVE_RECORD = 1;'), conn).to_json(orient='records'))
 
 @app.route('/admin')
 @login_required
@@ -802,13 +799,13 @@ def admin():
 def editPlays():
 	team_key = int(request.values.get('team', '755'))
 	year = int(request.values.get('year', years[0]))
-	with db.engine.connect() as conn:
-		playsORG = pd.read_sql_query(text(f"""SELECT p.FULL_NAME NAME, t.NAME TEAM_NAME, pbp.* FROM PLAY_BY_PLAY pbp
-	 	LEFT JOIN PLAYER_DIM p on p.PLAYER_KEY = pbp.BATTER_PLAYER_KEY
-	 	LEFT JOIN TEAM_DIM t on t.TEAM_KEY = pbp.BATTER_TEAM_KEY
-		WHERE t.TEAM_KEY = {team_key} and pbp.YEAR = {year}
-	 	ORDER BY pbp.DATE_KEY, pbp.BATTER_PLAYER_KEY
-	 	 """), conn)
+	conn = db.engine.connect()
+	playsORG = pd.read_sql_query(text(f"""SELECT p.FULL_NAME NAME, t.NAME TEAM_NAME, pbp.* FROM PLAY_BY_PLAY pbp
+ 	LEFT JOIN PLAYER_DIM p on p.PLAYER_KEY = pbp.BATTER_PLAYER_KEY
+ 	LEFT JOIN TEAM_DIM t on t.TEAM_KEY = pbp.BATTER_TEAM_KEY
+	WHERE t.TEAM_KEY = {team_key} and pbp.YEAR = {year}
+ 	ORDER BY pbp.DATE_KEY, pbp.BATTER_PLAYER_KEY
+ 	 """), conn)
 
 	name = ''
 	if len(playsORG) > 0:
@@ -858,12 +855,11 @@ def download(key, year, type, csv):
 			keyCol = 'TEAM_KEY'
 			order = 'FULL_NAME'
 		query = f"""SELECT * FROM {tab} WHERE {keyCol} = {key} and YEAR = {year} and ACTIVE_RECORD = 1 ORDER BY {order}"""
-		with db.engine.connect() as conn:
-
-			if ';' not in query:
-				data = pd.read_sql_query(text(text(query), conn))
-			else:
-				data = []
+		conn = db.engine.connect()
+		if ';' not in query:
+			data = pd.read_sql_query(text(text(query), conn))
+		else:
+			data = []
 	else:
 		data = []
 
@@ -883,9 +879,9 @@ def download(key, year, type, csv):
 @admin_required()
 def getStats(name, num, pos, fresh, year, team):
 	string = f"""SELECT * FROM HITTER_STATS WHERE FULL_NAME = '{name}' and NUMBER = '{num}' and POSITION = '{pos}' and YEAR = '{year}' and CLASS = '{fresh}' and TEAM_KEY = '{team}'"""
-	with db.engine.connect() as conn:
-		if ';' not in string:
-			data = pd.read_sql_query(text(string), conn)
-		else:
-			data = []
+	conn = db.engine.connect()
+	if ';' not in string:
+		data = pd.read_sql_query(text(string), conn)
+	else:
+		data = []
 	return data.to_json(orient='records')
