@@ -57,7 +57,6 @@ def exists(text):
 @app.route('/')
 def index():
 	with db.engine.connect() as conn:
-		conn.reconnect()
 		data = conn.execute(text(f"""SELECT p.TEAM_KEY, NAME, COUNT(*) FROM PLAYER_DIM p
 		JOIN TEAM_DIM t on t.TEAM_KEY = p.TEAM_KEY
 		WHERE p.ACTIVE_RECORD = 1 and t.ACTIVE_RECORD = 1
@@ -128,7 +127,6 @@ def logout():
 def updateTeamDim():
 	update = request.values.get('update', 'u')
 	with db.engine.connect() as conn:
-		conn.reconnect()
 		teamList = list(conn.execute(text("""SELECT TEAM_KEY, NAME, ALT_NAMES FROM TEAM_DIM""")).fetchall())
 	newTeams = scrapeTeams()
 
@@ -156,12 +154,11 @@ def updateTeamDim():
 			elif curName != newName[0] and newName[0] not in curAltList:
 				curAltList.append(newName[0])
 				with db.engine.connect() as conn:
-					conn.reconnect()
+		
 					conn.execute(text(f"""UPDATE TEAM_DIM SET ALT_NAMES = '{', '.join(curAltList)}' WHERE TEAM_KEY = {key}"""))
 	db.session.commit()
 
 	with db.engine.connect() as conn:
-		conn.reconnect()
 		data = list(conn.execute(text('SELECT * FROM TEAM_DIM WHERE ACTIVE_RECORD = 1;')).fetchall())
 	return render_template('teamList.html', data = jsonDump(data))
 
@@ -183,7 +180,6 @@ def scrapeRoster():
 			db.session.commit()
 
 	with db.engine.connect() as conn:
-		conn.reconnect()
 		players = list(conn.execute(text(f"SELECT * FROM PLAYER_DIM WHERE YEAR = '{year}' and TEAM_KEY = {team}"))).fetchall()
 	db.session.commit()
 
@@ -671,7 +667,6 @@ def dataDownload():
 	ORDER BY NAME;
 	"""
 	with db.engine.connect() as conn:
-		conn.reconnect()
 		status = list(conn.execute(text(query)).fetchall())
 
 	return render_template('dataDownload.html', status=status, data = jsonDump(status), years=years)
@@ -685,7 +680,6 @@ def sprays():
 	if team != '':
 		team = int(team)
 	with db.engine.connect() as conn:
-		conn.reconnect()
 		data = conn.execute(text(f"""SELECT p.TEAM_KEY, NAME, COUNT(*) FROM PLAYER_DIM p
 		JOIN TEAM_DIM t on t.TEAM_KEY = p.TEAM_KEY
 		WHERE p.ACTIVE_RECORD = 1 and t.ACTIVE_RECORD = 1
@@ -720,7 +714,6 @@ def printSprays():
 		year = int(year)
 	c = request.values.get('c','')
 	with db.engine.connect() as conn:
-		conn.reconnect()
 		if c == 'ca':
 			names = list(conn.execute(text(f"""
 			SELECT * FROM PLAYER_DIM WHERE TEAM_KEY = {team} and YEAR = {year}
@@ -795,7 +788,6 @@ def faq():
 @app.route('/teamList')
 def teamList():
 	with db.engine.connect() as conn:
-		conn.reconnect()
 		return render_template('teamList.html', data = pd.read_sql_query(text('SELECT * FROM TEAM_DIM WHERE ACTIVE_RECORD = 1;'), conn).to_json(orient='records'))
 
 @app.route('/admin')
@@ -811,7 +803,6 @@ def editPlays():
 	team_key = int(request.values.get('team', '755'))
 	year = int(request.values.get('year', years[0]))
 	with db.engine.connect() as conn:
-		conn.reconnect()
 		playsORG = pd.read_sql_query(text(f"""SELECT p.FULL_NAME NAME, t.NAME TEAM_NAME, pbp.* FROM PLAY_BY_PLAY pbp
 	 	LEFT JOIN PLAYER_DIM p on p.PLAYER_KEY = pbp.BATTER_PLAYER_KEY
 	 	LEFT JOIN TEAM_DIM t on t.TEAM_KEY = pbp.BATTER_TEAM_KEY
@@ -868,7 +859,7 @@ def download(key, year, type, csv):
 			order = 'FULL_NAME'
 		query = f"""SELECT * FROM {tab} WHERE {keyCol} = {key} and YEAR = {year} and ACTIVE_RECORD = 1 ORDER BY {order}"""
 		with db.engine.connect() as conn:
-			conn.reconnect()
+
 			if ';' not in query:
 				data = pd.read_sql_query(text(text(query), conn))
 			else:
@@ -893,7 +884,6 @@ def download(key, year, type, csv):
 def getStats(name, num, pos, fresh, year, team):
 	string = f"""SELECT * FROM HITTER_STATS WHERE FULL_NAME = '{name}' and NUMBER = '{num}' and POSITION = '{pos}' and YEAR = '{year}' and CLASS = '{fresh}' and TEAM_KEY = '{team}'"""
 	with db.engine.connect() as conn:
-		conn.reconnect()
 		if ';' not in string:
 			data = pd.read_sql_query(text(string), conn)
 		else:
