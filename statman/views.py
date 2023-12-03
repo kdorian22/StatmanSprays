@@ -16,7 +16,6 @@ jsglue = JSGlue(app)
 Mobility(app)
 
 app.config['PDF_FOLDER'] = 'static/pdf/'
-conn = db.engine.connect()
 
 def admin_required():
 	def wrapper(fn):
@@ -57,6 +56,7 @@ def exists(text):
 
 @app.route('/')
 def index():
+	conn = db.engine.connect()
 	data = conn.execute(text(f"""SELECT p.TEAM_KEY, NAME, COUNT(*) FROM PLAYER_DIM p
 	JOIN TEAM_DIM t on t.TEAM_KEY = p.TEAM_KEY
 	WHERE p.ACTIVE_RECORD = 1 and t.ACTIVE_RECORD = 1
@@ -126,6 +126,7 @@ def logout():
 @admin_required()
 def updateTeamDim():
 	update = request.values.get('update', 'u')
+	conn = db.engine.connect()
 	teamList = list(conn.execute(text("""SELECT TEAM_KEY, NAME, ALT_NAMES FROM TEAM_DIM""")).fetchall())
 	newTeams = scrapeTeams()
 
@@ -175,6 +176,7 @@ def scrapeRoster():
 			db.session.merge(player)
 			db.session.commit()
 
+	conn = db.engine.connect()
 	players = list(conn.execute(text(f"SELECT * FROM PLAYER_DIM WHERE YEAR = '{year}' and TEAM_KEY = {team}"))).fetchall()
 	db.session.commit()
 
@@ -661,6 +663,7 @@ def dataDownload():
 	WHERE t.ACTIVE_RECORD = 1
 	ORDER BY NAME;
 	"""
+	conn = db.engine.connect()
 	status = list(conn.execute(text(query)).fetchall())
 
 	return render_template('dataDownload.html', status=status, data = jsonDump(status), years=years)
@@ -671,7 +674,7 @@ def sprays():
 	team = request.values.get('team', '')
 	if team != '':
 		team = int(team)
-
+	conn = db.engine.connect()
 	data = conn.execute(text(f"""SELECT p.TEAM_KEY, NAME, COUNT(*) FROM PLAYER_DIM p
 	JOIN TEAM_DIM t on t.TEAM_KEY = p.TEAM_KEY
 	WHERE p.ACTIVE_RECORD = 1 and t.ACTIVE_RECORD = 1
@@ -693,6 +696,7 @@ def sprays():
 	plays = pd.read_sql_query(f"""SELECT * FROM PLAY_BY_PLAY WHERE BATTER_TEAM_KEY = {team} and ACTIVE_RECORD = 1 and BATTER_PLAYER_KEY is not null""", conn)
 	rosters = pd.read_sql_query(f"""SELECT * FROM PLAYER_DIM WHERE TEAM_KEY = {team} AND ACTIVE_RECORD = 1 ORDER BY FULL_NAME""", conn)
 	stats = pd.read_sql_query(f"""SELECT * FROM HITTER_STATS WHERE TEAM_KEY = {team} AND ACTIVE_RECORD = 1""", conn)
+	conn.close()
 	return render_template('sprays.html', team = team, stats = stats.to_json(orient='records'), plays=plays.to_json(orient='records'), rosters=rosters.to_json(orient='records'), data = teams, years = years)
 
 
@@ -706,6 +710,7 @@ def printSprays():
 	if year != '':
 		year = int(year)
 	c = request.values.get('c','')
+	conn = db.engine.connect()
 	if c == 'ca':
 		names = list(conn.execute(text(f"""
 		SELECT * FROM PLAYER_DIM WHERE TEAM_KEY = {team} and YEAR = {year}
@@ -779,6 +784,7 @@ def faq():
 
 @app.route('/teamList')
 def teamList():
+	conn = db.engine.connect()
 	return render_template('teamList.html', data = pd.read_sql_query(text('SELECT * FROM TEAM_DIM WHERE ACTIVE_RECORD = 1;'), conn).to_json(orient='records'))
 
 @app.route('/admin')
@@ -793,6 +799,7 @@ def admin():
 def editPlays():
 	team_key = int(request.values.get('team', '755'))
 	year = int(request.values.get('year', years[0]))
+	conn = db.engine.connect()
 	playsORG = pd.read_sql_query(text(f"""SELECT p.FULL_NAME NAME, t.NAME TEAM_NAME, pbp.* FROM PLAY_BY_PLAY pbp
  	LEFT JOIN PLAYER_DIM p on p.PLAYER_KEY = pbp.BATTER_PLAYER_KEY
  	LEFT JOIN TEAM_DIM t on t.TEAM_KEY = pbp.BATTER_TEAM_KEY
@@ -848,6 +855,7 @@ def download(key, year, type, csv):
 			keyCol = 'TEAM_KEY'
 			order = 'FULL_NAME'
 		query = f"""SELECT * FROM {tab} WHERE {keyCol} = {key} and YEAR = {year} and ACTIVE_RECORD = 1 ORDER BY {order}"""
+		conn = db.engine.connect()
 		if ';' not in query:
 			data = pd.read_sql_query(text(text(query), conn))
 		else:
@@ -871,6 +879,7 @@ def download(key, year, type, csv):
 @admin_required()
 def getStats(name, num, pos, fresh, year, team):
 	string = f"""SELECT * FROM HITTER_STATS WHERE FULL_NAME = '{name}' and NUMBER = '{num}' and POSITION = '{pos}' and YEAR = '{year}' and CLASS = '{fresh}' and TEAM_KEY = '{team}'"""
+	conn = db.engine.connect()
 	if ';' not in string:
 		data = pd.read_sql_query(text(string), conn)
 	else:
