@@ -57,10 +57,11 @@ def exists(text):
 @app.route('/')
 def index():
 	conn = db.engine.connect()
-	data = conn.execute(text(f"""SELECT p.TEAM_KEY, NAME, COUNT(*) FROM PLAYER_DIM p
-	JOIN TEAM_DIM t on t.TEAM_KEY = p.TEAM_KEY
-	WHERE p.ACTIVE_RECORD = 1 and t.ACTIVE_RECORD = 1
-	GROUP BY p.TEAM_KEY;""")).fetchall()
+	try:
+		data = conn.execute(text(f"""SELECT p.TEAM_KEY, NAME, COUNT(*) FROM PLAYER_DIM p
+		JOIN TEAM_DIM t on t.TEAM_KEY = p.TEAM_KEY
+		WHERE p.ACTIVE_RECORD = 1 and t.ACTIVE_RECORD = 1
+		GROUP BY p.TEAM_KEY;""")).fetchall()
 
 	conn.execute(text("""SELECT p.*, FULL_NAME FROM PLAY_BY_PLAY p
 	JOIN PLAYER_DIM d on d.PLAYER_KEY = p.BATTER_PLAYER_KEY
@@ -680,12 +681,7 @@ def sprays():
 		JOIN TEAM_DIM t on t.TEAM_KEY = p.TEAM_KEY
 		WHERE p.ACTIVE_RECORD = 1 and t.ACTIVE_RECORD = 1
 		GROUP BY p.TEAM_KEY;""")).fetchall()
-	except:
-		conn.reconnect()
-		data = conn.execute(text(f"""SELECT p.TEAM_KEY, NAME, COUNT(*) FROM PLAYER_DIM p
-		JOIN TEAM_DIM t on t.TEAM_KEY = p.TEAM_KEY
-		WHERE p.ACTIVE_RECORD = 1 and t.ACTIVE_RECORD = 1
-		GROUP BY p.TEAM_KEY;""")).fetchall()
+
 	teams = []
 	for d in data:
 		teams.append({'NAME': d.NAME, 'TEAM_KEY': d.TEAM_KEY})
@@ -696,8 +692,8 @@ def sprays():
 	if team == '' or row is None:
 		return render_template('sprays.html', team = team, stats = jsonDump(stats), plays = jsonDump(plays), rosters = jsonDump(rosters), data = teams, years = years)
 
-	row.VISITS = row.VISITS + 1
-	db.session.commit()
+	# row.VISITS = row.VISITS + 1
+	# db.session.commit()
 
 	plays = pd.read_sql_query(f"""SELECT * FROM PLAY_BY_PLAY WHERE BATTER_TEAM_KEY = {team} and ACTIVE_RECORD = 1 and BATTER_PLAYER_KEY is not null""", conn)
 	rosters = pd.read_sql_query(f"""SELECT * FROM PLAYER_DIM WHERE TEAM_KEY = {team} AND ACTIVE_RECORD = 1 ORDER BY FULL_NAME""", conn)
