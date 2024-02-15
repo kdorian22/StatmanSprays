@@ -139,7 +139,7 @@ def getRoster(team, year, player_dim):
 				text = cell.text.replace("\n", '')
 				text = cell.text.replace('nbsp&', '')
 				cells.append(text)
-			rosterToAdd.append(player_dim(cells[0], cells[1].replace('â€™',"'"), cells[2], cells[4] if year in ['2022', '2023'] else cells[3], year, team))
+			rosterToAdd.append(player_dim(cells[0], cells[1].replace('â€™',"'"), cells[2], cells[4] if year in ['2022', '2023', '2024'] else cells[3], year, team))
 	return rosterToAdd
 
 
