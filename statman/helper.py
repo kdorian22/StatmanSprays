@@ -118,14 +118,12 @@ def calcDist(a, b):
 		dist = 0
 	return dist
 
-
 def partialDist(a, b):
 	if len(a) > 3 and len(b) > 3:
 		dist = fuzz.partial_ratio(a.lower(),b.lower())
 	else:
 		dist = 0
 	return dist
-
 
 def getRoster(team, year, player_dim):
 	url=f'https://stats.ncaa.org/team/{team}/roster/{yearCodes[str(year)]}'
@@ -141,7 +139,6 @@ def getRoster(team, year, player_dim):
 				cells.append(text)
 			rosterToAdd.append(player_dim(cells[0], cells[1].replace('â€™',"'"), cells[2], cells[4] if year in ['2022', '2023', '2024'] else cells[3], year, team))
 	return rosterToAdd
-
 
 def scrapeRoster(team, year, db, player_dim):
 	try:
