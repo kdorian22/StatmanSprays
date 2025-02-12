@@ -14,6 +14,7 @@ import itertools
 import json
 
 divDict = {
+'2025': ['18543', '18544', '18545'],
 '2024': ['18300', '18301', '18302'],
 '2023': ['18080', '18082', '18083'],
 '2022': ['17760', '17761', '17762'],
@@ -35,13 +36,7 @@ yearCodes = {
 		 '2016': '12360'
 		}
 
-years = ['2024', '2023', '2022', '2021', '2020', '2019', '2018']
-
-statCodes = {
-		 'hit': '15000',
-		 'pitch':'15001',
-		 'field':'15002'
-		 }
+years = ['2025', '2024', '2023', '2022', '2021', '2020', '2019', '2018']
 
 locations = ['1b', '2b', '3b', ' ss', ' p ', ' p.', ' p,',' p;', ' p:', ' c ', ' c.', ' c,', ' c;', 'catcher', 'pitcher',
 ' lf', ' rf', ' cf', 'shortstop', 'center', 'lcf', 'rcf', '1b line', '3b line', ' left', ' right',
@@ -125,8 +120,8 @@ def partialDist(a, b):
 		dist = 0
 	return dist
 
-def getRoster(team, year, player_dim):
-	url=f'https://stats.ncaa.org/team/{team}/roster/{yearCodes[str(year)]}'
+def getRoster(teamYearId, player_dim):
+	url=f'https://stats.ncaa.org/teams/{teamYearId}/roster'
 	soup = BeautifulSoup(requests.get(url, headers = {"User-Agent": "Mozilla/5.0"}).content, 'lxml')
 	table = soup.find('tbody')
 	rosterToAdd = []
@@ -423,23 +418,10 @@ def getMatchup(pbp, altNames, altTeamNameList):
 	return teams, pbpSoup
 
 def updateHitterStats(year, team, hitter_stats, db):
-	url=f'https://stats.ncaa.org/team/{team}/stats/{yearCodes[str(year)]}'
+	url=f'https://stats.ncaa.org/teams/{team}/stats/{yearCodes[str(year)]}'
 	soup = BeautifulSoup(requests.get(url, headers = {"User-Agent": "Mozilla/5.0"}).content, 'html.parser')
 	table = soup.find('tbody')
 	if table is not None:
-		head = soup.find('thead').findAll('th')
-		index = 6
-		for i, d in enumerate(head):
-			if d.text == 'BA':
-				index = i
-				break
-
-		ibb = 0 if int(year) < 2019 else 1
-		for i, d in enumerate(head):
-			if d.text == 'IBB':
-				ibb = 1
-				break
-
 		rosterToAdd = []
 		if table is not None:
 			for row in table.findAll('tr'):
@@ -450,6 +432,7 @@ def updateHitterStats(year, team, hitter_stats, db):
 					cells.append(text)
 					# name
 				rosterToAdd.append(hitter_stats(cells[1].replace('â€™',"'").replace("\n", ''),
+				
 				# position
 				cells[3].replace("\n", ''),
 				# jersey
@@ -458,37 +441,37 @@ def updateHitterStats(year, team, hitter_stats, db):
 				cells[2].replace("\n", ''),
 				year,
 				# games
-				cells[4].replace("\n", ''),
+				cells[6].replace("\n", ''),
 				# games started
-				cells[5].replace("\n", ''),
+				cells[7].replace("\n", ''),
 				# AB
 				cells[11].replace("\n", ''),
 				# BA
-				cells[index].replace("\n", ''),
-				# OBP
 				cells[8].replace("\n", ''),
-				#SLG
+				# OBP
 				cells[9].replace("\n", ''),
-				#K
-				cells[22].replace("\n", ''),
-				#BB
-				cells[18].replace("\n", ''),
-				#SB
-				cells[26].replace("\n", ''),
-				#CS
-				cells[24].replace('\n', ''),
-				# IBB
-				0 if ibb == 0 else cells[27].replace("\n", ''),
-				# HBP
-				cells[19].replace("\n", ''),
-				#SF
-				cells[20].replace("\n", ''),
-				#SH
-				cells[21].replace("\n", ''),
-				#R
+				#SLG
 				cells[10].replace("\n", ''),
+				#K
+				cells[23].replace("\n", ''),
+				#BB
+				cells[19].replace("\n", ''),
+				#SB
+				cells[27].replace("\n", ''),
+				#CS
+				cells[25].replace('\n', ''),
+				# IBB
+				cells[28].replace('\n', ''),
+				# HBP
+				cells[20].replace("\n", ''),
+				#SF
+				cells[21].replace("\n", ''),
+				#SH
+				cells[22].replace("\n", ''),
+				#R
+				cells[11].replace("\n", ''),
 				#RBI
-				cells[17].replace("\n", ''),
+				cells[18].replace("\n", ''),
 
 				team))
 		lastName = ''

@@ -75,8 +75,10 @@ class player_dim(db.Model):
     YEAR = db.Column(db.String(5))
     TEAM_KEY = db.Column(db.Integer)
     ACTIVE_RECORD = db.Column(db.Integer)
+    BATS = db.Column(db.String(10))
+    THROWS = db.Column(db.Strin(10))
 
-    def __init__(self, num, name, pos, cl, y, tk):
+    def __init__(self, num, name, pos, cl, y, tk, b, t):
         self.NUMBER = num
         self.FULL_NAME = name
         self.POSITION = pos
@@ -84,6 +86,8 @@ class player_dim(db.Model):
         self.YEAR = y
         self.TEAM_KEY = tk
         self.ACTIVE_RECORD = 1
+        self.BATS = b 
+        self.THROWS = t
 
 
 class hitter_stats(db.Model):
@@ -162,3 +166,17 @@ class play_by_play(db.Model):
         self.DESCRIPTION = dec
         self.YEAR = year
         self.ACTIVE_RECORD = 1
+
+class team_id_lk(db.Model):
+	__tablename__ = 'TEAM_ID_LK'
+
+	TEAM_SEASON_ID = db.Column(db.Integer, primary_key=True)
+	YEAR = db.Column(db.Integer)
+	SEASON_ID = db.Column(db.Integer)
+	TEAM_ID = db.Column(db.Integer)
+
+	def __init__(self, id, year, season_id, team_id):
+		self.TEAM_SEASON_ID = id
+		self.YEAR = year
+		self.SEASON_ID = season_id
+		self.TEAM_ID = team_id
