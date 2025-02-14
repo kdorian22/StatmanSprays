@@ -25,6 +25,7 @@ divDict = {
 }
 
 yearCodes = {
+		 '2025': '16840',
 		 '2024': '16580',
 		 '2023': '16340',
 		 '2022': '15860',
@@ -120,10 +121,11 @@ def partialDist(a, b):
 		dist = 0
 	return dist
 
-def getRoster(teamYearId, player_dim):
+def getRoster(teamYearId, player_dim, team, year):
 	url=f'https://stats.ncaa.org/teams/{teamYearId}/roster'
 	soup = BeautifulSoup(requests.get(url, headers = {"User-Agent": "Mozilla/5.0"}).content, 'lxml')
 	table = soup.find('tbody')
+
 	rosterToAdd = []
 	if table is not None:
 		for row in table.findAll('tr'):
@@ -132,14 +134,15 @@ def getRoster(teamYearId, player_dim):
 				text = cell.text.replace("\n", '')
 				text = cell.text.replace('nbsp&', '')
 				cells.append(text)
-			rosterToAdd.append(player_dim(cells[0], cells[1].replace('â€™',"'"), cells[2], cells[4] if year in ['2022', '2023', '2024'] else cells[3], year, team))
+			rosterToAdd.append(player_dim(cells[2], cells[3].replace('â€™',"'"), cells[5], cells[4], year, team, cells[7], cells[8]))
 	return rosterToAdd
 
-def scrapeRoster(team, year, db, player_dim):
+def scrapeRoster(team, year, db, player_dim, team_id_lk):
 	try:
 		existingRoster = player_dim.query.filter_by(YEAR=str(year)).filter_by(TEAM_KEY=team).all()
 		players = [[x.FULL_NAME, x.NUMBER, x.CLASS] for x in existingRoster]
-		rosterToAdd = getRoster(team,year,player_dim)
+		teamYearId = team_id_lk.query.filter_by(TEAM_ID=team).filter_by(YEAR=str(year)).first()
+		rosterToAdd = getRoster(teamYearId.TEAM_SEASON_ID, player_dim, team, year)
 		for player in rosterToAdd:
 			if [player.FULL_NAME, player.NUMBER, player.CLASS] not in players:
 				db.session.merge(player)
@@ -159,21 +162,20 @@ def gameParser(soup, players, teamNameList, altNames, altTeamNameList, team_dim,
 	allPlays = []
 	plays = []
 	try:
-		date = soup.find(text='Game Date:').parent.parent.findNext('td', attrs={'class': None}).text.strip()
+		date = soup.find('td', class_='d-md-table-cell').findAll('tr')[3].find('td').text.strip()[0:10]
 		date = date[6:10] + date[0:2] + date[3:5]
 	except:
 		date = None
 
 	## Plays are stored in a 3-column table. This is how we identify which column we want
 	index = 10
-	for i, td in enumerate(soup.find('table', {'class': 'mytable', 'width': '1000px'}).find('tr', {'class': 'grey_heading'}).findAll('td')):
+	for i, td in enumerate(soup.find('table', class_="table").findAll('th')):
 		if td.text not in teamNameList and td.text != 'Score':
 			oppTeamName = td.text
 			if oppTeamName in altNames:
 				oppTeamName = [x.NAME for x in altTeamNameList if td.text in x.ALT_NAMES][0]
 		if td.text in teamNameList or bool([x for x in teamNameList if td.text in x.split()]):
 			index = i
-
 	if index < 10:
 		oppTeam = team_dim.query.filter_by(NAME=oppTeamName).first()
 		if oppTeam != None:
@@ -182,8 +184,9 @@ def gameParser(soup, players, teamNameList, altNames, altTeamNameList, team_dim,
 			ptk = None
 
 
-		for table in soup.findAll('table', {'class': 'mytable', 'width': '1000px'}):
-			for play in table.findAll('tr', {'class': None}):
+		for table in soup.findAll('table', class_="table"):
+			tbody = table.find('tbody')
+			for play in tbody.findAll('tr'):
 				## Select the correct column
 				string = play.select_one(f"tr td:nth-of-type({index+1})").text.replace("\n", '')
 				if len(string) > 5 and len([pl for pl in unwanted if(pl in string)]) == 0:
@@ -404,8 +407,7 @@ def getMatchup(pbp, altNames, altTeamNameList):
 	try:
 		pbpSoup = BeautifulSoup(requests.get(pbp, headers = {"User-Agent": "Mozilla/5.0"}).content, 'lxml')
 		teams = []
-
-		for i, td in enumerate(pbpSoup.find('table', {'class': 'mytable', 'width': '1000px'}).find('tr', {'class': 'grey_heading'}).findAll('td', {'width': '40%'})):
+		for i, td in enumerate(pbpSoup.find('table', class_="table").findAll('th')):
 			if td.text != 'Score':
 				if td.text in altNames:
 					listedName = [x.NAME for x in altTeamNameList if td.text in x.ALT_NAMES][0]
@@ -418,7 +420,7 @@ def getMatchup(pbp, altNames, altTeamNameList):
 	return teams, pbpSoup
 
 def updateHitterStats(year, team, hitter_stats, db):
-	url=f'https://stats.ncaa.org/teams/{team}/stats/{yearCodes[str(year)]}'
+	url=f'https://stats.ncaa.org/team/{team}/stats/{yearCodes[str(year)]}'
 	soup = BeautifulSoup(requests.get(url, headers = {"User-Agent": "Mozilla/5.0"}).content, 'html.parser')
 	table = soup.find('tbody')
 	if table is not None:
@@ -431,47 +433,46 @@ def updateHitterStats(year, team, hitter_stats, db):
 					text = cell.text.replace('nbsp&', '')
 					cells.append(text)
 					# name
-				rosterToAdd.append(hitter_stats(cells[1].replace('â€™',"'").replace("\n", ''),
-				
+				rosterToAdd.append(hitter_stats(cells[1].replace('â€™',"'").replace("\n", '').strip(),
 				# position
-				cells[3].replace("\n", ''),
+				cells[3].replace("\n", '').strip(),
 				# jersey
-				cells[0].replace("\n", ''),
+				cells[0].replace("\n", '').strip(),
 				# class
-				cells[2].replace("\n", ''),
+				cells[2].replace("\n", '').strip(),
 				year,
 				# games
-				cells[6].replace("\n", ''),
+				cells[6].replace("\n", '').strip(),
 				# games started
-				cells[7].replace("\n", ''),
+				cells[7].replace("\n", '').strip(),
 				# AB
-				cells[11].replace("\n", ''),
+				cells[11].replace("\n", '').strip(),
 				# BA
-				cells[8].replace("\n", ''),
+				cells[8].replace("\n", '').strip(),
 				# OBP
-				cells[9].replace("\n", ''),
+				cells[9].replace("\n", '').strip(),
 				#SLG
-				cells[10].replace("\n", ''),
+				cells[10].replace("\n", '').strip(),
 				#K
-				cells[23].replace("\n", ''),
+				cells[23].replace("\n", '').strip(),
 				#BB
-				cells[19].replace("\n", ''),
+				cells[19].replace("\n", '').strip(),
 				#SB
-				cells[27].replace("\n", ''),
+				cells[27].replace("\n", '').strip(),
 				#CS
-				cells[25].replace('\n', ''),
+				cells[25].replace('\n', '').strip(),
 				# IBB
-				cells[28].replace('\n', ''),
+				cells[28].replace('\n', '').strip(),
 				# HBP
-				cells[20].replace("\n", ''),
+				cells[20].replace("\n", '').strip(),
 				#SF
-				cells[21].replace("\n", ''),
+				cells[21].replace("\n", '').strip(),
 				#SH
-				cells[22].replace("\n", ''),
+				cells[22].replace("\n", '').strip(),
 				#R
-				cells[11].replace("\n", ''),
+				cells[11].replace("\n", '').strip(),
 				#RBI
-				cells[18].replace("\n", ''),
+				cells[18].replace("\n", '').strip(),
 
 				team))
 		lastName = ''
@@ -504,6 +505,20 @@ def getTeamName(val):
 		return text
 	else:
 		return None
+	
+def getTeamIdFromLink(val, team_id_lk):
+	try:
+		if len(val) > 0:
+			teamSeasonId = val.get('href').split('/')[2]
+			row = team_id_lk.query.filter_by(TEAM_SEASON_ID=teamSeasonId).first()
+			if row is not None:
+				return row.TEAM_ID
+			else:
+				return None
+		else:
+			return None
+	except:
+		return None
 
 def getLink(row):
 	try:
@@ -531,7 +546,7 @@ def getTeamKey(teamName, team_dim, altNames, altTeamNameList):
 		return None
 
 
-def getSchedule(year, month, day, div, divList, game_dim, team_dim, altNames, altTeamNameList, db):
+def getSchedule(year, month, day, div, divList, game_dim, team_id_lk, db):
 	games = []
 	url = f"https://stats.ncaa.org/contests/scoreboards?season_division_id={div}&game_date={month}%2F{day}%2F{year}"
 	soup = BeautifulSoup(requests.get(url, headers = {"User-Agent": "Mozilla/5.0"}).content, 'lxml')
@@ -540,11 +555,10 @@ def getSchedule(year, month, day, div, divList, game_dim, team_dim, altNames, al
 	dbDate = year+month+day
 	if compDate == pageDate:
 		print(f"Yes D{divList.index(div)+1} Games On {month+'/'+day+'/'+year}")
-		gameDates = soup.select('td:first-child[rowspan="2"][valign="middle"]')
 		games = soup.findAll('a', attrs={'href': re.compile("^/contests"), 'target': re.compile("box")})
 		rows = soup.select('tbody > tr')
-		print(f"{len(gameDates)} D{divList.index(div)+1} Games On {month+'/'+day+'/'+year}")
-		for i in range(0, len(gameDates)):
+		print(f"{len(games)} D{divList.index(div)+1} Games On {month+'/'+day+'/'+year}")
+		for i in range(0, len(games)):
 			try:
 				rowNum = i
 				rows[rowNum*3].select('td a.skipMask')
@@ -553,8 +567,8 @@ def getSchedule(year, month, day, div, divList, game_dim, team_dim, altNames, al
 				home_team = getTeamName(rows[rowNum*3+1].select('td a.skipMask'))
 				home_score = getScoreVal(rows[rowNum*3+1].select('td.totalcol'))
 				boxLink = getLink(rows[rowNum*3+2])
-				home_key = getTeamKey(home_team, team_dim, altNames, altTeamNameList)
-				away_key = getTeamKey(away_team, team_dim, altNames, altTeamNameList)
+				home_key = getTeamIdFromLink(rows[rowNum*3].select('td a.skipMask'), team_id_lk)
+				away_key = getTeamIdFromLink(rows[rowNum*3+1].select('td a.skipMask'), team_id_lk)
 				newGame = game_dim(dbDate, year, home_key, home_team, away_key, away_team, home_score, away_score, boxLink)
 				db.session.add(newGame)
 			except:

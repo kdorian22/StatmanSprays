@@ -76,7 +76,7 @@ class player_dim(db.Model):
     TEAM_KEY = db.Column(db.Integer)
     ACTIVE_RECORD = db.Column(db.Integer)
     BATS = db.Column(db.String(10))
-    THROWS = db.Column(db.Strin(10))
+    THROWS = db.Column(db.String(10))
 
     def __init__(self, num, name, pos, cl, y, tk, b, t):
         self.NUMBER = num
