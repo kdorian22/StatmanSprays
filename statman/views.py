@@ -779,6 +779,12 @@ def printSprays():
 
 	return render_template('printSprays.html', keys = keyList, plays = plays.to_json(orient='records'), stats = stats.to_json(orient='records'))
 
+@app.route('/ping')
+def ping():
+	conn = db.engine.connect()
+	names = list(conn.execute(text(f"""SELECT * FROM TEAM_DIM LIMIT 1""")).fetchall())
+	return 'success'
+
 @app.route('/about')
 def about():
 	return render_template('about.html')

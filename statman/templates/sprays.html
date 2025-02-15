@@ -640,6 +640,15 @@ th.plays{
   });
 
 
+  let numPing = 0
+  const ping = setInterval(function() {
+          if(numPing < 60){
+            data = $.getJSON("{{url_for('ping')}}")
+            numPing += 1
+          }
+  }, 20000);
+
+
   {% if request.MOBILE %}
     width = $('#body').width()
     height = width*(450/650)+10
