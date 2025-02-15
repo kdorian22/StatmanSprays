@@ -696,7 +696,7 @@ th.plays{
       thesePlays = teamPlays.filter(function(d){ return playerKeysCareer.indexOf(d.BATTER_PLAYER_KEY) > -1})
       c = 'c'
     }
-      makeSpray(thesePlays, cDatum.FULL_NAME, cDatum.NUMBER, cDatum.POSITION, cDatum.CLASS, cDatum.YEAR, cDatum.TEAM_KEY, c)
+      makeSpray(thesePlays, cDatum.FULL_NAME, cDatum.NUMBER, cDatum.POSITION, cDatum.CLASS.replace('.', ''), cDatum.YEAR, cDatum.TEAM_KEY, c, cDatum.BATS)
     }
   })
 
@@ -756,7 +756,7 @@ th.plays{
                 newRow.classed('selected', true)
                 tum = newRow.datum()
                 data = plays.filter(function(v){ return v.BATTER_PLAYER_KEY == tum.PLAYER_KEY})
-                makeSpray(data, tum.FULL_NAME, tum.NUMBER, tum.POSITION, tum.CLASS, tum.YEAR, tum.TEAM_KEY, 'y')
+                makeSpray(data, tum.FULL_NAME, tum.NUMBER, tum.POSITION, tum.CLASS.replace('.', ''), tum.YEAR, tum.TEAM_KEY, 'y', tum.BATS)
               }
             }
         });
@@ -787,7 +787,7 @@ th.plays{
 
          d3.selectAll('tr.plRow')
          .append('td')
-         .html(function(d){ return d.CLASS} )
+         .html(function(d){ return d.CLASS.replace('.', '')} )
 
          d3.selectAll('tr.plRow')
          .append('td')
@@ -812,7 +812,7 @@ th.plays{
           $('#career').show()
           $(this).parent().addClass('selected')
           data = plays.filter(function(e){ return e.BATTER_PLAYER_KEY == d.PLAYER_KEY})
-          makeSpray(data, d.FULL_NAME, d.NUMBER, d.POSITION, d.CLASS, d.YEAR, d.TEAM_KEY, 'y')
+          makeSpray(data, d.FULL_NAME, d.NUMBER, d.POSITION, d.CLASS.replace('.', ''), d.YEAR, d.TEAM_KEY, 'y', d.BATS)
         })
 
 
@@ -827,7 +827,7 @@ th.plays{
       }
     }
 
-  function makeSpray(plays, name, num, position, fresh, year, team_key, c){
+  function makeSpray(plays, name, num, position, fresh, year, team_key, c, bats){
     $("#playTable").empty()
     $('#field').empty()
     d3.selection.prototype.moveToFront = function() {
@@ -883,7 +883,7 @@ th.plays{
     var width = d3.select('#field').attr('width')
 
     var field = d3.select('#field').append('g').attr('transform', `translate(${width}, ${height-margins.bottom})`)
-    var fieldSVG = d3.select('#field').on('click', function(d){ makeSpray(plays, name, num, position, fresh, year, team_key, c)})
+    var fieldSVG = d3.select('#field').on('click', function(d){ makeSpray(plays, name, num, position, fresh, year, team_key, c, bats)})
 
     var ofBuckets = 3
     var infBuckets = buckets.length - ofBuckets
@@ -1185,7 +1185,7 @@ th.plays{
       }
 
       fieldSVG.append('text')
-      .text(name)
+      .text(name + (!!bats ? ` (${bats.substring(0, 1) === 'B' ? 'S' : bats.substring(0, 1)})` : ''))
       .attr('x', margins.left).attr('y', 25*height/450)
       .style('font-size', `${26*height/450}px`)
 
@@ -1292,7 +1292,7 @@ th.plays{
 
        soloStats = []
        if(c == 'y'){
-         soloStats = hitStats.filter(function(f){ return f.FULL_NAME == name & f.POSITION == position & f.CLASS == fresh & f.NUMBER == num & f.TEAM_KEY == team_key & f.YEAR == year})
+         soloStats = hitStats.filter(function(f){ return f.FULL_NAME == name & f.POSITION == position & f.CLASS.replace('.', '') == fresh & f.NUMBER == num & f.TEAM_KEY == team_key & f.YEAR == year})
        }else{
          careerStats = hitStats.filter(function(f){ return f.FULL_NAME == name & f.TEAM_KEY == team_key})
          statNest = d3.nest()
@@ -1388,7 +1388,7 @@ th.plays{
                 if($('.infWedge').length == 0){
                   drawBlankField()
                 }else{
-                  makeSpray(plays, name, num, position, fresh, year, team_key, c)
+                  makeSpray(plays, name, num, position, fresh, year, team_key, c, bats)
                 }
                 }, false);
             {% endif %}

@@ -134,7 +134,14 @@ def getRoster(teamYearId, player_dim, team, year):
 				text = cell.text.replace("\n", '')
 				text = cell.text.replace('nbsp&', '')
 				cells.append(text)
-			rosterToAdd.append(player_dim(cells[2], cells[3].replace('â€™',"'"), cells[5], cells[4], year, team, cells[7], cells[8]))
+			fullName = cells[3]
+			if ', ' not in fullName:
+				name = fullName.split(' ', 1)
+				if len(name) > 1:
+					lastName = name[1]
+					firstName = name[0]
+					fullName = lastName + ', ' +  firstName				
+			rosterToAdd.append(player_dim(cells[2], fullName.replace('â€™',"'"), cells[5], cells[4], year, team, cells[7], cells[8]))
 	return rosterToAdd
 
 def scrapeRoster(team, year, db, player_dim, team_id_lk):
@@ -436,8 +443,16 @@ def updateHitterStats(year, team, hitter_stats, db):
 					text = cell.text.replace("\n", '')
 					text = cell.text.replace('nbsp&', '')
 					cells.append(text)
-					# name
-				rosterToAdd.append(hitter_stats(cells[1].replace('â€™',"'").replace("\n", '').strip(),
+				
+				# name
+				fullName = cells[1]
+				if ', ' not in fullName:
+					name = fullName.split(' ', 1)
+					if len(name) > 1:
+						lastName = name[1]
+						firstName = name[0]
+						fullName = lastName + ', ' +  firstName		
+				rosterToAdd.append(hitter_stats(fullName.replace('â€™',"'").replace("\n", '').strip(),
 				# position
 				cells[3].replace("\n", '').strip(),
 				# jersey
@@ -450,7 +465,7 @@ def updateHitterStats(year, team, hitter_stats, db):
 				# games started
 				cells[7].replace("\n", '').strip(),
 				# AB
-				cells[11].replace("\n", '').strip(),
+				cells[12].replace("\n", '').strip(),
 				# BA
 				cells[8].replace("\n", '').strip(),
 				# OBP
