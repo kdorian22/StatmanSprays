@@ -11,6 +11,7 @@ import gc
 import time
 import itertools
 import json
+from sqlalchemy import text
 
 divDict = {
 '2025': ['18543', '18544', '18545'],
