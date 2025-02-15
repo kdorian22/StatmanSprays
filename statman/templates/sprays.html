@@ -1185,14 +1185,14 @@ th.plays{
       }
 
       fieldSVG.append('text')
-      .text(name + (!!bats ? ` (${bats.substring(0, 1) === 'B' ? 'S' : bats.substring(0, 1)})` : ''))
+      .text(name)
       .attr('x', margins.left).attr('y', 25*height/450)
       .style('font-size', `${26*height/450}px`)
 
       fieldSVG.append('text')
-      .text(`#${num}` + (c == 'c' ? ' - Career' : ' - ' + String(year)))
-      .attr('x', margins.left).attr('y', 55*height/450)
-      .style('font-size', `${26*height/450}px`)
+      .text((!!bats ? `${bats.substring(0, 1) === 'B' ? 'S' : bats.substring(0, 1)} | ` : '') + `#${num}` + (c == 'c' ? ' | Career' : ' | ' + String(year)))
+      .attr('x', margins.left).attr('y', 50*height/450)
+      .style('font-size', `${20*height/450}px`)
 
       fieldSVG.append('text')
       .text(`Tot. IF BIP: ${infPlaysEx}`)
