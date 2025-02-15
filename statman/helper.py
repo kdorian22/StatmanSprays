@@ -569,7 +569,6 @@ def getSchedule(year, month, day, div, divList, game_dim, team_id_lk, db):
 	games = []
 	url = f"https://stats.ncaa.org/contests/scoreboards?season_division_id={div}&game_date={month}%2F{day}%2F{year}"
 	req = requests.get(url, headers = {"User-Agent": "Mozilla/5.0"})
-	print('ip: ', req.json()['ip'])
 	soup = BeautifulSoup(req.content, 'lxml')
 	pageDate = soup.select('input#game_date')[0]['value'].split('/')
 	compDate = [month, day, year]
