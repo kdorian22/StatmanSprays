@@ -368,7 +368,11 @@ def getRosterNames(roster):
 	for r in roster:
 		try:
 			names = []
-			full = r.FULL_NAME.split(', ')
+			full = r.FULL_NAME
+			if ', ' in full :
+				full = full.split(', ')
+			else:
+				full = full.split(' ', 1)[::-1]
 			if len(full) > 1 and '' not in full:
 				fullNS = full
 				full = [f.replace(' ','') for f in full]
