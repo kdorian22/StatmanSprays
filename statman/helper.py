@@ -1,4 +1,3 @@
-import sshtunnel
 from functools import wraps
 import requests
 import pandas as pd

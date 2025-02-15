@@ -257,7 +257,7 @@
         $('#loader').css('visibility', 'visible')
         $('#searchTeam').val(ui.item.label)
         $('.wait').text("Gathering data. This may take up to 30 seconds.")
-        $('.wait').slideDown()
+        // $('.wait').slideDown()
         setTimeout(function() {
           window.location.href = "{{url_for('sprays')}}?team="+ui.item.value.key
         }, 500);
