@@ -772,7 +772,7 @@ th.plays{
 
         $("#teamName").text(name + ' - ' + year)
         d3.select('#roster').append('tr')
-        .html("<th>Name</th><th>Pos</th><th>Num</th><th>Year</th><th></th>")
+        .html("<th>Name</th><th>Bats</th><th>Pos</th><th>Num</th><th>Year</th><th></th>")
 
         d3.select('#roster')
         .selectAll('tr.plRow')
@@ -785,6 +785,10 @@ th.plays{
 
         d3.selectAll('tr.plRow')
         .append('td').html(function(d){ return d.FULL_NAME })
+
+        d3.selectAll('tr.plRow')
+         .append('td')
+         .html(function(d){ return d.BATS === 'BOTH' ? 'S' : d.BATS?.substring(0, 1)} )
 
          d3.selectAll('tr.plRow')
          .append('td')
