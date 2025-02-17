@@ -241,4 +241,12 @@ $('#content').click(function(){
   $('#side').css('width', '0px').css('border-left', '0px solid rgb(254, 246, 235)').css('border-left', '0px solid rgb(254, 246, 235)')
 })
 
+let numPing = 0
+  const ping = setInterval(function() {
+          if(numPing < 60){
+            data = $.getJSON("{{url_for('ping')}}")
+            numPing += 1
+          }
+  }, 20000);
+
 </script>

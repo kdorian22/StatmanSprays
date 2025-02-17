@@ -724,9 +724,10 @@ def printSprays():
 		stats = pd.DataFrame()
 		for name in names:
 			plays = pd.concat([plays, pd.read_sql_query(text(f"""
-			SELECT d.FULL_NAME, d.NUMBER, p.* FROM PLAY_BY_PLAY p
+			SELECT d.FULL_NAME, d.NUMBER, d.BATS, p.* FROM PLAY_BY_PLAY p
 			JOIN PLAYER_DIM d on d.PLAYER_KEY = p.BATTER_PLAYER_KEY
 			WHERE d.FULL_NAME = '{str(name.FULL_NAME).replace("'","''")}' and d.TEAM_KEY = {team} and p.ACTIVE_RECORD = 1
+			ORDER BY CASE WHEN d.BATS IS NOT NULL THEN 0 ELSE 1 END
 			"""), conn)])
 
 			stats = pd.concat([stats, pd.read_sql_query(text(f"""
@@ -742,9 +743,10 @@ def printSprays():
 	if c == 'c':
 		name = player_dim.query.filter_by(PLAYER_KEY=key).first().FULL_NAME
 		plays = pd.read_sql_query(text(f"""
-		SELECT d.FULL_NAME, d.NUMBER, p.* FROM PLAY_BY_PLAY p
+		SELECT d.FULL_NAME, d.NUMBER, d.BATS, p.* FROM PLAY_BY_PLAY p
 		JOIN PLAYER_DIM d on d.PLAYER_KEY = p.BATTER_PLAYER_KEY
 		WHERE FULL_NAME = '{str(name).replace("'","''")}' and d.TEAM_KEY = {team} and p.ACTIVE_RECORD = 1
+		ORDER BY CASE WHEN d.BATS IS NOT NULL THEN 0 ELSE 1 END
 		"""), conn)
 		stats = pd.read_sql_query(text(f"""
 		SELECT * FROM HITTER_STATS
@@ -764,9 +766,10 @@ def printSprays():
 
 
 	plays = pd.read_sql_query(text(f"""
-	SELECT d.FULL_NAME, d.NUMBER, p.* FROM PLAY_BY_PLAY p
+	SELECT d.FULL_NAME, d.NUMBER, d.BATS, p.* FROM PLAY_BY_PLAY p
 	JOIN PLAYER_DIM d on d.PLAYER_KEY = p.BATTER_PLAYER_KEY
 	WHERE BATTER_PLAYER_KEY in ({keys}) and p.ACTIVE_RECORD = 1
+	ORDER BY CASE WHEN d.BATS IS NOT NULL THEN 0 ELSE 1 END
 	"""), conn)
 
 	stats = pd.read_sql_query(text(f"""

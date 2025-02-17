@@ -1,4 +1,4 @@
-function makeSpray(plays, name, num, fieldSVG, statPlayer, wait, career){
+function makeSpray(plays, name, num, fieldSVG, statPlayer, wait, career, bats){
     var colScale = d3.scaleLinear().domain([0,1]).range(['white', 'red'])
 
     var plays = plays.filter(function(d){ return d.OUTCOME != null & d.OUTCOME != 'null'})
@@ -202,14 +202,14 @@ function makeSpray(plays, name, num, fieldSVG, statPlayer, wait, career){
 
       if(career == 1){
         fieldSVG.append('text')
-        .text(`#${num}` + ' - Career')
-        .attr('x', margins.left).attr('y', margins.top*9.5)
-        .style('font-size', '22px')
+        .text((!!bats ? `${bats.substring(0, 1) === 'B' ? 'S' : bats.substring(0, 1)} | ` : '') + `#${num}` + ' | Career')
+        .attr('x', margins.left).attr('y', margins.top*9)
+        .style('font-size', '18px')
       }else{
         fieldSVG.append('text')
-        .text(`#${num}` + ' - ' + (plays.length > 0 ? String(plays[0].YEAR) : ''))
-        .attr('x', margins.left).attr('y', margins.top*9.5)
-        .style('font-size', '22px')
+        .text((!!bats ? `${bats.substring(0, 1) === 'B' ? 'S' : bats.substring(0, 1)} | ` : '') + `#${num}` + (plays.length > 0 ? ` | ${String(plays[0].YEAR)}`: ''))
+        .attr('x', margins.left).attr('y', margins.top*9)
+        .style('font-size', '18px')
       }
 
 

@@ -59,7 +59,8 @@ if(plays.length > 0){
       var svg = '#field'+key
       name = player[0].FULL_NAME
       num = player[0].NUMBER
-      makeSpray(player, name, num, svg, statPlayer,0,0)
+      bats = player[0].BATS
+      makeSpray(player, name, num, svg, statPlayer,0,0, bats)
     }else{
       $('#field'+key).remove()
     }

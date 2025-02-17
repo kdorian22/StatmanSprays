@@ -43,7 +43,8 @@ if(player.length > 0){
     var svg = '#field'
     name = player[0].FULL_NAME
     num = player[0].NUMBER
-    makeSpray(player, name, num, svg, stats, 1, 1)
+    bats = player[0].BATS
+    makeSpray(player, name, num, svg, stats, 1, 1, bats)
   }else{
   $('#body').html("<span style = 'font-size: 30px; margin-top: 30px;'>No Plays Found.</span>")
   $('body').css('background-color', 'white')

@@ -55,7 +55,8 @@ if(plays.length > 0){
       d3.select('#plots').append('div').append('svg').attr('class', 'field').attr('width', '650').attr('height', '420').attr('id', 'field'+i)
       name = player[0].FULL_NAME
       num = player[0].NUMBER
-      makeSpray(player, name, num, String('#field'+i), statPlayer, 0, 1)
+      bats = player[0].BATS
+      makeSpray(player, name, num, String('#field'+i), statPlayer, 0, 1, bats)
     }
   }
   setTimeout(function(){ print(); }, 1000)
