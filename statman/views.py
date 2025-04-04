@@ -776,10 +776,9 @@ def printSprays():
 	SELECT p.PLAYER_KEY, h.* FROM HITTER_STATS h
 	JOIN PLAYER_DIM p on p.FULL_NAME = h.FULL_NAME
 	and h.TEAM_KEY = p.TEAM_KEY and h.NUMBER = p.NUMBER
-	and h.POSITION = p.POSITION and h.CLASS = p.CLASS and h.YEAR = p.YEAR
+	and h.YEAR = p.YEAR
 	WHERE p.PLAYER_KEY in ({keys})
 	"""), conn)
-
 	return render_template('printSprays.html', keys = keyList, plays = plays.to_json(orient='records'), stats = stats.to_json(orient='records'))
 
 @app.route('/ping')
