@@ -133,6 +133,26 @@ h1{
   background-color: lightgray;
 }
 
+.flag{
+  width: 100%;
+  position: fixed;
+  bottom: 0vw;
+  text-align: center;
+  padding-left: 20px;
+  background-color: lightgray;
+  opacity: 100;
+  font-size: 2vw;
+  height: 6vw;
+  line-height: 5vw
+}
+
+@media screen and (max-width: 800px) {
+  #flag {
+    display: none;
+  }
+}
+
+
 {% if request.MOBILE %}
 #links{
   font-size: 4vw;

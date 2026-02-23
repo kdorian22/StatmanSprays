@@ -19,6 +19,7 @@
       </div>
       </div>
     </div>
+    <div class="flag"> Statman Sprays can sadly no longer access live data. Pre-2026 sprays will remain available. </div>
     <div hidden class="wait banner">  </div>
 
     <div id = loaderCont>
@@ -39,6 +40,17 @@
   color: white;
   opacity: .6;
   font-size: 30px;
+}
+
+.flag {
+    position: 'absolute'
+    bottom: 0
+  }
+
+@media screen and (max-width: 600px) {
+  .flag {
+    display: none;
+  }
 }
 
 .ui-menu-item{
